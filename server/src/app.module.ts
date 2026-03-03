@@ -3,6 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { KhungGioModule } from './khung-gio/khung-gio.module';
+import { LichSanModule } from './lich-san/lich-san.module';
+import { SanBaiModule } from './san-bai/san-bai.module';
+import { CauHinhModule } from './cau-hinh/cau-hinh.module';
 
 @Module({
   imports: [
@@ -34,6 +38,12 @@ import { AppService } from './app.service';
         },
       }),
     }),
+
+    // Feature modules
+    SanBaiModule,
+    KhungGioModule,
+    LichSanModule,
+    CauHinhModule,
   ],
   controllers: [AppController],
   providers: [AppService],
