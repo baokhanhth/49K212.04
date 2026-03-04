@@ -1,10 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Serve static files (uploads)
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
 
   // Global prefix
   app.setGlobalPrefix('api');
@@ -29,6 +34,7 @@ async function bootstrap() {
     .setTitle('Quản Lý Đặt Sân - API')
     .setDescription('API documentation cho hệ thống quản lý đặt sân bóng đá')
     .setVersion('1.0')
+    .addTag('san-bai', 'Quản lý cấu hình sân bãi (US-18)')
     .addTag('khung-gio', 'Quản lý khung giờ hoạt động')
     .addTag('lich-san', 'Quản lý lịch hoạt động sân')
     .build();
