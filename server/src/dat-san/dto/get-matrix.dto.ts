@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class GetMatrixDto {
   @ApiProperty({ description: 'Mã sân bãi (Từ US-18)', example: 1 })
   @IsNotEmpty({ message: 'Mã sân không được để trống' })
-  @Type(() => Number) // Ép kiểu từ string sang number
+  @Type(() => Number) 
   @IsInt({ message: 'Mã sân phải là số nguyên' })
   maSan: number;
 
