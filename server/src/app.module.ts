@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
 import { CauHinhModule } from './cau-hinh/cau-hinh.module';
-import { BookingsModule } from './bookings/bookings.module';
+import { DatSanModule } from './dat-san/dat-san.module';
 
 @Module({
   imports: [
@@ -43,7 +43,7 @@ import { BookingsModule } from './bookings/bookings.module';
     SanBaiModule,
     LichSanModule,
     CauHinhModule,
-    BookingsModule,
+    DatSanModule,
   ],
   controllers: [AppController],
   providers: [AppService],
