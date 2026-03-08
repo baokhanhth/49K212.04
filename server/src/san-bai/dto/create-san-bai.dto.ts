@@ -36,11 +36,11 @@ export class CreateSanBaiDto {
   @ApiPropertyOptional({
     description: 'Trạng thái sân',
     example: 'Hoạt động',
-    enum: ['Hoạt động', 'Bảo trì', 'Ngừng hoạt động'],
+    enum: ['Hoạt động', 'Bảo trì', 'Không hoạt động'],
   })
   @IsOptional()
-  @IsIn(['Hoạt động', 'Bảo trì', 'Ngừng hoạt động'], {
-    message: "Trạng thái phải là 'Hoạt động', 'Bảo trì' hoặc 'Ngừng hoạt động'",
+  @IsIn(['Hoạt động', 'Bảo trì', 'Không hoạt động'], {
+    message: "Trạng thái phải là 'Hoạt động', 'Bảo trì' hoặc 'Không hoạt động'",
   })
   trangThai?: string;
 }
