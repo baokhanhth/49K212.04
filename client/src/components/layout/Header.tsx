@@ -8,6 +8,9 @@ const Header: React.FC = () => {
           ⚽ Football Web
         </Link>
         <nav className="flex gap-6">
+          <Link to="/xem-san" className="hover:text-accent transition-colors">
+  Xem danh sách sân
+</Link>
           <Link to="/" className="hover:text-accent transition-colors">
             Trang chủ
           </Link>
