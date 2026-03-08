@@ -3,6 +3,7 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
+import Xemdanhsachsan from "./pages/Xemdanhsachsan";
 
 const App: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="*" element={<NotFoundPage />} />
+            <Route path="/xem-san" element={<Xemdanhsachsan />} />
           </Routes>
         </main>
         <Footer />
