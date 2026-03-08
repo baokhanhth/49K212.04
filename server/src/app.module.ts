@@ -5,6 +5,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
+import { CauHinhModule } from './cau-hinh/cau-hinh.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -22,13 +24,13 @@ import { SanBaiModule } from './san-bai/san-bai.module';
         host: configService.get<string>('DB_HOST', 'localhost'),
         port: parseInt(configService.get<string>('DB_PORT', '1433'), 10),
         username: configService.get<string>('DB_USERNAME', 'sa'),
-        password: configService.get<string>('DB_PASSWORD', ''),
+        password: configService.get<string>('DB_PASSWORD', '123456'),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false,
         options: {
-          encrypt: true,
-          trustServerCertificate: false,
+          encrypt: false,
+          trustServerCertificate: true,
         },
         extra: {
           requestTimeout: 30000,
@@ -40,6 +42,8 @@ import { SanBaiModule } from './san-bai/san-bai.module';
     // Feature modules
     SanBaiModule,
     LichSanModule,
+    CauHinhModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
