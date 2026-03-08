@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LichSanModule } from './lich-san/lich-san.module';
+import { SanBaiModule } from './san-bai/san-bai.module';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { AppService } from './app.service';
         password: configService.get<string>('DB_PASSWORD', ''),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Set false in production
+        synchronize: false,
         options: {
           encrypt: true,
           trustServerCertificate: false,
@@ -34,6 +36,10 @@ import { AppService } from './app.service';
         },
       }),
     }),
+
+    // Feature modules
+    SanBaiModule,
+    LichSanModule,
   ],
   controllers: [AppController],
   providers: [AppService],
