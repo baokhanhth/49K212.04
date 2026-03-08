@@ -3,10 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { KhungGioModule } from './khung-gio/khung-gio.module';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
-import { CauHinhModule } from './cau-hinh/cau-hinh.module';
 
 @Module({
   imports: [
@@ -27,7 +25,7 @@ import { CauHinhModule } from './cau-hinh/cau-hinh.module';
         password: configService.get<string>('DB_PASSWORD', ''),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Set false in production
+        synchronize: false,
         options: {
           encrypt: true,
           trustServerCertificate: false,
@@ -41,9 +39,7 @@ import { CauHinhModule } from './cau-hinh/cau-hinh.module';
 
     // Feature modules
     SanBaiModule,
-    KhungGioModule,
     LichSanModule,
-    CauHinhModule,
   ],
   controllers: [AppController],
   providers: [AppService],

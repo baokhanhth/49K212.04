@@ -106,7 +106,7 @@ export class SanBaiController {
         viTri: { type: 'string', description: 'Vị trí sân' },
         trangThai: {
           type: 'string',
-          enum: ['Hoạt động', 'Bảo trì', 'Ngừng hoạt động'],
+          enum: ['Hoạt động', 'Bảo trì', 'Không hoạt động'],
         },
         hinhAnh: { type: 'string', format: 'binary', description: 'File hình ảnh' },
       },
@@ -146,7 +146,7 @@ export class SanBaiController {
         viTri: { type: 'string', description: 'Vị trí sân' },
         trangThai: {
           type: 'string',
-          enum: ['Hoạt động', 'Bảo trì', 'Ngừng hoạt động'],
+          enum: ['Hoạt động', 'Bảo trì', 'Không hoạt động'],
         },
         hinhAnh: { type: 'string', format: 'binary', description: 'File hình ảnh' },
       },
@@ -175,7 +175,7 @@ export class SanBaiController {
   // ───────────── Cập nhật trạng thái bảo trì (AC7) ─────────────
 
   @Patch(':id/trang-thai')
-  @ApiOperation({ summary: 'Cập nhật trạng thái sân (Hoạt động/Bảo trì/Ngừng hoạt động)' })
+  @ApiOperation({ summary: 'Cập nhật trạng thái sân (Hoạt động/Bảo trì/Không hoạt động)' })
   @ApiParam({ name: 'id', description: 'Mã sân', type: Number })
   @SwaggerResponse({ status: 200, description: 'Cập nhật trạng thái thành công' })
   @SwaggerResponse({ status: 404, description: 'Không tìm thấy sân' })

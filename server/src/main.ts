@@ -35,7 +35,6 @@ async function bootstrap() {
     .setDescription('API documentation cho hệ thống quản lý đặt sân bóng đá')
     .setVersion('1.0')
     .addTag('san-bai', 'Quản lý cấu hình sân bãi (US-18)')
-    .addTag('khung-gio', 'Quản lý khung giờ hoạt động')
     .addTag('lich-san', 'Quản lý lịch hoạt động sân')
     .build();
   const document = SwaggerModule.createDocument(app, config);

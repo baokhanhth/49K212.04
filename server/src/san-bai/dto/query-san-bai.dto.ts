@@ -17,7 +17,7 @@ export class QuerySanBaiDto {
   @ApiPropertyOptional({
     description: 'Lọc theo trạng thái',
     example: 'Hoạt động',
-    enum: ['Hoạt động', 'Bảo trì', 'Ngừng hoạt động'],
+    enum: ['Hoạt động', 'Bảo trì', 'Không hoạt động'],
   })
   @IsOptional()
   @IsString()

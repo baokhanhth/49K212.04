@@ -16,15 +16,15 @@ export class SanBai {
   maSan: number;
 
   @ApiProperty({ description: 'Tên sân', example: 'Sân A' })
-  @Column({ name: 'TenSan', type: 'nvarchar', length: 100 })
+  @Column({ name: 'TenSan', type: 'nvarchar', length: 80 })
   tenSan: string;
 
   @ApiPropertyOptional({ description: 'Đường dẫn hình ảnh', example: null })
-  @Column({ name: 'HinhAnh', type: 'nvarchar', length: 255, nullable: true })
+  @Column({ name: 'HinhAnh', type: 'varchar', length: 255, nullable: true })
   hinhAnh: string | null;
 
   @ApiPropertyOptional({ description: 'Vị trí sân', example: 'Khu A' })
-  @Column({ name: 'ViTri', type: 'nvarchar', length: 200, nullable: true })
+  @Column({ name: 'ViTri', type: 'nvarchar', length: 50, nullable: true })
   viTri: string | null;
 
   @ApiProperty({ description: 'Giá thuê (VNĐ)', example: 200000 })
@@ -34,9 +34,9 @@ export class SanBai {
   @ApiProperty({
     description: 'Trạng thái sân',
     example: 'Hoạt động',
-    enum: ['Hoạt động', 'Bảo trì', 'Ngừng hoạt động'],
+    enum: ['Hoạt động', 'Bảo trì', 'Không hoạt động'],
   })
-  @Column({ name: 'TrangThai', type: 'nvarchar', length: 50 })
+  @Column({ name: 'TrangThai', type: 'nvarchar', length: 50, default: 'Hoạt động' })
   trangThai: string;
 
   @ApiProperty({ description: 'Mã loại sân', example: 1 })

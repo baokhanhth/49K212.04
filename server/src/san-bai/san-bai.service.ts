@@ -4,12 +4,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { SanBai } from './entities/san-bai.entity';
 import { LoaiSan } from './entities/loai-san.entity';
 import { CreateSanBaiDto } from './dto/create-san-bai.dto';
 import { UpdateSanBaiDto } from './dto/update-san-bai.dto';
 import { QuerySanBaiDto } from './dto/query-san-bai.dto';
+import { DatSan } from '../lich-san/entities/dat-san.entity';
 
 @Injectable()
 export class SanBaiService {
@@ -109,11 +110,11 @@ export class SanBaiService {
   async remove(id: number): Promise<void> {
     const sanBai = await this.findOne(id);
 
-    // AC8: Kiểm tra sân có lịch đặt chưa (bao gồm cả quá khứ để tránh FK constraint)
+    // Không cho xóa sân đã có lịch được đặt.
     const lichDaDat = await this.sanBaiRepo.manager
-      .createQueryBuilder('LichSan', 'ls')
+      .createQueryBuilder(DatSan, 'ds')
+      .innerJoin('LichSan', 'ls', 'ls.MaLichSan = ds.MaLichSan')
       .where('ls.MaSan = :maSan', { maSan: id })
-      .andWhere('ls.MaDatSan IS NOT NULL')
       .getCount();
 
     if (lichDaDat > 0) {
@@ -122,14 +123,32 @@ export class SanBaiService {
       );
     }
 
-    // Xóa tất cả lịch sân trống trước khi xóa sân
-    await this.sanBaiRepo.manager
+    // Xóa tất cả lịch sân chưa có đặt sân trước khi xóa sân.
+    const danhSachLich = await this.sanBaiRepo.manager
       .createQueryBuilder()
-      .delete()
-      .from('LichSan')
-      .where('MaSan = :maSan', { maSan: id })
-      .andWhere('MaDatSan IS NULL')
-      .execute();
+      .select('ls.MaLichSan', 'maLichSan')
+      .from('LichSan', 'ls')
+      .where('ls.MaSan = :maSan', { maSan: id })
+      .getRawMany<{ maLichSan: number }>();
+
+    const ids = danhSachLich.map((item) => item.maLichSan);
+    if (ids.length > 0) {
+      const lichDaDat = await this.sanBaiRepo.manager.find(DatSan, {
+        where: { maLichSan: In(ids) },
+        select: ['maLichSan'],
+      });
+      const bookedSet = new Set(lichDaDat.map((item) => item.maLichSan));
+      const idsCoTheXoa = ids.filter((lichId) => !bookedSet.has(lichId));
+
+      if (idsCoTheXoa.length > 0) {
+        await this.sanBaiRepo.manager
+          .createQueryBuilder()
+          .delete()
+          .from('LichSan')
+          .where('MaLichSan IN (:...ids)', { ids: idsCoTheXoa })
+          .execute();
+      }
+    }
 
     await this.sanBaiRepo.remove(sanBai);
   }
@@ -139,9 +158,9 @@ export class SanBaiService {
   async updateTrangThai(id: number, trangThai: string): Promise<SanBai> {
     const sanBai = await this.findOne(id);
 
-    if (!['Hoạt động', 'Bảo trì', 'Ngừng hoạt động'].includes(trangThai)) {
+    if (!['Hoạt động', 'Bảo trì', 'Không hoạt động'].includes(trangThai)) {
       throw new BadRequestException(
-        "Trạng thái phải là 'Hoạt động', 'Bảo trì' hoặc 'Ngừng hoạt động'",
+        "Trạng thái phải là 'Hoạt động', 'Bảo trì' hoặc 'Không hoạt động'",
       );
     }
 
@@ -160,12 +179,5 @@ export class SanBaiService {
         `Không tìm thấy loại sân với mã ${maLoaiSan}`,
       );
     }
-  }
-
-  private formatDate(date: Date): string {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
   }
 }
