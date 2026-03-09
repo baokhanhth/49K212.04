@@ -5,8 +5,11 @@ import {
   IsArray,
   ArrayNotEmpty,
   IsBoolean,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { TimeRangeDto } from './time-range.dto';
 
 export class ToggleLichSanDto {
   @ApiProperty({ description: 'Mã sân', example: 1 })
@@ -20,14 +23,18 @@ export class ToggleLichSanDto {
   ngayApDung: string;
 
   @ApiProperty({
-    description: 'Danh sách mã khung giờ cần đóng/mở',
-    example: [1, 2, 3],
-    type: [Number],
+    description: 'Danh sách khung giờ cần đóng/mở',
+    type: [TimeRangeDto],
+    example: [
+      { gioBatDau: '06:00:00', gioKetThuc: '08:00:00' },
+      { gioBatDau: '08:00:00', gioKetThuc: '10:00:00' },
+    ],
   })
   @IsArray({ message: 'Danh sách khung giờ phải là mảng' })
   @ArrayNotEmpty({ message: 'Danh sách khung giờ không được rỗng' })
-  @IsInt({ each: true, message: 'Mã khung giờ phải là số nguyên' })
-  danhSachKhungGio: number[];
+  @ValidateNested({ each: true })
+  @Type(() => TimeRangeDto)
+  danhSachKhungGio: TimeRangeDto[];
 
   @ApiProperty({
     description: 'true = mở (tạo lịch sân), false = đóng (xóa lịch sân chưa đặt)',

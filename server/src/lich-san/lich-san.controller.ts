@@ -14,7 +14,6 @@ import { CreateLichSanDto } from './dto/create-lich-san.dto';
 import { GenerateLichSanDto } from './dto/generate-lich-san.dto';
 import { QueryLichSanDto } from './dto/query-lich-san.dto';
 import { ToggleLichSanDto } from './dto/toggle-lich-san.dto';
-import { KhoaLichSanDto } from './dto/khoa-lich-san.dto';
 import {
   successResponse,
   ApiResponse,
@@ -27,28 +26,13 @@ export class LichSanController {
   constructor(private readonly lichSanService: LichSanService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Lấy danh sách lịch sân', description: 'Hỗ trợ lọc theo mã sân, khoảng ngày, khung giờ, trạng thái (trống/đã đặt)' })
+  @ApiOperation({ summary: 'Lấy danh sách lịch sân', description: 'Hỗ trợ lọc theo mã sân, khoảng ngày, giờ bắt đầu/kết thúc, trạng thái (trống/đã đặt)' })
   @SwaggerResponse({ status: 200, description: 'Danh sách lịch sân' })
   async findAll(
     @Query() query: QueryLichSanDto,
   ): Promise<ApiResponse<LichSan[]>> {
     const data = await this.lichSanService.findAll(query);
     return successResponse(data, 'Lấy danh sách lịch sân thành công');
-  }
-
-  @Get('cho-sinh-vien')
-  @ApiOperation({
-    summary: 'Lấy danh sách lịch sân cho sinh viên đặt',
-    description:
-      'Chỉ trả về lịch sân TRỐNG trong khoảng ngày cho phép đặt [hôm nay, hôm nay + max_day]. ' +
-      'Dùng API GET /api/cau-hinh/dat-san để biết khoảng ngày cho phép.',
-  })
-  @SwaggerResponse({ status: 200, description: 'Danh sách lịch sân cho sinh viên' })
-  async findAllChoSinhVien(
-    @Query() query: QueryLichSanDto,
-  ): Promise<ApiResponse<LichSan[]>> {
-    const data = await this.lichSanService.findAllChoSinhVien(query);
-    return successResponse(data, 'Lấy danh sách lịch sân cho sinh viên thành công');
   }
 
   @Get(':id')
@@ -67,7 +51,7 @@ export class LichSanController {
   @ApiOperation({ summary: 'Tạo một lịch sân mới' })
   @SwaggerResponse({ status: 201, description: 'Tạo lịch sân thành công' })
   @SwaggerResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc lịch đã tồn tại' })
-  @SwaggerResponse({ status: 404, description: 'Sân hoặc khung giờ không tồn tại' })
+  @SwaggerResponse({ status: 404, description: 'Sân không tồn tại' })
   async create(
     @Body() dto: CreateLichSanDto,
   ): Promise<ApiResponse<LichSan>> {
@@ -82,7 +66,7 @@ export class LichSanController {
   })
   @SwaggerResponse({ status: 201, description: 'Tạo hàng loạt thành công' })
   @SwaggerResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
-  @SwaggerResponse({ status: 404, description: 'Sân hoặc khung giờ không tồn tại' })
+  @SwaggerResponse({ status: 404, description: 'Sân không tồn tại' })
   async generate(
     @Body() dto: GenerateLichSanDto,
   ): Promise<ApiResponse<{ created: number; skipped: number }>> {
@@ -104,23 +88,6 @@ export class LichSanController {
     @Body() dto: ToggleLichSanDto,
   ): Promise<ApiResponse<{ message: string; affected: number }>> {
     const data = await this.lichSanService.toggleDate(dto);
-    return successResponse(data, data.message);
-  }
-
-  @Post('khoa')
-  @ApiOperation({
-    summary: 'Khoá/mở khoá lịch sân',
-    description:
-      'Admin khoá lịch sân cụ thể để sinh viên không đặt được. ' +
-      'Ví dụ: chiều thứ 7 trường có sự kiện, admin khoá các khung giờ chiều để sinh viên không đặt được. ' +
-      'Lịch bị khoá vẫn tồn tại trong hệ thống, chỉ ẩn với sinh viên. Mở khoá lại bình thường.',
-  })
-  @SwaggerResponse({ status: 200, description: 'Khoá/mở khoá thành công' })
-  @SwaggerResponse({ status: 404, description: 'Sân không tồn tại' })
-  async khoaLichSan(
-    @Body() dto: KhoaLichSanDto,
-  ): Promise<ApiResponse<{ message: string; affected: number }>> {
-    const data = await this.lichSanService.khoaLichSan(dto);
     return successResponse(data, data.message);
   }
 
