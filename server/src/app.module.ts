@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
 import { CauHinhModule } from './cau-hinh/cau-hinh.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
 
 @Module({
@@ -13,6 +15,12 @@ import { DatSanModule } from './dat-san/dat-san.module';
     // Load .env
     ConfigModule.forRoot({
       isGlobal: true,
+      
+    }),
+    // Serve static file
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
 
     // Database connection - SQL Server
@@ -27,7 +35,7 @@ import { DatSanModule } from './dat-san/dat-san.module';
         password: configService.get<string>('DB_PASSWORD', '123456'),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false,
+        synchronize: false, // Set false in production
         options: {
           encrypt: false,
           trustServerCertificate: true,
