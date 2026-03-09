@@ -8,7 +8,7 @@ export class LoaiSan {
   maLoaiSan: number;
 
   @ApiProperty({ description: 'Tên loại sân', example: 'Sân 5 người' })
-  @Column({ name: 'TenLoaiSan', type: 'nvarchar', length: 100, unique: true })
+  @Column({ name: 'TenLoaiSan', type: 'nvarchar', length: 80 })
   tenLoaiSan: string;
 
   @OneToMany('SanBai', 'loaiSan')

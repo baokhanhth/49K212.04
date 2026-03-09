@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, IsDateString } from 'class-validator';
+import { IsOptional, IsInt, IsDateString, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -19,11 +19,19 @@ export class QueryLichSanDto {
   @IsDateString()
   denNgay?: string;
 
-  @ApiPropertyOptional({ description: 'Lọc theo mã khung giờ', example: 1 })
+  @ApiPropertyOptional({ description: 'Lọc theo giờ bắt đầu', example: '06:00:00' })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  maKhungGio?: number;
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, {
+    message: 'Giờ bắt đầu phải đúng định dạng HH:mm hoặc HH:mm:ss',
+  })
+  gioBatDau?: string;
+
+  @ApiPropertyOptional({ description: 'Lọc theo giờ kết thúc', example: '08:00:00' })
+  @IsOptional()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, {
+    message: 'Giờ kết thúc phải đúng định dạng HH:mm hoặc HH:mm:ss',
+  })
+  gioKetThuc?: string;
 
   @ApiPropertyOptional({
     description: 'Lọc trạng thái: "trong" = chỉ lịch trống, "da_dat" = chỉ lịch đã đặt, bỏ trống = tất cả',
