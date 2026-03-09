@@ -3,17 +3,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-<<<<<<< Updated upstream
-=======
 import { KhungGioModule } from './khung-gio/khung-gio.module';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
 import { CauHinhModule } from './cau-hinh/cau-hinh.module';
-import { LoaiSan } from './facilities/LoaiSan.entity';
-import { FacilitiesController } from './facilities/facilities.controller';
 import { FacilitiesModule } from './facilities/facilities.module';
->>>>>>> Stashed changes
-
 @Module({
   imports: [ 
     // Load .env
@@ -44,8 +38,6 @@ import { FacilitiesModule } from './facilities/facilities.module';
         },
       }),
     }),
-<<<<<<< Updated upstream
-=======
 
     // Feature modules
     SanBaiModule,
@@ -53,7 +45,6 @@ import { FacilitiesModule } from './facilities/facilities.module';
     LichSanModule,
     CauHinhModule,
     FacilitiesModule,
->>>>>>> Stashed changes
   ],
   controllers: [AppController],
   providers: [AppService],
