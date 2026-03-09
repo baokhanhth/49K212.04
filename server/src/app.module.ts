@@ -8,13 +8,21 @@ import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
 import { CauHinhModule } from './cau-hinh/cau-hinh.module';
 import { FacilitiesModule } from './facilities/facilities.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { DatSanModule } from './dat-san/dat-san.module';
+
 @Module({
-  imports: [ 
+  imports: [
     // Load .env
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
+    // Serve static file
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     // Database connection - SQL Server
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -27,10 +35,10 @@ import { FacilitiesModule } from './facilities/facilities.module';
         password: configService.get<string>('DB_PASSWORD', ''),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Set false in production
+        synchronize: false,
         options: {
           encrypt: true,
-          trustServerCertificate: false,
+          trustServerCertificate: true,
         },
         extra: {
           requestTimeout: 30000,
@@ -38,16 +46,15 @@ import { FacilitiesModule } from './facilities/facilities.module';
         },
       }),
     }),
-
     // Feature modules
     SanBaiModule,
     KhungGioModule,
     LichSanModule,
     CauHinhModule,
     FacilitiesModule,
+    DatSanModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
-
