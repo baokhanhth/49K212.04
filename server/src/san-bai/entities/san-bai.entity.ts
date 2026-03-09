@@ -16,24 +16,28 @@ export class SanBai {
   maSan: number;
 
   @ApiProperty({ description: 'Tên sân', example: 'Sân A' })
-  @Column({ name: 'TenSan', type: 'nvarchar', length: 100 })
+  @Column({ name: 'TenSan', type: 'nvarchar', length: 80 })
   tenSan: string;
 
   @ApiPropertyOptional({ description: 'Đường dẫn hình ảnh', example: null })
-  @Column({ name: 'HinhAnh', type: 'nvarchar', length: 255, nullable: true })
-  hinhAnh: string;
+  @Column({ name: 'HinhAnh', type: 'varchar', length: 255, nullable: true })
+  hinhAnh: string | null;
 
   @ApiPropertyOptional({ description: 'Vị trí sân', example: 'Khu A' })
-  @Column({ name: 'ViTri', type: 'nvarchar', length: 200, nullable: true })
-  viTri: string;
+  @Column({ name: 'ViTri', type: 'nvarchar', length: 50, nullable: true })
+  viTri: string | null;
 
   @ApiProperty({ description: 'Giá thuê (VNĐ)', example: 200000 })
   @Column({ name: 'GiaThue', type: 'decimal', precision: 18, scale: 2 })
   giaThue: number;
 
-  @ApiProperty({ description: 'Trạng thái hoạt động', example: true })
-  @Column({ name: 'TrangThai', type: 'bit', default: 1 })
-  trangThai: boolean;
+  @ApiProperty({
+    description: 'Trạng thái sân',
+    example: 'Hoạt động',
+    enum: ['Hoạt động', 'Bảo trì', 'Không hoạt động'],
+  })
+  @Column({ name: 'TrangThai', type: 'nvarchar', length: 50, default: 'Hoạt động' })
+  trangThai: string;
 
   @ApiProperty({ description: 'Mã loại sân', example: 1 })
   @Column({ name: 'MaLoaiSan' })
