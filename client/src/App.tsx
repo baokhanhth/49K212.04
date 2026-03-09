@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import QuanLySan from './pages/Quanlysan';
 import CauHinhSanBai from './pages/Cauhinhsanbai';
 import NotFoundPage from './pages/NotFoundPage';
+import Xemdanhsachsan from "./pages/Xemdanhsachsan";
 
 
 const App: React.FC = () => {
@@ -18,6 +19,7 @@ const App: React.FC = () => {
               <Route path="/" element={<HomePage />} />
               <Route path="/quan-ly-san" element={<QuanLySan />} />
               <Route path="/cau-hinh-san-bai" element={<CauHinhSanBai />} />
+              <Route path="/xem-san" element={<Xemdanhsachsan />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
