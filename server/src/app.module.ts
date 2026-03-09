@@ -37,7 +37,7 @@ import { DatSanModule } from './dat-san/dat-san.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false, // Set false in production
         options: {
-          encrypt: false,
+          encrypt: true,
           trustServerCertificate: true,
         },
         extra: {
