@@ -4,18 +4,18 @@ import { Link, useLocation } from 'react-router-dom';
 const Header: React.FC = () => {
   const location = useLocation();
   const menuItems = [
-    { label: 'Dashboard', path: '/' },
-    { label: 'Duyệt đặt sân', path: '/duyet-dat-san' },
-    { label: 'Cấu hình sân', path: '/cau-hinh-san-bai' },
-    { label: 'Quản lý sân', path: '/quan-ly-san' },
-    { label: 'Tài khoản', path: '/tai-khoan' },
+    { label: 'Dashboard', path: '/admin' },
+    { label: 'Duyệt đặt sân', path: '/admin/duyet-dat-san' },
+    { label: 'Cấu hình sân', path: '/admin/cau-hinh-san-bai' },
+    { label: 'Quản lý sân', path: '/admin/quan-ly-san' },
+    { label: 'Tài khoản', path: '/admin/tai-khoan' },
   ];
 
 
   return (
     <aside className="flex w-[250px] flex-col bg-gradient-to-b from-[#3E5D99] to-[#36558F] px-6 py-7 text-white">
       <div className="mb-10">
-        <div className="flex items-center gap-3">
+        <Link to="/select-role" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-[#3E5D99] font-bold">
             DUE
           </div>
@@ -25,7 +25,7 @@ const Header: React.FC = () => {
               Hệ thống quản lý và đặt lịch sân thể thao
             </p>
           </div>
-        </div>
+        </Link>
       </div>
 
 
@@ -38,13 +38,16 @@ const Header: React.FC = () => {
             <Link
               key={item.label}
               to={item.path}
-              className={`block rounded-2xl px-4 py-3 text-lg font-medium transition ${
+              className={`relative block rounded-2xl px-4 py-3 text-lg font-medium transition ${
                 active
-                  ? 'bg-white/18 text-white shadow-sm'
+                  ? 'bg-white/15 text-white'
                   : 'text-white/75 hover:bg-white/10 hover:text-white'
               }`}
             >
-              {item.label}
+              {active && (
+                <span className="absolute inset-0 rounded-2xl border-2 border-blue-300/30" />
+              )}
+              <span className="relative z-10">{item.label}</span>
             </Link>
           );
         })}

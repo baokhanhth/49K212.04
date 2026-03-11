@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import AdminLayout from '../../components/layout/AdminLayout';
 
 
 interface ClosedDay {
@@ -88,8 +89,9 @@ const CauHinhSanBai: React.FC = () => {
 
 
   return (
-    <div className="min-h-full bg-[#E9EDF5] px-7 py-8">
-      <div className="mx-auto max-w-[1120px]">
+    <AdminLayout>
+      <div className="px-7 py-8">
+        <div className="mx-auto max-w-[1120px]">
         <section className="mb-6">
           <h2 className="mb-4 text-[18px] font-semibold text-slate-800">
             Thiết lập thời gian đặt sân
@@ -153,7 +155,7 @@ const CauHinhSanBai: React.FC = () => {
                   type="button"
                   className="rounded-lg border border-slate-200 px-4 py-2 text-[16px] text-slate-500"
                 >
-                  &lt; Trước
+                  {'<'} Trước
                 </button>
 
 
@@ -166,7 +168,7 @@ const CauHinhSanBai: React.FC = () => {
                   type="button"
                   className="rounded-lg border border-slate-200 px-4 py-2 text-[16px] text-slate-500"
                 >
-                  Sau &gt;
+                  Sau {'>'}
                 </button>
               </div>
 
@@ -283,8 +285,9 @@ const CauHinhSanBai: React.FC = () => {
             </div>
           </div>
         </section>
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 
