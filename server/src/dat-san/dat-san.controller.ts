@@ -18,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { DatSanService } from './dat-san.service';
 import { CreateDatSanDto } from './dto/create-dat-san.dto';
+import { CreateDatSanThuCongDto } from './dto/create-dat-san-thu-cong.dto';
 import { QueryDatSanDto } from './dto/query-dat-san.dto';
 import { DuyetDatSanDto } from './dto/duyet-dat-san.dto';
 import {
@@ -80,6 +81,18 @@ export class DatSanController {
   async create(@Body() dto: CreateDatSanDto): Promise<ApiResponse<DatSan>> {
     const data = await this.datSanService.create(dto.maLichSan);
     return successResponse(data, 'Tạo yêu cầu đặt sân thành công');
+  }
+
+  // ───────────── Tạo lịch đặt sân thủ công (US-13) ─────────────
+
+  @Post('thu-cong')
+  @ApiOperation({ summary: 'Admin tạo lịch đặt sân thủ công (US-13)' })
+  @SwaggerResponse({ status: 201, description: 'Tạo đặt sân thủ công thành công' })
+  @SwaggerResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc khung giờ đã được đặt' })
+  @SwaggerResponse({ status: 404, description: 'Không tìm thấy sân' })
+  async createThuCong(@Body() dto: CreateDatSanThuCongDto): Promise<ApiResponse<DatSan>> {
+    const data = await this.datSanService.createThuCong(dto);
+    return successResponse(data, 'Tạo lịch đặt sân thủ công thành công');
   }
 
   // ───────────── Duyệt / Từ chối yêu cầu (AC2, AC3) ─────────────
