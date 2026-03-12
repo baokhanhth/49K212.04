@@ -7,9 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LichSanService } from '../lich-san/lich-san.service';
+import { SanBaiService } from '../san-bai/san-bai.service';
 import { DatSan } from '../lich-san/entities/dat-san.entity';
 import { LichSan } from '../lich-san/entities/lich-san.entity';
 import { QueryDatSanDto } from './dto/query-dat-san.dto';
+import { CreateDatSanThuCongDto } from './dto/create-dat-san-thu-cong.dto';
 
 @Injectable()
 export class DatSanService {
@@ -19,6 +21,7 @@ export class DatSanService {
     @InjectRepository(LichSan)
     private readonly lichSanRepo: Repository<LichSan>,
     private readonly lichSanService: LichSanService,
+    private readonly sanBaiService: SanBaiService,
   ) {}
 
   // ───────────── Danh sách yêu cầu đặt sân (AC1) ─────────────
@@ -90,6 +93,49 @@ export class DatSanService {
     const datSan = this.datSanRepo.create({
       maLichSan,
       trangThai: 'Chờ duyệt',
+    });
+
+    const saved = await this.datSanRepo.save(datSan);
+    return this.findOne(saved.maDatSan);
+  }
+
+  // ───────────── Tạo lịch đặt sân thủ công (US-13) ─────────────
+
+  async createThuCong(dto: CreateDatSanThuCongDto): Promise<DatSan> {
+    const { maSan, ngayApDung, gioBatDau, gioKetThuc } = dto;
+
+    // Kiểm tra sân tồn tại và đang hoạt động
+    const sanBai = await this.sanBaiService.findOne(maSan);
+    if (sanBai.trangThai !== 'Hoạt động') {
+      throw new BadRequestException(`Sân đang ở trạng thái "${sanBai.trangThai}", không thể đặt`);
+    }
+
+    // Kiểm tra giờ bắt đầu < giờ kết thúc
+    if (gioBatDau >= gioKetThuc) {
+      throw new BadRequestException('Giờ bắt đầu phải nhỏ hơn giờ kết thúc');
+    }
+
+    // Tìm hoặc tạo lịch sân
+    let lichSan = await this.lichSanRepo.findOne({
+      where: { maSan, ngayApDung, gioBatDau, gioKetThuc },
+      relations: ['datSan'],
+    });
+
+    if (lichSan) {
+      // Nếu lịch sân đã tồn tại, kiểm tra chưa được đặt
+      if (lichSan.datSan) {
+        throw new BadRequestException('Khung giờ này đã được đặt');
+      }
+    } else {
+      // Tạo lịch sân mới
+      lichSan = this.lichSanRepo.create({ maSan, ngayApDung, gioBatDau, gioKetThuc });
+      lichSan = await this.lichSanRepo.save(lichSan);
+    }
+
+    // Tạo đặt sân với trạng thái "Đã duyệt" (admin đặt thủ công)
+    const datSan = this.datSanRepo.create({
+      maLichSan: lichSan.maLichSan,
+      trangThai: 'Đã duyệt',
     });
 
     const saved = await this.datSanRepo.save(datSan);
