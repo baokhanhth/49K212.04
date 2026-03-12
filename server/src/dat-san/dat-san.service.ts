@@ -1,13 +1,130 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { LichSanService } from '../lich-san/lich-san.service';
-import { SanBaiService } from '../san-bai/san-bai.service';
+import { DatSan } from '../lich-san/entities/dat-san.entity';
+import { LichSan } from '../lich-san/entities/lich-san.entity';
+import { QueryDatSanDto } from './dto/query-dat-san.dto';
 
 @Injectable()
 export class DatSanService {
   constructor(
+    @InjectRepository(DatSan)
+    private readonly datSanRepo: Repository<DatSan>,
+    @InjectRepository(LichSan)
+    private readonly lichSanRepo: Repository<LichSan>,
     private readonly lichSanService: LichSanService,
-    private readonly sanBaiService: SanBaiService,
   ) {}
+
+  // ───────────── Danh sách yêu cầu đặt sân (AC1) ─────────────
+
+  async findAll(query: QueryDatSanDto): Promise<DatSan[]> {
+    const qb = this.datSanRepo
+      .createQueryBuilder('ds')
+      .leftJoinAndSelect('ds.lichSan', 'ls')
+      .leftJoinAndSelect('ls.sanBai', 'sb')
+      .leftJoinAndSelect('sb.loaiSan', 'loaiSan');
+
+    if (query.trangThai) {
+      qb.andWhere('ds.trangThai = :trangThai', { trangThai: query.trangThai });
+    }
+    if (query.maSan) {
+      qb.andWhere('ls.maSan = :maSan', { maSan: query.maSan });
+    }
+    if (query.ngay) {
+      qb.andWhere('ls.ngayApDung = :ngay', { ngay: query.ngay });
+    }
+
+    qb.orderBy('ds.maDatSan', 'DESC');
+    return qb.getMany();
+  }
+
+  // ───────────── Chi tiết yêu cầu đặt sân ─────────────
+
+  async findOne(id: number): Promise<DatSan> {
+    const datSan = await this.datSanRepo.findOne({
+      where: { maDatSan: id },
+      relations: ['lichSan', 'lichSan.sanBai', 'lichSan.sanBai.loaiSan'],
+    });
+    if (!datSan) {
+      throw new NotFoundException(`Không tìm thấy yêu cầu đặt sân với mã ${id}`);
+    }
+    return datSan;
+  }
+
+  // ───────────── Tạo yêu cầu đặt sân ─────────────
+
+  async create(maLichSan: number): Promise<DatSan> {
+    // Kiểm tra lịch sân tồn tại
+    const lichSan = await this.lichSanRepo.findOne({
+      where: { maLichSan },
+      relations: ['sanBai', 'datSan'],
+    });
+    if (!lichSan) {
+      throw new NotFoundException(`Không tìm thấy lịch sân với mã ${maLichSan}`);
+    }
+
+    // Kiểm tra sân không đang bảo trì
+    if (lichSan.sanBai?.trangThai === 'Bảo trì') {
+      throw new BadRequestException('Sân đang trong trạng thái bảo trì, không thể đặt');
+    }
+
+    // Kiểm tra lịch chưa được đặt
+    if (lichSan.datSan) {
+      throw new BadRequestException('Lịch sân này đã được đặt');
+    }
+
+    // Kiểm tra ngày không phải quá khứ
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const ngayApDung = new Date(lichSan.ngayApDung);
+    if (ngayApDung < today) {
+      throw new BadRequestException('Không thể đặt sân cho ngày đã qua');
+    }
+
+    const datSan = this.datSanRepo.create({
+      maLichSan,
+      trangThai: 'Chờ duyệt',
+    });
+
+    const saved = await this.datSanRepo.save(datSan);
+    return this.findOne(saved.maDatSan);
+  }
+
+  // ───────────── Duyệt / Từ chối yêu cầu (AC2, AC3) ─────────────
+
+  async duyet(id: number, trangThai: string): Promise<DatSan> {
+    const datSan = await this.findOne(id);
+
+    if (datSan.trangThai !== 'Chờ duyệt') {
+      throw new BadRequestException(
+        `Yêu cầu này đã được xử lý (trạng thái hiện tại: ${datSan.trangThai})`,
+      );
+    }
+
+    datSan.trangThai = trangThai;
+    await this.datSanRepo.save(datSan);
+    return this.findOne(id);
+  }
+
+  // ───────────── Hủy yêu cầu đặt sân ─────────────
+
+  async remove(id: number): Promise<void> {
+    const datSan = await this.findOne(id);
+
+    if (datSan.trangThai === 'Đã duyệt') {
+      throw new BadRequestException('Không thể hủy yêu cầu đã được duyệt');
+    }
+
+    await this.datSanRepo.remove(datSan);
+  }
+
+  // ───────────── Ma trận lịch (US-08) ─────────────
 
   async getMatrix(dateStr: string, maSan?: number, maLoaiSan?: number) {
     try {
@@ -19,7 +136,6 @@ export class DatSanService {
         maSan: maSan,
       });
 
-      // 2. Lọc theo loại sân nếu có maLoaiSan
       let filteredLich = lichSans;
       if (maLoaiSan) {
         filteredLich = lichSans.filter(
@@ -27,39 +143,29 @@ export class DatSanService {
         );
       }
 
-      // Trường hợp không tìm thấy lịch nào sau khi lọc
       if (!filteredLich || filteredLich.length === 0) {
         throw new NotFoundException(`Không có lịch sân cho yêu cầu của bạn vào ngày ${dateStr}`);
       }
 
-      // 3. Map kết quả trả về Ma trận trạng thái
       return filteredLich.map((lich) => {
-        // 1. Ép kiểu Giờ Bắt Đầu (timeStartStr)
         const timeStartStr = typeof lich.gioBatDau === 'string'
           ? lich.gioBatDau
           : new Date(lich.gioBatDau).toLocaleTimeString('it-IT');
 
-        // 2. Ép kiểu Giờ Kết Thúc (timeEndStr) - ĐÂY LÀ CHỖ QUAN TRỌNG
         const timeEndStr = typeof lich.gioKetThuc === 'string'
           ? lich.gioKetThuc
           : new Date(lich.gioKetThuc).toLocaleTimeString('it-IT');
 
-        // 3. Lấy Hour/Min để so sánh "Hết giờ"
         const [hour, min] = timeStartStr.split(':');
         const slotStartTime = new Date(dateStr);
         slotStartTime.setHours(Number(hour), Number(min), 0, 0);
         let finalStatus = 'Trống';
 
-        // Ưu tiên 1: Sân đang bảo trì (Dữ liệu từ thực thể SanBai)
         if (lich.sanBai?.trangThai === 'Bảo trì') {
           finalStatus = 'Bảo trì';
-        }
-        // Ưu tiên 2: Khung giờ đã trôi qua so với hiện tại
-        else if (slotStartTime < now) {
+        } else if (slotStartTime < now) {
           finalStatus = 'Quá giờ';
-        }
-        // Ưu tiên 3: Slot đã được đặt (Dựa trên OneToOne relation datSan)
-        else if (lich.datSan) {
+        } else if (lich.datSan) {
           finalStatus = 'Đã đặt';
         }
 
@@ -74,13 +180,11 @@ export class DatSanService {
         };
       });
     } catch (error) {
-      // Nếu là lỗi NotFoundException đã quăng ở trên thì giữ nguyên
       if (error instanceof NotFoundException) {
         throw error;
       }
-      // Các lỗi crash code khác sẽ log ra terminal để Khanh dễ soi
       console.error('Lỗi logic US-08:', error);
-      throw new InternalServerErrorException(`Lỗi hệ thống khi xử lý ma trận: ${error.message}`);
+      throw new InternalServerErrorException('Lỗi hệ thống khi xử lý ma trận lịch');
     }
   }
 }
