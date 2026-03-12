@@ -4,7 +4,7 @@ import Footer from './components/layout/Footer';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import Xemdanhsachsan from "./pages/Xemdanhsachsan";
-
+import Lichsudatsan from "./pages/Lichsudatsan";
 const App: React.FC = () => {
   return (
     <Router>
@@ -15,6 +15,7 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="*" element={<NotFoundPage />} />
             <Route path="/xem-san" element={<Xemdanhsachsan />} />
+            <Route path="/lich-su-dat-san" element={<Lichsudatsan />} />
           </Routes>
         </main>
         <Footer />
