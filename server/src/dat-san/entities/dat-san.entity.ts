@@ -31,7 +31,13 @@ export class DatSan {
   ngayDat: Date;
 
   @ApiProperty({ description: 'Tổng tiền' })
-  @Column({ name: 'TongTien', type: 'decimal', precision: 18, scale: 2, nullable: true })
+  @Column({
+    name: 'TongTien',
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    nullable: true,
+  })
   tongTien: number;
 
   @OneToOne(() => LichSan, (lichSan) => lichSan.datSan)
