@@ -46,9 +46,24 @@ export class DatSanController {
 
   @Get('matrix')
   @ApiOperation({ summary: 'Lấy ma trận lịch trống cho sinh viên (US-08)' })
-  @ApiQuery({ name: 'ngay', description: 'Ngày cần xem (YYYY-MM-DD)', type: String, required: true })
-  @ApiQuery({ name: 'maSan', description: 'Lọc theo mã sân cụ thể', type: Number, required: false })
-  @ApiQuery({ name: 'maLoaiSan', description: 'Lọc theo loại sân', type: Number, required: false })
+  @ApiQuery({
+    name: 'ngay',
+    description: 'Ngày cần xem (YYYY-MM-DD)',
+    type: String,
+    required: true,
+  })
+  @ApiQuery({
+    name: 'maSan',
+    description: 'Lọc theo mã sân cụ thể',
+    type: Number,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'maLoaiSan',
+    description: 'Lọc theo loại sân',
+    type: Number,
+    required: false,
+  })
   async getMatrix(
     @Query('ngay') ngay: string,
     @Query('maSan') maSan?: number,
@@ -56,6 +71,23 @@ export class DatSanController {
   ): Promise<ApiResponse<any>> {
     const data = await this.datSanService.getMatrix(ngay, maSan, maLoaiSan);
     return successResponse(data, 'Lấy ma trận lịch trống thành công');
+  }
+
+  // ───────────── Lịch sử đặt sân (US-11) ─────────────
+
+  @Get('lich-su')
+  @ApiOperation({ summary: 'Xem lịch sử đặt sân của sinh viên (US-11)' })
+  @ApiQuery({
+    name: 'maNguoiDung',
+    description: 'Mã người dùng',
+    type: Number,
+    required: true,
+  })
+  async getLichSu(
+    @Query('maNguoiDung', ParseIntPipe) maNguoiDung: number,
+  ): Promise<ApiResponse<any>> {
+    const data = await this.datSanService.getLichSu(maNguoiDung);
+    return successResponse(data, 'Lấy lịch sử đặt sân thành công');
   }
 
   // ───────────── Chi tiết yêu cầu đặt sân ─────────────
@@ -87,10 +119,18 @@ export class DatSanController {
 
   @Post('thu-cong')
   @ApiOperation({ summary: 'Admin tạo lịch đặt sân thủ công (US-13)' })
-  @SwaggerResponse({ status: 201, description: 'Tạo đặt sân thủ công thành công' })
-  @SwaggerResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc khung giờ đã được đặt' })
+  @SwaggerResponse({
+    status: 201,
+    description: 'Tạo đặt sân thủ công thành công',
+  })
+  @SwaggerResponse({
+    status: 400,
+    description: 'Dữ liệu không hợp lệ hoặc khung giờ đã được đặt',
+  })
   @SwaggerResponse({ status: 404, description: 'Không tìm thấy sân' })
-  async createThuCong(@Body() dto: CreateDatSanThuCongDto): Promise<ApiResponse<DatSan>> {
+  async createThuCong(
+    @Body() dto: CreateDatSanThuCongDto,
+  ): Promise<ApiResponse<DatSan>> {
     const data = await this.datSanService.createThuCong(dto);
     return successResponse(data, 'Tạo lịch đặt sân thủ công thành công');
   }
@@ -100,7 +140,10 @@ export class DatSanController {
   @Patch(':id/duyet')
   @ApiOperation({ summary: 'Duyệt hoặc từ chối yêu cầu đặt sân (US-12)' })
   @ApiParam({ name: 'id', description: 'Mã đặt sân', type: Number })
-  @SwaggerResponse({ status: 200, description: 'Cập nhật trạng thái thành công' })
+  @SwaggerResponse({
+    status: 200,
+    description: 'Cập nhật trạng thái thành công',
+  })
   @SwaggerResponse({ status: 400, description: 'Yêu cầu đã được xử lý' })
   @SwaggerResponse({ status: 404, description: 'Không tìm thấy yêu cầu' })
   async duyet(
@@ -108,7 +151,10 @@ export class DatSanController {
     @Body() dto: DuyetDatSanDto,
   ): Promise<ApiResponse<DatSan>> {
     const data = await this.datSanService.duyet(id, dto.trangThai);
-    return successResponse(data, `Yêu cầu đã được ${dto.trangThai === 'Đã duyệt' ? 'duyệt' : 'từ chối'} thành công`);
+    return successResponse(
+      data,
+      `Yêu cầu đã được ${dto.trangThai === 'Đã duyệt' ? 'duyệt' : 'từ chối'} thành công`,
+    );
   }
 
   // ───────────── Hủy yêu cầu đặt sân ─────────────
@@ -117,7 +163,10 @@ export class DatSanController {
   @ApiOperation({ summary: 'Hủy yêu cầu đặt sân' })
   @ApiParam({ name: 'id', description: 'Mã đặt sân', type: Number })
   @SwaggerResponse({ status: 200, description: 'Hủy yêu cầu thành công' })
-  @SwaggerResponse({ status: 400, description: 'Không thể hủy yêu cầu đã duyệt' })
+  @SwaggerResponse({
+    status: 400,
+    description: 'Không thể hủy yêu cầu đã duyệt',
+  })
   @SwaggerResponse({ status: 404, description: 'Không tìm thấy yêu cầu' })
   async remove(
     @Param('id', ParseIntPipe) id: number,
@@ -125,5 +174,4 @@ export class DatSanController {
     await this.datSanService.remove(id);
     return successResponse(null, 'Hủy yêu cầu đặt sân thành công');
   }
-
 }
