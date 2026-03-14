@@ -6,7 +6,6 @@ const Header: React.FC = () => {
   const menuItems = [
     { label: 'Dashboard', path: '/' },
     { label: 'Duyệt đặt sân', path: '/duyet-dat-san' },
-    { label: 'Cấu hình sân', path: '/cau-hinh-san-bai' },
     { label: 'Quản lý sân', path: '/quan-ly-san' },
     { label: 'Tài khoản', path: '/tai-khoan' },
   ];

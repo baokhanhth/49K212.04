@@ -3,6 +3,12 @@ import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDatSanThuCongDto {
+  @ApiProperty({ description: 'Mã người dùng đặt sân', example: 1 })
+  @IsNotEmpty({ message: 'Mã người dùng không được để trống' })
+  @Type(() => Number)
+  @IsInt({ message: 'Mã người dùng phải là số nguyên' })
+  userId: number;
+
   @ApiProperty({ description: 'Mã sân cần đặt', example: 1 })
   @IsNotEmpty({ message: 'Mã sân không được để trống' })
   @Type(() => Number)

@@ -79,7 +79,7 @@ export class DatSanController {
   @SwaggerResponse({ status: 201, description: 'Tạo yêu cầu thành công' })
   @SwaggerResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
   async create(@Body() dto: CreateDatSanDto): Promise<ApiResponse<DatSan>> {
-    const data = await this.datSanService.create(dto.maLichSan);
+    const data = await this.datSanService.create(dto.userId, dto.maLichSan);
     return successResponse(data, 'Tạo yêu cầu đặt sân thành công');
   }
 
@@ -107,7 +107,7 @@ export class DatSanController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DuyetDatSanDto,
   ): Promise<ApiResponse<DatSan>> {
-    const data = await this.datSanService.duyet(id, dto.trangThai);
+    const data = await this.datSanService.duyet(id, dto.trangThai, dto.nguoiDuyet);
     return successResponse(data, `Yêu cầu đã được ${dto.trangThai === 'Đã duyệt' ? 'duyệt' : 'từ chối'} thành công`);
   }
 
