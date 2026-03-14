@@ -34,4 +34,13 @@ async getMatrix(
   const data = await this.datSanService.getMatrix(ngay, maSan, maLoaiSan);
   return successResponse(data, 'Lấy ma trận lịch trống thành công');
 }
+@Get('lich-su')
+@ApiOperation({ summary: 'Xem lịch sử đặt sân của sinh viên (US-11)' })
+@ApiQuery({ name: 'maNguoiDung', description: 'Mã người dùng', type: Number, required: true })
+async getLichSu(
+  @Query('maNguoiDung', ParseIntPipe) maNguoiDung: number,
+): Promise<ApiResponse<any>> {
+  const data = await this.datSanService.getLichSu(maNguoiDung);
+  return successResponse(data, 'Lấy lịch sử đặt sân thành công');
 }
+} 
