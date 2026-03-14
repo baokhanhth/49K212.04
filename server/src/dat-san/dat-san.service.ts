@@ -234,7 +234,7 @@ export class DatSanService {
     try {
       const lichSu = await this.lichSanService.findAll({});
       const result = lichSu
-        .filter((lich) => lich.datSan?.maNguoiDung === maNguoiDung)
+        .filter((lich) => lich.datSan?.userId === maNguoiDung)
         .map((lich) => {
           const timeStartStr =
             typeof lich.gioBatDau === 'string'
