@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SanBai } from '../../san-bai/entities/san-bai.entity';
-import { DatSan } from './dat-san.entity';
+import { DatSan } from '../../dat-san/entities/dat-san.entity';
 
 @Entity('LichSan')
 @Unique('UQ_LichSan', ['maSan', 'ngayApDung', 'gioBatDau', 'gioKetThuc'])
