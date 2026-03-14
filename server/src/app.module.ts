@@ -5,7 +5,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
-import { CauHinhModule } from './cau-hinh/cau-hinh.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
@@ -50,7 +49,6 @@ import { DatSanModule } from './dat-san/dat-san.module';
     // Feature modules
     SanBaiModule,
     LichSanModule,
-    CauHinhModule,
     DatSanModule,
   ],
   controllers: [AppController],

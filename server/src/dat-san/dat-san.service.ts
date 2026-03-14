@@ -62,7 +62,7 @@ export class DatSanService {
 
   // ───────────── Tạo yêu cầu đặt sân ─────────────
 
-  async create(maLichSan: number): Promise<DatSan> {
+  async create(userId: number, maLichSan: number): Promise<DatSan> {
     // Kiểm tra lịch sân tồn tại
     const lichSan = await this.lichSanRepo.findOne({
       where: { maLichSan },
@@ -91,7 +91,9 @@ export class DatSanService {
     }
 
     const datSan = this.datSanRepo.create({
+      userId,
       maLichSan,
+      tongTien: lichSan.sanBai?.giaThue ?? null,
       trangThai: 'Chờ duyệt',
     });
 
@@ -134,7 +136,9 @@ export class DatSanService {
 
     // Tạo đặt sân với trạng thái "Đã duyệt" (admin đặt thủ công)
     const datSan = this.datSanRepo.create({
+      userId: dto.userId,
       maLichSan: lichSan.maLichSan,
+      tongTien: sanBai.giaThue,
       trangThai: 'Đã duyệt',
     });
 
@@ -144,7 +148,7 @@ export class DatSanService {
 
   // ───────────── Duyệt / Từ chối yêu cầu (AC2, AC3) ─────────────
 
-  async duyet(id: number, trangThai: string): Promise<DatSan> {
+  async duyet(id: number, trangThai: string, nguoiDuyet: number): Promise<DatSan> {
     const datSan = await this.findOne(id);
 
     if (datSan.trangThai !== 'Chờ duyệt') {
@@ -154,6 +158,7 @@ export class DatSanService {
     }
 
     datSan.trangThai = trangThai;
+    datSan.nguoiDuyet = nguoiDuyet;
     await this.datSanRepo.save(datSan);
     return this.findOne(id);
   }
