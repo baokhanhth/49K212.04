@@ -258,12 +258,6 @@ export class DatSanService {
           };
         });
 
-      if (result.length === 0) {
-        throw new NotFoundException(
-          `Không tìm thấy lịch sử đặt sân cho người dùng ${maNguoiDung}`,
-        );
-      }
-
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
