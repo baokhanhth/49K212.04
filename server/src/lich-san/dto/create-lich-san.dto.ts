@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsInt, IsDateString, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateLichSanDto {
@@ -12,8 +12,17 @@ export class CreateLichSanDto {
   @IsDateString({}, { message: 'Ngày áp dụng phải có định dạng YYYY-MM-DD' })
   ngayApDung: string;
 
-  @ApiProperty({ description: 'Mã khung giờ', example: 1 })
-  @IsNotEmpty({ message: 'Mã khung giờ không được để trống' })
-  @IsInt({ message: 'Mã khung giờ phải là số nguyên' })
-  maKhungGio: number;
+  @ApiProperty({ description: 'Giờ bắt đầu', example: '06:00:00' })
+  @IsNotEmpty({ message: 'Giờ bắt đầu không được để trống' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, {
+    message: 'Giờ bắt đầu phải đúng định dạng HH:mm hoặc HH:mm:ss',
+  })
+  gioBatDau: string;
+
+  @ApiProperty({ description: 'Giờ kết thúc', example: '08:00:00' })
+  @IsNotEmpty({ message: 'Giờ kết thúc không được để trống' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, {
+    message: 'Giờ kết thúc phải đúng định dạng HH:mm hoặc HH:mm:ss',
+  })
+  gioKetThuc: string;
 }

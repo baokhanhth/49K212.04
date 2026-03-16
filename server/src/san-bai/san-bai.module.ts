@@ -7,8 +7,8 @@ import { SanBaiController } from './san-bai.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([SanBai, LoaiSan])],
-  exports: [TypeOrmModule],
-  providers: [SanBaiService],
   controllers: [SanBaiController],
+  providers: [SanBaiService],
+  exports: [TypeOrmModule, SanBaiService],
 })
 export class SanBaiModule {}
