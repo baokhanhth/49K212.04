@@ -1,141 +1,125 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-
-interface BookingRequest {
-  id: number;
-  studentName: string;
-  avatar: string;
-  courtName: string;
-  date: string;
-  time: string;
-  status: 'pending' | 'approved' | 'rejected';
-}
-
-const mockRequests: BookingRequest[] = [
-  {
-    id: 1,
-    studentName: 'Quang Minh',
-    avatar: 'https://i.pravatar.cc/100?img=12',
-    courtName: 'Sân cầu lông A',
-    date: '04/04/2026',
-    time: '07:00 - 08:00',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    studentName: 'Thảo Vy',
-    avatar: 'https://i.pravatar.cc/100?img=32',
-    courtName: 'Sân Bóng Đá B',
-    date: '04/04/2026',
-    time: '09:00 - 10:00',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    studentName: 'Đại Nghĩa',
-    avatar: 'https://i.pravatar.cc/100?img=15',
-    courtName: 'Sân Tennis A',
-    date: '04/04/2026',
-    time: '15:00 - 16:00',
-    status: 'pending',
-  },
-];
+import { datSanApi, sanBaiApi } from '../../services/api';
+import type { DatSan, SanBai } from '../../types';
 
 const statusOptions = [
   { label: 'Tất cả trạng thái', value: 'all' },
-  { label: 'Chờ duyệt', value: 'pending' },
-  { label: 'Đã duyệt', value: 'approved' },
-  { label: 'Từ chối', value: 'rejected' },
+  { label: 'Chờ duyệt', value: 'Chờ duyệt' },
+  { label: 'Đã duyệt', value: 'Đã duyệt' },
+  { label: 'Bị từ chối', value: 'Bị từ chối' },
 ];
 
-const eventOptions = [
-  'Giải bóng đá khoa CNTT',
-  'Giải cầu lông sinh viên',
-  'Hội thao truyền thống',
-];
-
-const creatorOptions = ['Quang Minh', 'Thảo Vy', 'Đại Nghĩa'];
-const courtOptions = ['Sân bóng đá 1', 'Sân bóng đá 2', 'Sân cầu lông A', 'Sân Tennis A'];
 const timeOptions = [
-  '06:00',
-  '07:00',
-  '08:00',
-  '09:00',
-  '10:00',
-  '11:00',
-  '12:00',
-  '13:00',
-  '14:00',
-  '15:00',
-  '16:00',
-  '17:00',
-  '18:00',
-  '19:00',
-  '20:00',
+  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
+  '18:00', '19:00', '20:00',
 ];
 
 const DuyetDatSan = () => {
-  const [requests, setRequests] = useState<BookingRequest[]>(mockRequests);
+  const [requests, setRequests] = useState<DatSan[]>([]);
+  const [sanList, setSanList] = useState<SanBai[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showModal, setShowModal] = useState<boolean>(false);
 
-  const [eventName, setEventName] = useState<string>('Giải bóng đá khoa CNTT');
-  const [creator, setCreator] = useState<string>('Quang Minh');
-  const [court, setCourt] = useState<string>('Sân bóng đá 1');
-  const [date, setDate] = useState<string>('01/03/2026');
+  // Manual booking form state
+  const [manualUserId, setManualUserId] = useState<number>(1);
+  const [manualMaSan, setManualMaSan] = useState<number>(0);
+  const [manualDate, setManualDate] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('07:00');
   const [endTime, setEndTime] = useState<string>('08:00');
 
+  useEffect(() => {
+    Promise.all([datSanApi.getAll(), sanBaiApi.getAll()])
+      .then(([datSanData, sanData]) => {
+        setRequests(Array.isArray(datSanData) ? datSanData : []);
+        const sArr = Array.isArray(sanData) ? sanData : [];
+        setSanList(sArr);
+        if (sArr.length > 0) setManualMaSan(sArr[0].maSan);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   const filteredRequests = useMemo(() => {
     if (selectedStatus === 'all') return requests;
-    return requests.filter((item) => item.status === selectedStatus);
+    return requests.filter((item) => item.trangThai === selectedStatus);
   }, [requests, selectedStatus]);
 
-  const handleApprove = (id: number) => {
-    setRequests((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: 'approved' } : item
-      )
-    );
+  const handleApprove = async (id: number) => {
+    try {
+      const updated = await datSanApi.duyet(id, {
+        trangThai: 'Đã duyệt',
+        nguoiDuyet: 1, // TODO: replace with actual admin user ID
+      });
+      setRequests((prev) =>
+        prev.map((item) => (item.maDatSan === id ? { ...item, ...updated } : item))
+      );
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Duyệt thất bại');
+    }
   };
 
-  const handleReject = (id: number) => {
-    setRequests((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: 'rejected' } : item
-      )
-    );
+  const handleReject = async (id: number) => {
+    try {
+      const updated = await datSanApi.duyet(id, {
+        trangThai: 'Bị từ chối',
+        nguoiDuyet: 1,
+      });
+      setRequests((prev) =>
+        prev.map((item) => (item.maDatSan === id ? { ...item, ...updated } : item))
+      );
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Từ chối thất bại');
+    }
   };
 
-  const handleCreateManualBooking = () => {
-    alert(
-      `Đã tạo lịch thủ công\nSự kiện: ${eventName}\nNgười tạo lịch: ${creator}\nSân: ${court}\nNgày: ${date}\nGiờ: ${startTime} - ${endTime}`
-    );
-    setShowModal(false);
+  const handleCreateManualBooking = async () => {
+    try {
+      const { default: api } = await import('../../services/api');
+      await api.post('/dat-san/thu-cong', {
+        userId: manualUserId,
+        maSan: manualMaSan,
+        ngayApDung: manualDate,
+        gioBatDau: startTime + ':00',
+        gioKetThuc: endTime + ':00',
+      });
+      alert('Tạo lịch đặt sân thủ công thành công');
+      setShowModal(false);
+      const data = await datSanApi.getAll();
+      setRequests(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Tạo lịch thủ công thất bại');
+    }
   };
 
-  const getStatusBadge = (status: BookingRequest['status']) => {
-    if (status === 'approved') {
+  const getStatusBadge = (status: string) => {
+    if (status === 'Đã duyệt') {
       return (
         <span className="rounded-full bg-[#D9F1EA] px-3 py-1 text-sm font-medium text-[#2D8C72]">
           Đã duyệt
         </span>
       );
     }
-
-    if (status === 'rejected') {
+    if (status === 'Bị từ chối') {
       return (
         <span className="rounded-full bg-[#F8DEDE] px-3 py-1 text-sm font-medium text-[#D36B6B]">
           Từ chối
         </span>
       );
     }
-
     return (
       <span className="rounded-full bg-[#F7E8B8] px-3 py-1 text-sm font-medium text-[#C89B1D]">
         Chờ duyệt
       </span>
     );
+  };
+
+  const formatDate = (d: string) => {
+    if (!d) return '';
+    const date = new Date(d);
+    return date.toLocaleDateString('vi-VN');
   };
 
   return (
@@ -168,11 +152,14 @@ const DuyetDatSan = () => {
         </div>
 
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+          {loading ? (
+            <div className="py-12 text-center text-base text-slate-500">Đang tải...</div>
+          ) : (
           <table className="w-full">
             <thead className="bg-[#F8FAFC]">
               <tr>
                 <th className="px-6 py-4 text-left text-base font-medium text-slate-500">
-                  Sinh viên
+                  Mã đặt sân
                 </th>
                 <th className="px-6 py-4 text-left text-base font-medium text-slate-500">
                   Sân
@@ -184,6 +171,9 @@ const DuyetDatSan = () => {
                   Thời gian
                 </th>
                 <th className="px-6 py-4 text-left text-base font-medium text-slate-500">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-4 text-left text-base font-medium text-slate-500">
                   Thao tác
                 </th>
               </tr>
@@ -191,40 +181,35 @@ const DuyetDatSan = () => {
 
             <tbody>
               {filteredRequests.map((item) => (
-                <tr key={item.id} className="border-t border-slate-100">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={item.avatar}
-                        alt={item.studentName}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="text-base font-semibold text-slate-800">
-                          {item.studentName}
-                        </p>
-                        <div className="mt-1">{getStatusBadge(item.status)}</div>
-                      </div>
-                    </div>
+                <tr key={item.maDatSan} className="border-t border-slate-100">
+                  <td className="px-6 py-4 text-base text-slate-700">
+                    #{item.maDatSan}
                   </td>
 
                   <td className="px-6 py-4 text-base text-slate-700">
-                    {item.courtName}
+                    {item.lichSan?.sanBai?.tenSan || `Lịch #${item.maLichSan}`}
                   </td>
 
                   <td className="px-6 py-4 text-base text-slate-700">
-                    {item.date}
+                    {item.lichSan?.ngayApDung ? formatDate(item.lichSan.ngayApDung) : formatDate(item.ngayDat)}
                   </td>
 
                   <td className="px-6 py-4 text-base text-slate-700">
-                    {item.time}
+                    {item.lichSan
+                      ? `${item.lichSan.gioBatDau?.substring(0, 5)} - ${item.lichSan.gioKetThuc?.substring(0, 5)}`
+                      : '-'}
                   </td>
 
                   <td className="px-6 py-4">
+                    {getStatusBadge(item.trangThai)}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {item.trangThai === 'Chờ duyệt' ? (
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
-                        onClick={() => handleApprove(item.id)}
+                        onClick={() => handleApprove(item.maDatSan)}
                         className="rounded-xl bg-[#4169E1] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
                       >
                         Duyệt
@@ -232,12 +217,15 @@ const DuyetDatSan = () => {
 
                       <button
                         type="button"
-                        onClick={() => handleReject(item.id)}
+                        onClick={() => handleReject(item.maDatSan)}
                         className="rounded-xl bg-[#FF2D2D] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
                       >
                         Từ chối
                       </button>
                     </div>
+                    ) : (
+                      <span className="text-sm text-slate-400">Đã xử lý</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -245,7 +233,7 @@ const DuyetDatSan = () => {
               {filteredRequests.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-6 py-10 text-center text-base text-slate-500"
                   >
                     Không có yêu cầu đặt sân phù hợp.
@@ -254,6 +242,7 @@ const DuyetDatSan = () => {
               )}
             </tbody>
           </table>
+          )}
         </div>
       </div>
 
@@ -281,41 +270,31 @@ const DuyetDatSan = () => {
             <div className="rounded-2xl bg-white">
               <div className="mb-4">
                 <label className="mb-2 block text-sm font-medium text-slate-600">
-                  Sự kiện
+                  User ID
                 </label>
                 <input
-                  type="text"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  placeholder="Nhập tên sự kiện..."
+                  type="number"
+                  value={manualUserId}
+                  onChange={(e) => setManualUserId(Number(e.target.value))}
                   className="h-12 w-full rounded-xl border border-slate-200 px-4 text-base text-slate-700 outline-none"
                 />
               </div>
 
-              <div className="mb-4 grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-600">
-                    Người tạo lịch
-                  </label>
-                  <p className="h-12 flex items-center rounded-xl border border-slate-200 px-4 text-base font-semibold text-slate-700">
-                    {creator}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-600">
-                    Sân
-                  </label>
-                  <select
-                    value={court}
-                    onChange={(e) => setCourt(e.target.value)}
-                    className="h-12 w-full rounded-xl border border-slate-200 px-4 text-base text-slate-700 outline-none"
-                  >
-                    {courtOptions.map((item) => (
-                      <option key={item}>{item}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-slate-600">
+                  Sân
+                </label>
+                <select
+                  value={manualMaSan}
+                  onChange={(e) => setManualMaSan(Number(e.target.value))}
+                  className="h-12 w-full rounded-xl border border-slate-200 px-4 text-base text-slate-700 outline-none"
+                >
+                  {sanList.map((s) => (
+                    <option key={s.maSan} value={s.maSan}>
+                      {s.tenSan}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="mb-6 grid grid-cols-[1.3fr_1fr_1fr] gap-4">
@@ -323,16 +302,12 @@ const DuyetDatSan = () => {
                   <label className="mb-2 block text-sm font-medium text-slate-600">
                     Ngày
                   </label>
-                  <div className="relative">
-                    <input
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-200 px-4 pr-10 text-base text-slate-700 outline-none"
-                    />
-                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-          
-                    </span>
-                  </div>
+                  <input
+                    type="date"
+                    value={manualDate}
+                    onChange={(e) => setManualDate(e.target.value)}
+                    className="h-12 w-full rounded-xl border border-slate-200 px-4 text-base text-slate-700 outline-none"
+                  />
                 </div>
 
                 <div>

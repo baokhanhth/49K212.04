@@ -1,76 +1,39 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-
-interface Court {
-  id: number;
-  tenSan: string;
-  loaiSan: string;
-  giaThue: number;
-  trangThai: boolean;
-  viTri?: string;
-  hinhAnh?: string;
-}
-
-const mockCourts: Court[] = [
-  {
-    id: 1,
-    tenSan: 'Sân bóng chuyền A',
-    loaiSan: 'Bóng chuyền',
-    giaThue: 20000,
-    trangThai: true,
-    viTri: 'Khu A',
-    hinhAnh:
-      'https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 2,
-    tenSan: 'Sân bóng đá B',
-    loaiSan: 'Bóng đá',
-    giaThue: 20000,
-    trangThai: true,
-    viTri: 'Khu B',
-    hinhAnh:
-      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 3,
-    tenSan: 'Sân Tennis B',
-    loaiSan: 'Tennis',
-    giaThue: 15000,
-    trangThai: false,
-    viTri: 'Khu C',
-    hinhAnh:
-      'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 4,
-    tenSan: 'Sân Bóng Rổ C',
-    loaiSan: 'Bóng rổ',
-    giaThue: 20000,
-    trangThai: true,
-    viTri: 'Khu D',
-    hinhAnh:
-      'https://images.unsplash.com/photo-1519861531473-9200262188bf?auto=format&fit=crop&w=120&q=80',
-  },
-];
+import { sanBaiApi } from '../../services/api';
+import type { SanBai, LoaiSan } from '../../types';
 
 const QuanLySan: React.FC = () => {
-  const [courts, setCourts] = useState<Court[]>(mockCourts);
+  const [courts, setCourts] = useState<SanBai[]>([]);
+  const [loaiSanList, setLoaiSanList] = useState<LoaiSan[]>([]);
   const [keyword, setKeyword] = useState<string>('');
   const [selectedLoaiSan, setSelectedLoaiSan] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price);
   };
 
+  // Load data
+  useEffect(() => {
+    Promise.all([sanBaiApi.getAll(), sanBaiApi.getLoaiSan()])
+      .then(([sanList, loaiList]) => {
+        setCourts(Array.isArray(sanList) ? sanList : []);
+        setLoaiSanList(Array.isArray(loaiList) ? loaiList : []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   const loaiSanOptions = useMemo(() => {
-    return ['all', ...new Set(courts.map((court) => court.loaiSan))];
-  }, [courts]);
+    return ['all', ...loaiSanList.map((l) => l.tenLoaiSan)];
+  }, [loaiSanList]);
 
   const filteredCourts = useMemo(() => {
     return courts.filter((court) => {
+      const loaiTen = court.loaiSan?.tenLoaiSan || '';
       const matchLoaiSan =
-        selectedLoaiSan === 'all' || court.loaiSan === selectedLoaiSan;
+        selectedLoaiSan === 'all' || loaiTen === selectedLoaiSan;
 
       const matchKeyword = court.tenSan
         .toLowerCase()
@@ -80,27 +43,40 @@ const QuanLySan: React.FC = () => {
     });
   }, [courts, keyword, selectedLoaiSan]);
 
-  const handleToggleStatus = (id: number) => {
-    setCourts((prev) =>
-      prev.map((court) =>
-        court.id === id ? { ...court, trangThai: !court.trangThai } : court
-      )
-    );
+  const handleToggleStatus = async (court: SanBai) => {
+    const newStatus = court.trangThai === 'Hoạt động' ? 'Bảo trì' : 'Hoạt động';
+    try {
+      const updated = await sanBaiApi.updateTrangThai(court.maSan, newStatus);
+      setCourts((prev) =>
+        prev.map((c) => (c.maSan === court.maSan ? { ...c, trangThai: updated?.trangThai || newStatus } : c))
+      );
+    } catch {
+      alert('Cập nhật trạng thái thất bại');
+    }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const confirmed = window.confirm('Bạn có chắc chắn muốn xóa sân này không?');
     if (!confirmed) return;
-
-    setCourts((prev) => prev.filter((court) => court.id !== id));
+    try {
+      await sanBaiApi.delete(id);
+      setCourts((prev) => prev.filter((court) => court.maSan !== id));
+    } catch {
+      alert('Xóa sân thất bại');
+    }
   };
 
-  const handleEdit = (court: Court) => {
+  const handleEdit = (court: SanBai) => {
     alert(`Mở form chỉnh sửa cho: ${court.tenSan}`);
   };
 
   const handleAddCourt = () => {
     alert('Mở form thêm sân thể thao');
+  };
+
+  const getImageUrl = (court: SanBai) => {
+    if (court.hinhAnh) return `/api/uploads/san-bai/${court.hinhAnh}`;
+    return 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=120&q=80';
   };
 
   return (
@@ -137,6 +113,9 @@ const QuanLySan: React.FC = () => {
             </button>
           </div>
 
+          {loading ? (
+            <div className="py-12 text-center text-lg text-slate-500">Đang tải...</div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
@@ -158,11 +137,11 @@ const QuanLySan: React.FC = () => {
 
               <tbody>
                 {filteredCourts.map((court) => (
-                  <tr key={court.id} className="border-t border-slate-100">
+                  <tr key={court.maSan} className="border-t border-slate-100">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-4">
                         <img
-                          src={court.hinhAnh}
+                          src={getImageUrl(court)}
                           alt={court.tenSan}
                           className="h-12 w-12 rounded-full object-cover"
                         />
@@ -180,22 +159,22 @@ const QuanLySan: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <span
                           className={`text-lg font-medium ${
-                            court.trangThai ? 'text-emerald-600' : 'text-amber-500'
+                            court.trangThai === 'Hoạt động' ? 'text-emerald-600' : 'text-amber-500'
                           }`}
                         >
-                          {court.trangThai ? 'Trống' : 'Bảo trì'}
+                          {court.trangThai}
                         </span>
 
                         <button
                           type="button"
-                          onClick={() => handleToggleStatus(court.id)}
+                          onClick={() => handleToggleStatus(court)}
                           className={`relative h-8 w-16 rounded-full transition ${
-                            court.trangThai ? 'bg-emerald-500' : 'bg-amber-400'
+                            court.trangThai === 'Hoạt động' ? 'bg-emerald-500' : 'bg-amber-400'
                           }`}
                         >
                           <span
                             className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition ${
-                              court.trangThai ? 'left-9' : 'left-1'
+                              court.trangThai === 'Hoạt động' ? 'left-9' : 'left-1'
                             }`}
                           />
                         </button>
@@ -211,7 +190,7 @@ const QuanLySan: React.FC = () => {
                           Sửa
                         </button>
                         <button
-                          onClick={() => handleDelete(court.id)}
+                          onClick={() => handleDelete(court.maSan)}
                           className="rounded-xl bg-rose-500 px-4 py-2 text-base font-semibold text-white shadow-sm transition hover:opacity-90"
                         >
                           Xóa
@@ -234,6 +213,7 @@ const QuanLySan: React.FC = () => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </div>
     </AdminLayout>

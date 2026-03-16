@@ -1,79 +1,56 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import StudentLayout from "../../components/layout/StudentLayout";
+import { datSanApi } from "../../services/api";
 
-
-interface Booking {
-  san: string;
-  sub: string;
-  ngay: string;
-  gio: string;
-  trangthai: string;
-  color: string;
+interface LichSuItem {
+  maDatSan: number;
+  tenSan: string;
+  loaiSan: string;
+  ngayDat: string;
+  ngayApDung: string;
+  khungGio: string;
+  trangThai: string;
+  giaThue: number;
 }
 
-
-const bookings: Booking[] = [
-  {
-    san: "Sân Bóng Đá A",
-    sub: "Sân Bóng Đá A",
-    ngay: "01/04/2026",
-    gio: "07:00 - 08:00",
-    trangthai: "Đã duyệt",
-    color: "bg-emerald-500",
-  },
-  {
-    san: "Sân Tennis A",
-    sub: "Sân Tennis A",
-    ngay: "30/03/2026",
-    gio: "15:00 - 16:00",
-    trangthai: "Không check-in",
-    color: "bg-red-500",
-  },
-  {
-    san: "Sân Cầu Lông C",
-    sub: "Sân Cầu Lông C",
-    ngay: "25/03/2026",
-    gio: "18:00 - 19:00",
-    trangthai: "Chờ duyệt",
-    color: "bg-blue-500",
-  },
-  {
-    san: "Sân Bóng Đá A",
-    sub: "Sân Bóng Đá A",
-    ngay: "15/03/2026",
-    gio: "17:00 - 18:00",
-    trangthai: "Đã duyệt",
-    color: "bg-emerald-500",
-  },
-  {
-    san: "Sân Bóng Rổ B",
-    sub: "Sân Bóng Rổ B",
-    ngay: "12/03/2026",
-    gio: "09:00 - 10:00",
-    trangthai: "Đã hủy",
-    color: "bg-gray-400",
-  },
-];
-
+const statusColor = (s: string) => {
+  if (s === "Đã duyệt") return "bg-emerald-500";
+  if (s === "Bị từ chối") return "bg-red-500";
+  if (s === "Chờ duyệt") return "bg-blue-500";
+  return "bg-gray-400";
+};
 
 const LichSuDatSan = () => {
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("Tất cả");
-
+  const [bookings, setBookings] = useState<LichSuItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const statusOptions = [
     "Tất cả",
     "Đã duyệt",
-    "Không check-in",
     "Chờ duyệt",
-    "Đã hủy",
+    "Bị từ chối",
   ];
 
+  // TODO: replace userId=1 with actual logged-in user
+  useEffect(() => {
+    datSanApi
+      .getLichSu(1)
+      .then((data: any) => setBookings(Array.isArray(data) ? data : []))
+      .catch(() => setBookings([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredBookings = useMemo(() => {
     if (selectedStatus === "Tất cả") return bookings;
-    return bookings.filter((b) => b.trangthai === selectedStatus);
-  }, [selectedStatus]);
+    return bookings.filter((b) => b.trangThai === selectedStatus);
+  }, [selectedStatus, bookings]);
+
+  const formatDate = (d: string) => {
+    if (!d) return "";
+    return new Date(d).toLocaleDateString("vi-VN");
+  };
 
 
   return (
@@ -127,6 +104,9 @@ const LichSuDatSan = () => {
 
 
           {/* TABLE */}
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">Đang tải...</div>
+          ) : (
           <table className="w-full">
             <thead className="text-gray-500 border-b">
               <tr>
@@ -137,30 +117,26 @@ const LichSuDatSan = () => {
               </tr>
             </thead>
 
-
             <tbody>
-              {filteredBookings.map((b, i) => (
-                <tr key={i} className="border-b">
+              {filteredBookings.map((b) => (
+                <tr key={b.maDatSan} className="border-b">
                   <td className="py-4">
-                    <div className="font-semibold">{b.san}</div>
-                    <div className="text-sm text-gray-400">{b.sub}</div>
+                    <div className="font-semibold">{b.tenSan}</div>
+                    <div className="text-sm text-gray-400">{b.loaiSan}</div>
                   </td>
 
-
-                  <td>{b.ngay}</td>
-                  <td>{b.gio}</td>
-
+                  <td>{formatDate(b.ngayApDung)}</td>
+                  <td>{b.khungGio}</td>
 
                   <td>
                     <span
-                      className={`${b.color} text-white px-4 py-1 rounded-full text-sm`}
+                      className={`${statusColor(b.trangThai)} text-white px-4 py-1 rounded-full text-sm`}
                     >
-                      {b.trangthai}
+                      {b.trangThai}
                     </span>
                   </td>
                 </tr>
               ))}
-
 
               {filteredBookings.length === 0 && (
                 <tr>
@@ -174,6 +150,7 @@ const LichSuDatSan = () => {
               )}
             </tbody>
           </table>
+          )}
 
 
           {/* PAGINATION */}
