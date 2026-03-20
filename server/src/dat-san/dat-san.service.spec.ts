@@ -7,7 +7,7 @@ import { DatSan } from './entities/dat-san.entity';
 import { LichSan } from '../lich-san/entities/lich-san.entity';
 import { NotFoundException } from '@nestjs/common';
 
-describe('DatSanService (US-08)', () => {
+describe("DatSanService (US-08)", () => {
   let service: DatSanService;
   let lichSanService: LichSanService;
 
@@ -49,13 +49,13 @@ describe('DatSanService (US-08)', () => {
 
     service = module.get<DatSanService>(DatSanService);
     lichSanService = module.get<LichSanService>(LichSanService);
-    
+
     // Clear mock sau mỗi lần test để dữ liệu không bị chồng chéo
     jest.clearAllMocks();
   });
 
   // Test 1: Khởi tạo
-  it('Service phải được khởi tạo thành công', () => {
+  it("Service phải được khởi tạo thành công", () => {
     expect(service).toBeDefined();
   });
 
@@ -69,15 +69,15 @@ describe('DatSanService (US-08)', () => {
     const mockData = [
       {
         maLichSan: 1,
-        gioBatDau: '17:00:00',
-        gioKetThuc: '18:00:00',
-        sanBai: { 
-          tenSan: 'Sân 5A', 
-          giaThue: 200000, 
-          trangThai: 'Hoạt động',
-          loaiSan: { tenLoaiSan: 'Sân bóng đá' } 
+        gioBatDau: "17:00:00",
+        gioKetThuc: "18:00:00",
+        sanBai: {
+          tenSan: "Sân 5A",
+          giaThue: 200000,
+          trangThai: "Hoạt động",
+          loaiSan: { tenLoaiSan: "Sân bóng đá" },
         },
-        datSan: null, 
+        datSan: null,
       },
     ];
 
@@ -86,9 +86,9 @@ describe('DatSanService (US-08)', () => {
     const result = await service.getMatrix(futureDateStr);
 
     expect(result).toBeDefined();
-    expect(result[0].trangThai).toBe('Trống');
+    expect(result[0].trangThai).toBe("Trống");
     expect(result[0].canBook).toBe(true);
-    expect(result[0].tenSan).toBe('Sân 5A');
+    expect(result[0].tenSan).toBe("Sân 5A");
   });
 
   // Test 3: Trạng thái "Đã đặt"
@@ -100,9 +100,9 @@ describe('DatSanService (US-08)', () => {
     const mockData = [
       {
         maLichSan: 2,
-        gioBatDau: '19:00:00',
-        gioKetThuc: '20:00:00',
-        sanBai: { tenSan: 'Sân 5A', giaThue: 200000, trangThai: 'Hoạt động' },
+        gioBatDau: "19:00:00",
+        gioKetThuc: "20:00:00",
+        sanBai: { tenSan: "Sân 5A", giaThue: 200000, trangThai: "Hoạt động" },
         datSan: { maDatSan: 123 },
       },
     ];
@@ -115,19 +115,27 @@ describe('DatSanService (US-08)', () => {
   });
 
   // Test 4: Lọc theo loại sân (maLoaiSan)
-  it('Nên lọc chính xác danh sách theo mã loại sân', async () => {
+  it("Nên lọc chính xác danh sách theo mã loại sân", async () => {
     const mockData = [
       {
         maLichSan: 1,
-        sanBai: { maLoaiSan: 1, tenSan: 'Sân 5A', loaiSan: { tenLoaiSan: 'Sân bóng đá' } },
-        gioBatDau: '17:00:00',
-        gioKetThuc: '18:00:00',
+        sanBai: {
+          maLoaiSan: 1,
+          tenSan: "Sân 5A",
+          loaiSan: { tenLoaiSan: "Sân bóng đá" },
+        },
+        gioBatDau: "17:00:00",
+        gioKetThuc: "18:00:00",
       },
       {
         maLichSan: 2,
-        sanBai: { maLoaiSan: 2, tenSan: 'Sân 7A', loaiSan: { tenLoaiSan: 'Sân bóng rổ' } },
-        gioBatDau: '17:00:00',
-        gioKetThuc: '18:00:00',
+        sanBai: {
+          maLoaiSan: 2,
+          tenSan: "Sân 7A",
+          loaiSan: { tenLoaiSan: "Sân bóng rổ" },
+        },
+        gioBatDau: "17:00:00",
+        gioKetThuc: "18:00:00",
       },
     ];
 
@@ -140,11 +148,11 @@ describe('DatSanService (US-08)', () => {
     const result = await service.getMatrix(futureDateStr, undefined, 1);
     
     expect(result).toHaveLength(1);
-    expect(result[0].loaiSan).toBe('Sân bóng đá');
+    expect(result[0].loaiSan).toBe("Sân bóng đá");
   });
 
   // Test 5: Lỗi không có lịch
-  it('Phải ném lỗi NotFoundException khi ngày đó không có lịch nào', async () => {
+  it("Phải ném lỗi NotFoundException khi ngày đó không có lịch nào", async () => {
     mockLichSanService.findAll.mockResolvedValue([]);
 
     const futureDate = new Date();
