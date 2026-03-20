@@ -8,7 +8,8 @@ import { SanBaiModule } from './san-bai/san-bai.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
-
+import { VeDienTuModule } from './ve-dien-tu/ve-dien-tu.module';
+import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
 @Module({
   imports: [
     // Load .env
@@ -36,7 +37,7 @@ import { DatSanModule } from './dat-san/dat-san.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false, // Set false in production
         options: {
-          encrypt: true,
+          encrypt: false,
           trustServerCertificate: true,
         },
         extra: {
@@ -50,6 +51,8 @@ import { DatSanModule } from './dat-san/dat-san.module';
     SanBaiModule,
     LichSanModule,
     DatSanModule,
+    VeDienTuModule,
+    NguoiDungModule,
   ],
   controllers: [AppController],
   providers: [AppService],
