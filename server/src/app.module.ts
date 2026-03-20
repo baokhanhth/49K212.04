@@ -9,6 +9,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
 import { CheckInModule } from './check-in/check-in.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { CheckInModule } from './check-in/check-in.module';
     LichSanModule,
     DatSanModule,
     CheckInModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
