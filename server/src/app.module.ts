@@ -8,6 +8,7 @@ import { SanBaiModule } from './san-bai/san-bai.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
+import { CheckInModule } from './check-in/check-in.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { DatSanModule } from './dat-san/dat-san.module';
     SanBaiModule,
     LichSanModule,
     DatSanModule,
+    CheckInModule,
   ],
   controllers: [AppController],
   providers: [AppService],
