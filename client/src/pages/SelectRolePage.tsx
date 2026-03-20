@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 
+
 const SelectRolePage = () => {
   const navigate = useNavigate();
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#111827] to-[#1f2937]">
@@ -18,7 +20,8 @@ const SelectRolePage = () => {
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+
+        <div className="grid gap-8 md:grid-cols-3">
           {/* Student Role Card */}
           <button
             onClick={() => navigate('/student')}
@@ -49,6 +52,7 @@ const SelectRolePage = () => {
             </div>
             <div className="absolute -right-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 transition-all duration-300 group-hover:scale-150" />
           </button>
+
 
           {/* Admin Role Card */}
           <button
@@ -83,10 +87,43 @@ const SelectRolePage = () => {
             </div>
             <div className="absolute -right-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 transition-all duration-300 group-hover:scale-150" />
           </button>
+
+
+          {/* Employee Role Card */}
+          <button
+            onClick={() => navigate('/employee')}
+            className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FF9800] to-[#F57C00] p-8 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="relative z-10">
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 text-4xl">
+                👨‍🔧
+              </div>
+              <h2 className="mb-4 text-3xl font-bold text-white">Nhân viên</h2>
+              <p className="mb-6 text-white/90">
+                Check-in khách hàng, xác nhận thanh toán và quản lý tài khoản
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full bg-white/20 px-3 py-1 text-sm text-white">
+                  Check-in
+                </span>
+                <span className="rounded-full bg-white/20 px-3 py-1 text-sm text-white">
+                  Xác nhận thanh toán
+                </span>
+                <span className="rounded-full bg-white/20 px-3 py-1 text-sm text-white">
+                  Tài khoản
+                </span>
+              </div>
+            </div>
+            <div className="absolute -right-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 transition-all duration-300 group-hover:scale-150" />
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
+
 export default SelectRolePage;
+
+
+
