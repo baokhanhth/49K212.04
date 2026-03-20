@@ -18,7 +18,7 @@ import DuyetDatSan from './pages/admin/DuyetDatSan';
 import CauHinhSanBai from './pages/admin/CauHinhSanBai';
 import QuanLySan from './pages/admin/QuanLySan';
 import TaiKhoanAdmin from './pages/admin/TaiKhoanAdmin';
-
+import QuanLyNguoiDung from './pages/admin/Quanlynguoidung';
 // Common pages
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -43,6 +43,7 @@ const App: React.FC = () => {
         <Route path="/admin/cau-hinh-san-bai" element={<CauHinhSanBai />} />
         <Route path="/admin/quan-ly-san" element={<QuanLySan />} />
         <Route path="/admin/tai-khoan" element={<TaiKhoanAdmin />} />
+        <Route path="/admin/sinh-vien" element={<QuanLyNguoiDung />} />
 
         {/* 404 - Not Found */}
         <Route path="*" element={<NotFoundPage />} />
