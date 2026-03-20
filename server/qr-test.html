@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QR Code Viewer</title>
+</head>
+<body>
+  <h2>Xem mã QR</h2>
+  <input type="text" id="qrCode" value="VE-23-1773894920162-FEGU0Z5Z" style="width:400px;padding:8px" />
+  <button onclick="loadQR()">Xem QR</button>
+  <br/><br/>
+  <div id="error" style="color:red"></div>
+  <img id="qrImage" />
+
+  <script>
+    async function loadQR() {
+      try {
+        const qrCode = document.getElementById('qrCode').value;
+        const res = await fetch(`http://localhost:5000/api/ve-dien-tu/qr-image/${qrCode}`);
+        const json = await res.json();
+        console.log(json);
+        if (json.data) {
+          document.getElementById('qrImage').src = json.data;
+          document.getElementById('error').innerText = '';
+        } else {
+          document.getElementById('error').innerText = JSON.stringify(json);
+        }
+      } catch(e) {
+        document.getElementById('error').innerText = e.message;
+      }
