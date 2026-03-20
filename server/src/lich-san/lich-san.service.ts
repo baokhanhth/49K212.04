@@ -4,16 +4,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { LichSan } from './entities/lich-san.entity';
+import { DatSan } from './entities/dat-san.entity';
 import { CreateLichSanDto } from './dto/create-lich-san.dto';
 import { GenerateLichSanDto } from './dto/generate-lich-san.dto';
 import { QueryLichSanDto } from './dto/query-lich-san.dto';
 import { ToggleLichSanDto } from './dto/toggle-lich-san.dto';
-import { KhoaLichSanDto } from './dto/khoa-lich-san.dto';
 import { SanBai } from '../san-bai/entities/san-bai.entity';
-import { KhungGio } from '../khung-gio/entities/khung-gio.entity';
-import { CauHinhService } from '../cau-hinh/cau-hinh.service';
 
 @Injectable()
 export class LichSanService {
@@ -22,19 +20,16 @@ export class LichSanService {
     private readonly lichSanRepo: Repository<LichSan>,
     @InjectRepository(SanBai)
     private readonly sanBaiRepo: Repository<SanBai>,
-    @InjectRepository(KhungGio)
-    private readonly khungGioRepo: Repository<KhungGio>,
-    private readonly cauHinhService: CauHinhService,
+    @InjectRepository(DatSan)
+    private readonly datSanRepo: Repository<DatSan>,
   ) {}
 
-  // ───────────── Query ─────────────
-
-  async findAll(query: QueryLichSanDto, excludeKhoa = false): Promise<LichSan[]> {
+  async findAll(query: QueryLichSanDto): Promise<LichSan[]> {
     const qb = this.lichSanRepo
       .createQueryBuilder('ls')
       .leftJoinAndSelect('ls.sanBai', 'sb')
       .leftJoinAndSelect('sb.loaiSan', 'loaiSan')
-      .leftJoinAndSelect('ls.khungGio', 'kg');
+      .leftJoinAndSelect('ls.datSan', 'ds');
 
     if (query.maSan) {
       qb.andWhere('ls.maSan = :maSan', { maSan: query.maSan });
@@ -45,57 +40,27 @@ export class LichSanService {
     if (query.denNgay) {
       qb.andWhere('ls.ngayApDung <= :denNgay', { denNgay: query.denNgay });
     }
-    if (query.maKhungGio) {
-      qb.andWhere('ls.maKhungGio = :maKhungGio', {
-        maKhungGio: query.maKhungGio,
-      });
+    if (query.gioBatDau) {
+      qb.andWhere('ls.gioBatDau = :gioBatDau', { gioBatDau: query.gioBatDau });
+    }
+    if (query.gioKetThuc) {
+      qb.andWhere('ls.gioKetThuc = :gioKetThuc', { gioKetThuc: query.gioKetThuc });
     }
     if (query.trangThai === 'trong') {
-      qb.andWhere('ls.maDatSan IS NULL');
+      qb.andWhere('ds.maDatSan IS NULL');
     } else if (query.trangThai === 'da_dat') {
-      qb.andWhere('ls.maDatSan IS NOT NULL');
+      qb.andWhere('ds.maDatSan IS NOT NULL');
     }
 
-    // Lọc bỏ lịch bị khoá (dành cho sinh viên)
-    if (excludeKhoa) {
-      qb.andWhere('ls.biKhoa = :biKhoa', { biKhoa: false });
-    }
-
-    qb.orderBy('ls.ngayApDung', 'ASC').addOrderBy('kg.gioBatDau', 'ASC');
+    qb.orderBy('ls.ngayApDung', 'ASC').addOrderBy('ls.gioBatDau', 'ASC');
 
     return qb.getMany();
-  }
-
-  /**
-   * Lấy danh sách lịch sân CHO SINH VIÊN (chỉ trong khoảng cho phép đặt).
-   * Frontend sinh viên nên gọi API này thay vì findAll.
-   */
-  async findAllChoSinhVien(query: QueryLichSanDto): Promise<LichSan[]> {
-    const thongTin = await this.cauHinhService.getThongTinDatSan();
-
-    // Ép khoảng ngày vào phạm vi cho phép
-    const tuNgay =
-      query.tuNgay && query.tuNgay > thongTin.ngayBatDau
-        ? query.tuNgay
-        : thongTin.ngayBatDau;
-
-    const denNgay =
-      query.denNgay && query.denNgay < thongTin.ngayKetThuc
-        ? query.denNgay
-        : thongTin.ngayKetThuc;
-
-    return this.findAll({
-      ...query,
-      tuNgay,
-      denNgay,
-      trangThai: 'trong', // Sinh viên chỉ thấy lịch trống
-    }, true);
   }
 
   async findOne(id: number): Promise<LichSan> {
     const lichSan = await this.lichSanRepo.findOne({
       where: { maLichSan: id },
-      relations: ['sanBai', 'sanBai.loaiSan', 'khungGio'],
+      relations: ['sanBai', 'sanBai.loaiSan', 'datSan'],
     });
     if (!lichSan) {
       throw new NotFoundException(`Không tìm thấy lịch sân với mã ${id}`);
@@ -108,30 +73,31 @@ export class LichSanService {
   async create(dto: CreateLichSanDto): Promise<LichSan> {
     // Validate sân tồn tại
     await this.validateSanBai(dto.maSan);
-    // Validate khung giờ tồn tại
-    await this.validateKhungGio(dto.maKhungGio);
     // Validate ngày không quá khứ
     this.validateNgayKhongQuaKhu(dto.ngayApDung);
+    this.validateTimeRange(dto.gioBatDau, dto.gioKetThuc);
+    // Normalize HH:mm → HH:mm:ss for mssql time type
+    dto.gioBatDau = this.normalizeTime(dto.gioBatDau);
+    dto.gioKetThuc = this.normalizeTime(dto.gioKetThuc);
 
     // Kiểm tra trùng lặp
     const existing = await this.lichSanRepo.findOne({
       where: {
         maSan: dto.maSan,
         ngayApDung: dto.ngayApDung,
-        maKhungGio: dto.maKhungGio,
+        gioBatDau: dto.gioBatDau,
+        gioKetThuc: dto.gioKetThuc,
       },
     });
     if (existing) {
       throw new BadRequestException(
-        `Lịch sân đã tồn tại cho sân ${dto.maSan}, ngày ${dto.ngayApDung}, khung giờ ${dto.maKhungGio}`,
+        `Lịch sân đã tồn tại cho sân ${dto.maSan}, ngày ${dto.ngayApDung}, khung ${dto.gioBatDau}-${dto.gioKetThuc}`,
       );
     }
 
     const lichSan = this.lichSanRepo.create(dto);
     return this.lichSanRepo.save(lichSan);
   }
-
-  // ───────────── Generate (batch) ─────────────
 
   async generate(
     dto: GenerateLichSanDto,
@@ -155,9 +121,11 @@ export class LichSanService {
       throw new BadRequestException('Khoảng thời gian tối đa là 90 ngày');
     }
 
-    // Validate tất cả khung giờ
-    for (const maKhungGio of dto.danhSachKhungGio) {
-      await this.validateKhungGio(maKhungGio);
+    // Validate tất cả khung giờ và normalize
+    for (const khungGio of dto.danhSachKhungGio) {
+      this.validateTimeRange(khungGio.gioBatDau, khungGio.gioKetThuc);
+      khungGio.gioBatDau = this.normalizeTime(khungGio.gioBatDau);
+      khungGio.gioKetThuc = this.normalizeTime(khungGio.gioKetThuc);
     }
 
     let created = 0;
@@ -171,7 +139,12 @@ export class LichSanService {
 
       for (const maKhungGio of dto.danhSachKhungGio) {
         const existing = await this.lichSanRepo.findOne({
-          where: { maSan: dto.maSan, ngayApDung: ngay, maKhungGio },
+          where: {
+            maSan: dto.maSan,
+            ngayApDung: ngay,
+            gioBatDau: maKhungGio.gioBatDau,
+            gioKetThuc: maKhungGio.gioKetThuc,
+          },
         });
 
         if (existing) {
@@ -180,7 +153,8 @@ export class LichSanService {
           const lichSan = this.lichSanRepo.create({
             maSan: dto.maSan,
             ngayApDung: ngay,
-            maKhungGio,
+            gioBatDau: maKhungGio.gioBatDau,
+            gioKetThuc: maKhungGio.gioKetThuc,
           });
           await this.lichSanRepo.save(lichSan);
           created++;
@@ -193,51 +167,6 @@ export class LichSanService {
     return { created, skipped };
   }
 
-  // ───────────── Toggle ─────────────
-
-  /**
-   * Khoá/mở khoá lịch sân cho sinh viên.
-   * Khi khoá: lịch vẫn tồn tại nhưng sinh viên không thấy và không đặt được.
-   * Khi mở khoá: sinh viên thấy lại và đặt được bình thường.
-   */
-  async khoaLichSan(
-    dto: KhoaLichSanDto,
-  ): Promise<{ message: string; affected: number }> {
-    await this.validateSanBai(dto.maSan);
-
-    let affected = 0;
-
-    for (const maKhungGio of dto.danhSachKhungGio) {
-      const lichSan = await this.lichSanRepo.findOne({
-        where: {
-          maSan: dto.maSan,
-          ngayApDung: dto.ngayApDung,
-          maKhungGio,
-        },
-      });
-
-      if (!lichSan) {
-        continue; // Lịch không tồn tại, bỏ qua
-      }
-
-      if (dto.khoa && lichSan.maDatSan) {
-        // Không khoá lịch đã được đặt
-        continue;
-      }
-
-      lichSan.biKhoa = dto.khoa;
-      lichSan.lyDoKhoa = dto.khoa ? (dto.lyDoKhoa || null) : null;
-      await this.lichSanRepo.save(lichSan);
-      affected++;
-    }
-
-    const action = dto.khoa ? 'khoá' : 'mở khoá';
-    return {
-      message: `Đã ${action} ${affected} khung giờ cho sân ${dto.maSan} ngày ${dto.ngayApDung}`,
-      affected,
-    };
-  }
-
   async toggleDate(
     dto: ToggleLichSanDto,
   ): Promise<{ message: string; affected: number }> {
@@ -248,18 +177,24 @@ export class LichSanService {
     if (dto.moLich) {
       // Mở: tạo lịch cho khung giờ chưa có
       for (const maKhungGio of dto.danhSachKhungGio) {
+        this.validateTimeRange(maKhungGio.gioBatDau, maKhungGio.gioKetThuc);
+        maKhungGio.gioBatDau = this.normalizeTime(maKhungGio.gioBatDau);
+        maKhungGio.gioKetThuc = this.normalizeTime(maKhungGio.gioKetThuc);
+
         const existing = await this.lichSanRepo.findOne({
           where: {
             maSan: dto.maSan,
             ngayApDung: dto.ngayApDung,
-            maKhungGio,
+            gioBatDau: maKhungGio.gioBatDau,
+            gioKetThuc: maKhungGio.gioKetThuc,
           },
         });
         if (!existing) {
           const lichSan = this.lichSanRepo.create({
             maSan: dto.maSan,
             ngayApDung: dto.ngayApDung,
-            maKhungGio,
+            gioBatDau: maKhungGio.gioBatDau,
+            gioKetThuc: maKhungGio.gioKetThuc,
           });
           await this.lichSanRepo.save(lichSan);
           affected++;
@@ -272,17 +207,33 @@ export class LichSanService {
     } else {
       // Đóng: xóa lịch chưa đặt
       for (const maKhungGio of dto.danhSachKhungGio) {
-        const result = await this.lichSanRepo
-          .createQueryBuilder()
-          .delete()
-          .where('maSan = :maSan', { maSan: dto.maSan })
-          .andWhere('ngayApDung = :ngayApDung', {
+        this.validateTimeRange(maKhungGio.gioBatDau, maKhungGio.gioKetThuc);
+        maKhungGio.gioBatDau = this.normalizeTime(maKhungGio.gioBatDau);
+        maKhungGio.gioKetThuc = this.normalizeTime(maKhungGio.gioKetThuc);
+
+        const lichSan = await this.lichSanRepo.findOne({
+          where: {
+            maSan: dto.maSan,
             ngayApDung: dto.ngayApDung,
-          })
-          .andWhere('maKhungGio = :maKhungGio', { maKhungGio })
-          .andWhere('maDatSan IS NULL')
-          .execute();
-        affected += result.affected || 0;
+            gioBatDau: maKhungGio.gioBatDau,
+            gioKetThuc: maKhungGio.gioKetThuc,
+          },
+          select: ['maLichSan'],
+        });
+
+        if (!lichSan) {
+          continue;
+        }
+
+        const daDat = await this.datSanRepo.exist({
+          where: { maLichSan: lichSan.maLichSan },
+        });
+        if (daDat) {
+          continue;
+        }
+
+        await this.lichSanRepo.delete({ maLichSan: lichSan.maLichSan });
+        affected++;
       }
       return {
         message: `Đã đóng ${affected} khung giờ cho sân ${dto.maSan} ngày ${dto.ngayApDung}`,
@@ -291,11 +242,12 @@ export class LichSanService {
     }
   }
 
-  // ───────────── Delete ─────────────
-
   async remove(id: number): Promise<void> {
     const lichSan = await this.findOne(id);
-    if (lichSan.maDatSan) {
+    const daDat = await this.datSanRepo.findOne({
+      where: { maLichSan: lichSan.maLichSan },
+    });
+    if (daDat) {
       throw new BadRequestException('Không thể xóa lịch sân đã có đặt sân');
     }
     await this.lichSanRepo.remove(lichSan);
@@ -305,13 +257,32 @@ export class LichSanService {
     maSan: number,
     ngayApDung: string,
   ): Promise<{ deleted: number }> {
-    const result = await this.lichSanRepo
-      .createQueryBuilder()
-      .delete()
-      .where('maSan = :maSan', { maSan })
-      .andWhere('ngayApDung = :ngayApDung', { ngayApDung })
-      .andWhere('maDatSan IS NULL')
-      .execute();
+    const danhSachLich = await this.lichSanRepo.find({
+      where: { maSan, ngayApDung },
+      select: ['maLichSan'],
+    });
+
+    if (danhSachLich.length === 0) {
+      throw new NotFoundException(
+        `Không tìm thấy lịch sân trống cho sân ${maSan} ngày ${ngayApDung}`,
+      );
+    }
+
+    const ids = danhSachLich.map((item) => item.maLichSan);
+    const lichDaDat = await this.datSanRepo.find({
+      where: { maLichSan: In(ids) },
+      select: ['maLichSan'],
+    });
+    const bookedSet = new Set(lichDaDat.map((item) => item.maLichSan));
+    const idsCoTheXoa = ids.filter((id) => !bookedSet.has(id));
+
+    if (idsCoTheXoa.length === 0) {
+      throw new NotFoundException(
+        `Không tìm thấy lịch sân trống cho sân ${maSan} ngày ${ngayApDung}`,
+      );
+    }
+
+    const result = await this.lichSanRepo.delete({ maLichSan: In(idsCoTheXoa) });
 
     if (!result.affected) {
       throw new NotFoundException(
@@ -322,8 +293,6 @@ export class LichSanService {
     return { deleted: result.affected };
   }
 
-  // ───────────── Validation helpers ─────────────
-
   private async validateSanBai(maSan: number): Promise<SanBai> {
     const san = await this.sanBaiRepo.findOne({ where: { maSan } });
     if (!san) {
@@ -332,14 +301,13 @@ export class LichSanService {
     return san;
   }
 
-  private async validateKhungGio(maKhungGio: number): Promise<KhungGio> {
-    const kg = await this.khungGioRepo.findOne({ where: { maKhungGio } });
-    if (!kg) {
-      throw new NotFoundException(
-        `Không tìm thấy khung giờ với mã ${maKhungGio}`,
-      );
+  private validateTimeRange(gioBatDau: string, gioKetThuc: string): void {
+    const from = this.normalizeTime(gioBatDau);
+    const to = this.normalizeTime(gioKetThuc);
+
+    if (from >= to) {
+      throw new BadRequestException('Giờ bắt đầu phải nhỏ hơn giờ kết thúc');
     }
-    return kg;
   }
 
   private validateNgayKhongQuaKhu(ngay: string): void {
@@ -354,36 +322,8 @@ export class LichSanService {
     }
   }
 
-  /**
-   * Validate ngày đặt sân cho SINH VIÊN.
-   * Gọi hàm này khi sinh viên đặt sân để kiểm tra ngày có nằm
-   * trong khoảng [hôm nay, hôm nay + max_day] không.
-   */
-  async validateNgayDatSanChoSinhVien(ngayApDung: string): Promise<void> {
-    await this.cauHinhService.validateNgayDatSan(ngayApDung);
-  }
-
-  /**
-   * Kiểm tra lịch sân có bị khoá không.
-   * Gọi khi sinh viên đặt sân để chận đặt vào slot bị khoá.
-   */
-  async validateKhongBiKhoa(
-    maSan: number,
-    ngayApDung: string,
-    maKhungGio: number,
-  ): Promise<void> {
-    const lichSan = await this.lichSanRepo.findOne({
-      where: { maSan, ngayApDung, maKhungGio },
-    });
-
-    if (lichSan && lichSan.biKhoa) {
-      const lyDo = lichSan.lyDoKhoa
-        ? ` Lý do: ${lichSan.lyDoKhoa}`
-        : '';
-      throw new BadRequestException(
-        `Lịch sân ngày ${ngayApDung} khung giờ ${maKhungGio} đã bị khoá, không thể đặt sân.${lyDo}`,
-      );
-    }
+  private normalizeTime(value: string): string {
+    return value.length === 5 ? `${value}:00` : value;
   }
 
   private formatDate(date: Date): string {
