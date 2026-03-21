@@ -174,4 +174,18 @@ export class DatSanController {
     await this.datSanService.remove(id);
     return successResponse(null, 'Hủy yêu cầu đặt sân thành công');
   }
+  // ───────────── Xác nhận thu phí (US-16) ─────────────
+@Patch(':id/xac-nhan-thu-phi')
+@ApiOperation({ summary: 'Xác nhận thu phí khi sinh viên đến nhận sân (US-16)' })
+@ApiParam({ name: 'id', description: 'Mã đặt sân', type: Number })
+@SwaggerResponse({ status: 200, description: 'Xác nhận thu phí thành công' })
+@SwaggerResponse({ status: 400, description: 'Đơn chưa được duyệt' })
+@SwaggerResponse({ status: 404, description: 'Không tìm thấy yêu cầu' })
+async xacNhanThuPhi(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() dto: DuyetDatSanDto,
+): Promise<ApiResponse<DatSan>> {
+  const data = await this.datSanService.xacNhanThuPhi(id, dto.nguoiDuyet);
+  return successResponse(data, 'Xác nhận thu phí thành công');
+}
 }
