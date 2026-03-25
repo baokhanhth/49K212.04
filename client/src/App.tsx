@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SelectRolePage from './pages/SelectRolePage';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import HomePage from './pages/HomePage';
-import Xemdanhsachsan from "./pages/Xemdanhsachsan";
+// import Header from './components/layout/Header';
+// import Footer from './components/layout/Footer';
+// import HomePage from './pages/HomePage';
+// import Xemdanhsachsan from "./pages/Xemdanhsachsan";
 
 
 // Student pages
@@ -18,6 +18,11 @@ import DuyetDatSan from './pages/admin/DuyetDatSan';
 import CauHinhSanBai from './pages/admin/CauHinhSanBai';
 import QuanLySan from './pages/admin/QuanLySan';
 import TaiKhoanAdmin from './pages/admin/TaiKhoanAdmin';
+
+// Employee pages
+import Checkin from './pages/employee/Checkin';
+import XacNhanThanhToan from './pages/employee/XacNhanThanhToan';
+import TaiKhoanEmployee from './pages/employee/TaiKhoan';
 
 // Common pages
 import NotFoundPage from './pages/NotFoundPage';
@@ -43,6 +48,12 @@ const App: React.FC = () => {
         <Route path="/admin/cau-hinh-san-bai" element={<CauHinhSanBai />} />
         <Route path="/admin/quan-ly-san" element={<QuanLySan />} />
         <Route path="/admin/tai-khoan" element={<TaiKhoanAdmin />} />
+
+        {/* Employee routes */}
+        <Route path="/employee" element={<Checkin />} />
+        <Route path="/employee/checkin" element={<Checkin />} />
+        <Route path="/employee/xac-nhan-thanh-toan" element={<XacNhanThanhToan />} />
+        <Route path="/employee/tai-khoan" element={<TaiKhoanEmployee />} />
 
         {/* 404 - Not Found */}
         <Route path="*" element={<NotFoundPage />} />
