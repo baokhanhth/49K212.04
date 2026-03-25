@@ -1,309 +1,249 @@
-import { useState } from "react";
-import StudentLayout from "../../components/layout/StudentLayout";
+// import StudentLayout from '../../components/layout/StudentLayout';
+
+// const VeCuaToi = () => {
+//   return (
+//     <StudentLayout>
+//       <div className="px-7 py-8">
+//         <h1 className="mb-6 text-2xl font-semibold text-slate-800">Vé của tôi</h1>
+//         <div className="rounded-2xl bg-white p-6 shadow-sm">
+//           <p className="text-slate-600">Trang vé của tôi đang được phát triển...</p>
+//         </div>
+//       </div>
+//     </StudentLayout>
+//   );
+// };
+
+// export default VeCuaToi;
 
 
-const mockTickets = [
-  {
-    id: 1,
-    code: "#DS123",
-    field: "Sân A",
-    time: "18:00 - 19:00",
-    date: "20/03/2026",
-    status: "Đã duyệt",
-    name: "Nguyễn Văn A",
-    price: "200.000đ",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DS123",
-  },
-  {
-    id: 2,
-    code: "#DS124",
-    field: "Sân B",
-    time: "20:00 - 21:00",
-    date: "21/03/2026",
-    status: "Đã Check-in",
-    name: "Nguyễn Văn A",
-    price: "250.000đ",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DS124",
-  },
-  {
-    id: 3,
-    code: "#DS125",
-    field: "Sân C",
-    time: "15:00 - 16:00",
-    date: "22/03/2026",
-    status: "Đã thanh toán",
-    name: "Nguyễn Văn A",
-    price: "180.000đ",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DS125",
-  },
-  {
-    id: 4,
-    code: "#DS126",
-    field: "Sân A",
-    time: "17:00 - 18:00",
-    date: "23/03/2026",
-    status: "Hoàn thành",
-    name: "Nguyễn Văn A",
-    price: "200.000đ",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DS126",
-  },
-  {
-    id: 5,
-    code: "#DS127",
-    field: "Sân D",
-    time: "19:00 - 20:00",
-    date: "24/03/2026",
-    status: "Đã hủy",
-    name: "Nguyễn Văn A",
-    price: "300.000đ",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DS127",
-  },
-];
 
+import { useEffect, useState } from 'react';
+import StudentLayout from '../../components/layout/StudentLayout';
+
+interface VeItem {
+  maVe: string;
+  maDatSan: number;
+  qrCode: string;
+  trangThaiVe: string;
+  qrHopLe: boolean;
+  tenSan: string;
+  loaiSan: string;
+  ngayApDung: string;
+  khungGio: string;
+  tongTien: number;
+  thoiGianCheckIn: string | null;
+  thoiGianCheckOut: string | null;
+}
+
+const API = 'http://localhost:5000/api';
+
+const statusStyle: Record<string, { bg: string; text: string; dot: string }> = {
+  'Chưa check-in': { bg: 'bg-blue-50', text: 'text-blue-600', dot: 'bg-blue-500' },
+  'Đã Check-in': { bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500' },
+  'Đã thanh toán': { bg: 'bg-green-50', text: 'text-green-600', dot: 'bg-green-500' },
+  'Hoàn thành': { bg: 'bg-teal-50', text: 'text-teal-600', dot: 'bg-teal-500' },
+  'No-show': { bg: 'bg-red-50', text: 'text-red-500', dot: 'bg-red-500' },
+};
+
+const fmtMoney = (value: number) =>
+  new Intl.NumberFormat('vi-VN').format(value) + 'đ';
 
 const VeCuaToi = () => {
-  const [tickets] = useState(mockTickets);
-  const [selected, setSelected] = useState<any>(null);
+  const userId = 2;
 
+  const [ves, setVes] = useState<VeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<VeItem | null>(null);
+  const [qrImage, setQrImage] = useState<string | null>(null);
+  const [loadingQr, setLoadingQr] = useState(false);
 
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case "Đã duyệt":
-        return "Chưa check-in";
-      case "Đã Check-in":
-        return "Đã Check-in";
-      case "Đã thanh toán":
-        return "Đã thanh toán";
-      case "Hoàn thành":
-        return "Hoàn thành";
-      case "No-show":
-        return "No-show";
-      case "Đã hủy":
-        return "No-show";
-      default:
-        return status;
+  // ================= FETCH DATA =================
+  useEffect(() => {
+    const fetchVes = async () => {
+      try {
+        const res = await fetch(`${API}/ve-dien-tu/user/${userId}`);
+        const json = await res.json();
+        setVes(json.data ?? []);
+      } catch (error) {
+        console.error(error);
+        setVes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVes();
+  }, [userId]);
+
+  // ================= HANDLERS =================
+  const handleChiTiet = async (ve: VeItem) => {
+    setSelected(ve);
+    setQrImage(null);
+
+    if (!ve.qrHopLe) return;
+
+    setLoadingQr(true);
+    try {
+      const res = await fetch(`${API}/ve-dien-tu/chi-tiet/${ve.maVe}`);
+      const json = await res.json();
+      setQrImage(json.data?.qrImage ?? null);
+    } catch (error) {
+      console.error(error);
+      setQrImage(null);
+    } finally {
+      setLoadingQr(false);
     }
   };
 
+  const handleSaveQr = () => {
+    if (!qrImage) return;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Đã duyệt":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      case "Đã Check-in":
-        return "bg-purple-100 text-purple-700 border-purple-200";
-      case "Đã thanh toán":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "Hoàn thành":
-        return "bg-gray-100 text-gray-700 border-gray-200";
-      case "No-show":
-        return "bg-orange-100 text-orange-700 border-orange-200";
-      case "Đã hủy":
-        return "bg-orange-100 text-orange-700 border-orange-200";
-      default:
-        return "bg-blue-100 text-blue-700 border-blue-200";
-    }
+    const link = document.createElement('a');
+    link.href = qrImage;
+    link.download = `QR-${selected?.maVe}.png`;
+    link.click();
   };
 
+  const getStatus = (trangThai: string) =>
+    statusStyle[trangThai] ?? {
+      bg: 'bg-gray-50',
+      text: 'text-gray-500',
+      dot: 'bg-gray-400',
+    };
 
- 
-  const isQRUsable = (status: string) => {
-    return status === "Đã duyệt";
-  };
-
-
+  // ================= UI =================
   return (
     <StudentLayout>
-      <div className="px-7 py-8 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">
-              Vé của tôi
-            </h1>
-            <p className="text-slate-500">
-              Quản lý và xem thông tin các vé đặt sân của bạn
+      <div className="px-7 py-8">
+        <h1 className="mb-6 text-2xl font-semibold text-slate-800">
+          🎟 Vé của tôi
+        </h1>
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center py-20 text-slate-400">
+            🔄 Đang tải vé...
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && ves.length === 0 && (
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-20 shadow-sm">
+            <span className="mb-3 text-5xl">🎫</span>
+            <p className="mb-4 text-lg font-semibold text-slate-600">
+              Bạn chưa có vé nào
             </p>
+
+            <a
+              href="/student/dat-san"
+              className="rounded-xl bg-[#4169E1] px-6 py-2.5 text-sm font-bold text-white shadow hover:opacity-90"
+            >
+              Đặt sân ngay
+            </a>
           </div>
+        )}
 
+        {/* List */}
+        {!loading && ves.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {ves.map((ve) => {
+              const s = getStatus(ve.trangThaiVe);
 
-          {/* Tickets List */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            {/* EMPTY STATE */}
-            {tickets.length === 0 && (
-              <div className="text-center py-16">
-                <p className="text-slate-500 mb-4">
-                  Bạn chưa có vé nào.
-                </p>
-                <button
-                  className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
-                  onClick={() => (window.location.href = "/student/dat-san")}
+              return (
+                <div
+                  key={ve.maVe}
+                  onClick={() => handleChiTiet(ve)}
+                  className="cursor-pointer rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md"
                 >
-                  Đặt sân ngay!
-                </button>
-              </div>
-            )}
-
-
-            {/* LIST */}
-            {tickets.length > 0 && (
-              <div className="divide-y divide-slate-100">
-                {tickets.map((t) => (
-                  <div
-                    key={t.id}
-                    onClick={() => setSelected(t)}
-                    className="p-5 hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent cursor-pointer transition-all duration-200 group"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="font-bold text-lg text-slate-800">
-                            {t.code}
-                          </span>
-                        </div>
-
-
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-slate-700">{t.field}</span>
-                        </div>
-
-
-                        <div className="flex items-center gap-4 text-sm text-slate-500">
-                          <div className="flex items-center gap-1">
-                            <span>{t.date}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span>{t.time}</span>
-                          </div>
-                        </div>
-                      </div>
-
-
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={t.qr}
-                          alt="qr"
-                          className={`w-14 h-14 rounded-lg border-2 transition-colors ${
-                            isQRUsable(t.status)
-                              ? "border-slate-200 group-hover:border-blue-300"
-                              : "border-slate-200 opacity-30 grayscale"
-                          }`}
-                        />
-                        <svg
-                          className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </div>
+                  <div className="mb-3 flex justify-between">
+                    <div>
+                      <p className="text-[11px] text-slate-400">
+                        Mã đặt sân
+                      </p>
+                      <p className="text-[13px] font-bold text-slate-800">
+                        #{ve.maDatSan}
+                      </p>
                     </div>
+
+                    <span
+                      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.bg} ${s.text}`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${s.dot}`}
+                      />
+                      {ve.trangThaiVe}
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
+
+                  <div className="space-y-1 text-sm text-slate-700">
+                    <p><b>Sân:</b> {ve.tenSan}</p>
+                    <p><b>Loại:</b> {ve.loaiSan}</p>
+                    <p><b>Ngày:</b> {ve.ngayApDung}</p>
+                    <p><b>Giờ:</b> {ve.khungGio}</p>
+                    <p><b>Tổng tiền:</b> {fmtMoney(ve.tongTien)}</p>
+                  </div>
+
+                  <div className="mt-3">
+                    <span
+                      className={`rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                        ve.qrHopLe
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-red-100 text-red-500'
+                      }`}
+                    >
+                      {ve.qrHopLe ? '✅ QR hợp lệ' : '❌ QR lỗi'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
 
-
-      {/* MODAL CHI TIẾT */}
+      {/* Modal */}
       {selected && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Chi tiết vé</h2>
-                <button
-                  onClick={() => setSelected(null)}
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="mt-4 text-2xl font-bold">{selected.code}</div>
-              <div
-                className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-sm font-medium`}
-              >
-                {getStatusDisplay(selected.status)}
-              </div>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex justify-between">
+              <h2 className="text-lg font-bold">Chi tiết vé</h2>
+              <button onClick={() => setSelected(null)}>✕</button>
             </div>
 
-
-            {/* Modal Body */}
-            <div className="p-6">
-              {/* QR Code */}
-              <div className="flex justify-center mb-6">
-                <div className={`relative ${!isQRUsable(selected.status) ? "opacity-30 grayscale" : ""}`}>
+            <div className="mb-4 flex flex-col items-center">
+              {selected.qrHopLe ? (
+                loadingQr ? (
+                  <div className="h-40 w-40 flex items-center justify-center">
+                    🔄
+                  </div>
+                ) : qrImage ? (
                   <img
-                    src={selected.qr}
-                    className="w-48 h-48 rounded-2xl border-4 border-slate-100 shadow-lg"
+                    src={qrImage}
+                    alt="QR"
+                    className="h-44 w-44 rounded-xl border p-2"
                   />
-                  {!isQRUsable(selected.status) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-2xl">
-                      <span className="text-white font-medium bg-black/50 px-4 py-2 rounded-xl">
-                        QR không sử dụng được
-                      </span>
-                    </div>
-                  )}
+                ) : null
+              ) : (
+                <div className="h-40 w-40 flex items-center justify-center bg-gray-100 rounded-xl">
+                  🚫
                 </div>
-              </div>
-
-
-              {/* Ticket Info */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                  <span className="text-slate-500">Tên sinh viên</span>
-                  <span className="font-medium text-slate-800">{selected.name}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                  <span className="text-slate-500">Sân</span>
-                  <span className="font-medium text-slate-800">{selected.field}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                  <span className="text-slate-500">Thời gian</span>
-                  <span className="font-medium text-slate-800">{selected.date} {selected.time}</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-slate-500">Trạng thái</span>
-                  <span
-                    className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(
-                      selected.status
-                    )}`}
-                  >
-                    {getStatusDisplay(selected.status)}
-                  </span>
-                </div>
-              </div>
-
-
-              {/* Actions */}
-              <div className="space-y-3">
-                <button
-                  disabled={!isQRUsable(selected.status)}
-                  className={`w-full py-3 rounded-xl font-medium transition-all ${
-                    isQRUsable(selected.status)
-                      ? "bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/30"
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  }`}
-                >
-                  Lưu QR code
-                </button>
-                <button
-                  className="w-full py-3 rounded-xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"
-                  onClick={() => setSelected(null)}
-                >
-                  Đóng
-                </button>
-              </div>
+              )}
             </div>
+
+            {selected.qrHopLe && qrImage && (
+              <button
+                onClick={handleSaveQr}
+                className="w-full bg-blue-600 text-white py-2 rounded-xl"
+              >
+                Lưu QR
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -313,6 +253,3 @@ const VeCuaToi = () => {
 
 
 export default VeCuaToi;
-
-
-
