@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 
-
-const Header: React.FC = () => {
+const SidebarAdmin: React.FC = () => {
   const location = useLocation();
+  const [openUser, setOpenUser] = useState(false);
+
   const menuItems = [
     { label: 'Dashboard', path: '/admin' },
     { label: 'Duyệt đặt sân', path: '/admin/duyet-dat-san' },
@@ -11,9 +13,10 @@ const Header: React.FC = () => {
     { label: 'Tài khoản', path: '/admin/tai-khoan' },
   ];
 
-
   return (
     <aside className="flex w-[250px] flex-col bg-gradient-to-b from-[#3E5D99] to-[#36558F] px-6 py-7 text-white">
+      
+      {/* Logo */}
       <div className="mb-10">
         <Link to="/select-role" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-[#3E5D99] font-bold">
@@ -28,11 +31,10 @@ const Header: React.FC = () => {
         </Link>
       </div>
 
-
+      {/* Menu */}
       <nav className="space-y-3">
         {menuItems.map((item) => {
           const active = location.pathname === item.path;
-
 
           return (
             <Link
@@ -51,9 +53,53 @@ const Header: React.FC = () => {
             </Link>
           );
         })}
+
+        {/* 🔽 QUẢN LÝ NGƯỜI DÙNG */}
+        <div>
+          <button
+            onClick={() => setOpenUser(!openUser)}
+            className={`w-full text-left rounded-2xl px-4 py-3 text-lg font-medium transition ${
+              openUser
+                ? 'bg-white/15 text-white'
+                : 'text-white/75 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <span>Quản lý người dùng</span>
+              <span>{openUser ? '▲' : '▼'}</span>
+            </div>
+          </button>
+
+          {/* Dropdown */}
+          {openUser && (
+            <div className="mt-1 flex flex-col space-y-1">
+              <Link
+                to="/admin/sinh-vien"
+                className={`block rounded-2xl px-4 py-2 text-base transition ${
+                  location.pathname === '/admin/sinh-vien'
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/75 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                Sinh viên
+              </Link>
+
+              <Link
+                to="/admin/nhan-vien"
+                className={`block rounded-2xl px-4 py-2 text-base transition ${
+                  location.pathname === '/admin/nhan-vien'
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/75 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                Nhân viên
+              </Link>
+            </div>
+          )}
+        </div>
       </nav>
 
-
+      {/* Logout */}
       <div className="mt-auto pt-8">
         <button className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90">
           Đăng xuất
@@ -63,5 +109,4 @@ const Header: React.FC = () => {
   );
 };
 
-
-export default Header;
+export default SidebarAdmin;
