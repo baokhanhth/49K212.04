@@ -16,7 +16,6 @@ import { DashboardModule } from './dashboard/dashboard.module';
     // Load .env
     ConfigModule.forRoot({
       isGlobal: true,
-      
     }),
     // Serve static file
     ServeStaticModule.forRoot({
@@ -36,9 +35,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
         password: configService.get<string>('DB_PASSWORD', '123456'),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Set false in production
+        synchronize: false,
         options: {
-          encrypt: false,
+          encrypt: true,
           trustServerCertificate: true,
         },
         extra: {
