@@ -8,21 +8,21 @@ import { SanBaiModule } from './san-bai/san-bai.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
+import { CheckInModule } from './check-in/check-in.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
-    // Load .env
     ConfigModule.forRoot({
       isGlobal: true,
-      
+      envFilePath: '.env',
     }),
-    // Serve static file
+
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
 
-    // Database connection - SQL Server
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -34,7 +34,7 @@ import { DatSanModule } from './dat-san/dat-san.module';
         password: configService.get<string>('DB_PASSWORD', '123456'),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Set false in production
+        synchronize: false,
         options: {
           encrypt: true,
           trustServerCertificate: true,
@@ -46,10 +46,11 @@ import { DatSanModule } from './dat-san/dat-san.module';
       }),
     }),
 
-    // Feature modules
     SanBaiModule,
     LichSanModule,
     DatSanModule,
+    CheckInModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
