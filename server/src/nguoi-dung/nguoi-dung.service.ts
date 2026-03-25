@@ -7,6 +7,11 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { NguoiDung } from "./entities/nguoi-dung.entity";
 import { KhoaQuyenDto } from "./dto/khoa-quyen.dto";
+import * as bcrypt from 'bcrypt';
+import { DangKyTaiKhoanDto } from './dto/dang-ky-tai-khoan.dto';
+import { DangKyResponseDto } from './dto/dang-ky-response.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class NguoiDungService {
@@ -133,4 +138,124 @@ export class NguoiDungService {
     }
     return true;
   }
+
+  // dang ky tai khoan
+  async dangKyTaiKhoan(dto: DangKyTaiKhoanDto): Promise<DangKyResponseDto> {
+    const username = dto.username.trim().toLowerCase();
+    const emailTruong = dto.emailTruong.trim().toLowerCase();
+    const msv = dto.msv.trim();
+    const hoTen = dto.hoTen.trim().replace(/\s+/g, ' ');
+    const lop = dto.lop.trim().toUpperCase();
+    const matKhau = dto.matKhau.trim();
+  
+    // 1. Validate MSSV (12 số)
+    if (!/^\d{12}$/.test(msv)) {
+      throw new BadRequestException('MSSV phải gồm đúng 12 chữ số');
+    }
+  
+    // 2. Username phải = MSSV + @due.udn.vn
+    const expectedEmail = `${msv}@due.udn.vn`;
+  
+    if (username !== expectedEmail) {
+      throw new BadRequestException(
+        'Username phải có dạng MSSV + @due.udn.vn',
+      );
+    }
+  
+    // 3. Email trường phải đúng format
+    if (emailTruong !== expectedEmail) {
+      throw new BadRequestException(
+        'Email trường phải có dạng MSSV + @due.udn.vn',
+      );
+    }
+  
+    // 4. Username và email phải giống nhau
+    if (username !== emailTruong) {
+      throw new BadRequestException(
+        'Username phải trùng với email trường',
+      );
+    }
+  
+    // 5. Validate mật khẩu
+    if (matKhau.length < 8) {
+      throw new BadRequestException(
+        'Mật khẩu phải có ít nhất 8 ký tự',
+      );
+    }
+  
+    // 6. Check trùng username
+    const existingUsername = await this.nguoiDungRepo.findOne({
+      where: { username },
+    });
+    if (existingUsername) {
+      throw new BadRequestException('Username đã tồn tại');
+    }
+  
+    // 7. Check trùng MSSV
+    const existingMsv = await this.nguoiDungRepo.findOne({
+      where: { msv },
+    });
+    if (existingMsv) {
+      throw new BadRequestException('MSSV đã tồn tại');
+    }
+  
+    // 8. Check trùng email
+    const existingEmail = await this.nguoiDungRepo.findOne({
+      where: { emailTruong },
+    });
+    if (existingEmail) {
+      throw new BadRequestException('Email đã tồn tại');
+    }
+  
+    // 9. Hash password
+    const hashedPassword = await bcrypt.hash(matKhau, 10);
+  
+    // 10. Tạo user
+    const newUser = this.nguoiDungRepo.create({
+      username,
+      matKhau: hashedPassword,
+      msv,
+      lop,
+      hoTen,
+      emailTruong,
+      sdt: null,
+      emailCaNhan: null,
+      anhDaiDien: null,
+      trangThai: true,
+      diemUyTin: 100,
+      maVaiTro: 2,
+    });
+  
+    const savedUser = await this.nguoiDungRepo.save(newUser);
+  
+    return {
+      userId: savedUser.userId,
+      username: savedUser.username,
+      hoTen: savedUser.hoTen,
+      msv: savedUser.msv,
+      lop: savedUser.lop,
+      emailTruong: savedUser.emailTruong,
+      maVaiTro: savedUser.maVaiTro,
+      trangThai: savedUser.trangThai,
+      diemUyTin: savedUser.diemUyTin,
+    };
+  }
+  // anh dai dien
+  async capNhatAnhDaiDien(userId: number, duongDanAnh: string): Promise<NguoiDung> {
+    const user = await this.findOne(userId);
+  
+    // Nếu đã có ảnh cũ thì xóa file cũ
+    if (user.anhDaiDien) {
+      const oldFilePath = path.join(process.cwd(), user.anhDaiDien.replace(/^\/+/, ''));
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    }
+  
+    user.anhDaiDien = duongDanAnh;
+    await this.nguoiDungRepo.save(user);
+  
+    return this.findOne(userId);
+  }
 }
+
