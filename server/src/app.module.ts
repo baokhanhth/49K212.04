@@ -8,8 +8,6 @@ import { SanBaiModule } from './san-bai/san-bai.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
-import { VeDienTuModule } from './ve-dien-tu/ve-dien-tu.module';
-import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
 import { CheckInModule } from './check-in/check-in.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
@@ -53,8 +51,6 @@ import { DashboardModule } from './dashboard/dashboard.module';
     SanBaiModule,
     LichSanModule,
     DatSanModule,
-    VeDienTuModule,
-    NguoiDungModule,
     CheckInModule,
     DashboardModule,
   ],
