@@ -13,17 +13,16 @@ import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
-    // Load .env
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
-    // Serve static file
+
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
 
-    // Database connection - SQL Server
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -47,7 +46,6 @@ import { DashboardModule } from './dashboard/dashboard.module';
       }),
     }),
 
-    // Feature modules
     SanBaiModule,
     LichSanModule,
     DatSanModule,

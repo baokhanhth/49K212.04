@@ -12,6 +12,7 @@ import VeCuaToi from './pages/student/VeCuaToi';
 import YeuCauDatSan from './pages/student/LichSuDatSan';
 import TaiKhoanStudent from './pages/student/TaiKhoanStudent';
 
+
 // Admin pages
 import Dashboard from './pages/admin/Dashboard';
 import DuyetDatSan from './pages/admin/DuyetDatSan';
@@ -27,6 +28,7 @@ import TaiKhoanEmployee from './pages/employee/TaiKhoan';
 // Common pages
 import NotFoundPage from './pages/NotFoundPage';
 
+
 const App: React.FC = () => {
   return (
     <Router>
@@ -35,12 +37,14 @@ const App: React.FC = () => {
         <Route path="/" element={<SelectRolePage />} />
         <Route path="/select-role" element={<SelectRolePage />} />
 
+
         {/* Student routes */}
         <Route path="/student" element={<DatSan />} />
         <Route path="/student/dat-san" element={<DatSan />} />
         <Route path="/student/ve-cua-toi" element={<VeCuaToi />} />
         <Route path="/student/lich-su-dat-san" element={<YeuCauDatSan />} />
         <Route path="/student/tai-khoan" element={<TaiKhoanStudent />} />
+
 
         {/* Admin routes */}
         <Route path="/admin" element={<Dashboard />} />
@@ -62,4 +66,8 @@ const App: React.FC = () => {
   );
 };
 
+
 export default App;
+
+
+

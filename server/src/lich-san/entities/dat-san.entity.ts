@@ -39,7 +39,7 @@ export class DatSan {
   trangThai: string;
 
   @ApiPropertyOptional({ description: 'Mã người duyệt', example: 2 })
-  @Column({ name: 'NguoiDuyet', type: 'int', nullable: true })
+  @Column({ name: 'NguoiDuyet',type: 'int',  nullable: true })
   nguoiDuyet: number | null;
 
   @OneToOne(() => LichSan, (lichSan) => lichSan.datSan)
