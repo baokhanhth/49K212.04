@@ -12,6 +12,8 @@ import { DatSan } from './entities/dat-san.entity';
 import { LichSan } from '../lich-san/entities/lich-san.entity';
 import { QueryDatSanDto } from './dto/query-dat-san.dto';
 import { CreateDatSanThuCongDto } from './dto/create-dat-san-thu-cong.dto';
+import { VeDienTuService } from '../ve-dien-tu/ve-dien-tu.service';
+import { NguoiDungService } from '../nguoi-dung/nguoi-dung.service';
 
 @Injectable()
 export class DatSanService {
@@ -22,6 +24,8 @@ export class DatSanService {
     private readonly lichSanRepo: Repository<LichSan>,
     private readonly lichSanService: LichSanService,
     private readonly sanBaiService: SanBaiService,
+    private readonly veDienTuService: VeDienTuService,
+    private readonly nguoiDungService: NguoiDungService,
   ) {}
 
   async findAll(query: QueryDatSanDto): Promise<DatSan[]> {
@@ -59,6 +63,7 @@ export class DatSanService {
   // ───────────── Tạo yêu cầu đặt sân ─────────────
 
   async create(userId: number, maLichSan: number): Promise<DatSan> {
+    await this.nguoiDungService.kiemTraQuyenDatSan(userId);
     const lichSan = await this.lichSanRepo.findOne({
       where: { maLichSan },
       relations: ['sanBai', 'datSan'],
@@ -134,6 +139,7 @@ export class DatSanService {
     });
 
     const saved = await this.datSanRepo.save(datSan);
+    await this.veDienTuService.create(saved.maDatSan);
     return this.findOne(saved.maDatSan);
   }
 
@@ -147,10 +153,15 @@ export class DatSanService {
         `Yêu cầu này đã được xử lý (trạng thái hiện tại: ${datSan.trangThai})`,
       );
     }
+    
 
     datSan.trangThai = trangThai;
     datSan.nguoiDuyet = nguoiDuyet;
     await this.datSanRepo.save(datSan);
+    
+    if (trangThai === 'Đã duyệt') {
+      await this.veDienTuService.create(datSan.maDatSan);
+    }
     return this.findOne(id);
   }
 
@@ -264,7 +275,6 @@ export class DatSanService {
         throw error;
       }
       console.error('Lỗi logic US-11:', error);
-      throw new InternalServerErrorException(`Lỗi hệ thống: ${error.message}`);
-    }
+      throw new InternalServerErrorException(`Lỗi hệ thống: ${(error as Error).message}`);    }
   }
 }
