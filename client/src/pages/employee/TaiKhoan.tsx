@@ -1,6 +1,5 @@
 import EmployeeLayout from '../../components/layout/EmployeeLayout';
 
-
 const TaiKhoan = () => {
   return (
     <EmployeeLayout>
@@ -14,8 +13,4 @@ const TaiKhoan = () => {
   );
 };
 
-
 export default TaiKhoan;
-
-
-

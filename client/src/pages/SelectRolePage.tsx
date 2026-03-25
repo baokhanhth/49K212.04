@@ -20,7 +20,6 @@ const SelectRolePage = () => {
           </p>
         </div>
 
-
         <div className="grid gap-8 md:grid-cols-3">
           {/* Student Role Card */}
           <button
@@ -87,7 +86,6 @@ const SelectRolePage = () => {
             </div>
             <div className="absolute -right-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 transition-all duration-300 group-hover:scale-150" />
           </button>
-
 
           {/* Employee Role Card */}
           <button
