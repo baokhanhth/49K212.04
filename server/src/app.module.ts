@@ -8,20 +8,16 @@ import { SanBaiModule } from './san-bai/san-bai.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
-<<<<<<< HEAD
 import { VeDienTuModule } from './ve-dien-tu/ve-dien-tu.module';
 import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
-=======
 import { CheckInModule } from './check-in/check-in.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
->>>>>>> 36b363df4cdcaec6a68358a4ed97b6603efd2f3b
 @Module({
   imports: [
     // Load .env
     ConfigModule.forRoot({
       isGlobal: true,
-      
     }),
     // Serve static file
     ServeStaticModule.forRoot({
@@ -41,9 +37,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
         password: configService.get<string>('DB_PASSWORD', '123456'),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Set false in production
+        synchronize: false,
         options: {
-          encrypt: false,
+          encrypt: true,
           trustServerCertificate: true,
         },
         extra: {
@@ -57,13 +53,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
     SanBaiModule,
     LichSanModule,
     DatSanModule,
-<<<<<<< HEAD
     VeDienTuModule,
     NguoiDungModule,
-=======
     CheckInModule,
     DashboardModule,
->>>>>>> 36b363df4cdcaec6a68358a4ed97b6603efd2f3b
   ],
   controllers: [AppController],
   providers: [AppService],

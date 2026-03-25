@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SelectRolePage from './pages/SelectRolePage';
 // import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import HomePage from './pages/HomePage';
-import Xemdanhsachsan from "./pages/Xemdanhsachsan";
+// import Footer from './components/layout/Footer';
+// import HomePage from './pages/HomePage';
+// import Xemdanhsachsan from "./pages/Xemdanhsachsan";
 
 
 // Student pages
