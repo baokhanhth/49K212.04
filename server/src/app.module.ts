@@ -8,6 +8,8 @@ import { SanBaiModule } from './san-bai/san-bai.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
+import { CheckInModule } from './check-in/check-in.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -24,36 +26,31 @@ import { DatSanModule } from './dat-san/dat-san.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        console.log('DB_HOST =', configService.get<string>('DB_HOST'));
-        console.log('DB_USERNAME =', configService.get<string>('DB_USERNAME'));
-        console.log('DB_PASSWORD =', configService.get<string>('DB_PASSWORD'));
-        console.log('DB_DATABASE =', configService.get<string>('DB_DATABASE'));
-
-        return {
-          type: 'mssql' as const,
-          host: configService.get<string>('DB_HOST', 'localhost'),
-          port: parseInt(configService.get<string>('DB_PORT', '1433'), 10),
-          username: configService.get<string>('DB_USERNAME', 'sa'),
-          password: configService.get<string>('DB_PASSWORD', '123456'),
-          database: configService.get<string>('DB_DATABASE', 'football_db'),
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: false,
-          options: {
-            encrypt: true,
-            trustServerCertificate: true,
-          },
-          extra: {
-            requestTimeout: 30000,
-            connectionTimeout: 30000,
-          },
-        };
-      },
+      useFactory: (configService: ConfigService) => ({
+        type: 'mssql',
+        host: configService.get<string>('DB_HOST', 'localhost'),
+        port: parseInt(configService.get<string>('DB_PORT', '1433'), 10),
+        username: configService.get<string>('DB_USERNAME', 'sa'),
+        password: configService.get<string>('DB_PASSWORD', '123456'),
+        database: configService.get<string>('DB_DATABASE', 'football_db'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: false,
+        options: {
+          encrypt: true,
+          trustServerCertificate: true,
+        },
+        extra: {
+          requestTimeout: 30000,
+          connectionTimeout: 30000,
+        },
+      }),
     }),
 
     SanBaiModule,
     LichSanModule,
     DatSanModule,
+    CheckInModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
