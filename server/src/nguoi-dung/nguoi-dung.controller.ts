@@ -5,12 +5,15 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  Post, Req, UseGuards
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse as SwaggerResponse } from '@nestjs/swagger';
 import { NguoiDungService } from './nguoi-dung.service';
 import { KhoaQuyenDto } from './dto/khoa-quyen.dto';
 import { successResponse, ApiResponse } from '../common/interfaces/api-response.interface';
 import { NguoiDung } from './entities/nguoi-dung.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Request } from 'express';
 
 @ApiTags('nguoi-dung')
 @Controller('nguoi-dung')
@@ -64,4 +67,28 @@ export class NguoiDungController {
     const data = await this.nguoiDungService.capNhatDiemUyTin(id, diemMoi);
     return successResponse(data, 'Cập nhật điểm uy tín thành công');
   }
-}
+  // đăng xuát
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @ApiOperation({ summary: 'Đăng xuất' })
+  logout(): ApiResponse<null> {
+    return successResponse(null, 'Đăng xuất thành công');
+  }
+
+  // phia client
+  // async function logout() {
+  //   await fetch('/nguoi-dung/logout', {
+  //     method: 'POST',
+  //     headers: {
+  //       Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+  //     },
+  //   });
+  
+  //   // Bước quan trọng nhất — xóa token khỏi client
+  //   localStorage.removeItem('accessToken');
+  //   localStorage.removeItem('refreshToken');
+  
+  //   // Chuyển về trang login
+  //   window.location.href = '/login';
+  // }
+  }

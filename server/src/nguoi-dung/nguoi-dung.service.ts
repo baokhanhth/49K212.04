@@ -7,13 +7,15 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { NguoiDung } from "./entities/nguoi-dung.entity";
 import { KhoaQuyenDto } from "./dto/khoa-quyen.dto";
+import { TokenBlacklistService } from '../auth/token-blacklist.service';
 
 @Injectable()
 export class NguoiDungService {
   constructor(
     @InjectRepository(NguoiDung)
-    private readonly nguoiDungRepo: Repository<NguoiDung>
-  ) {}
+    private readonly nguoiDungRepo: Repository<NguoiDung>,
+    private readonly blacklistService: TokenBlacklistService,
+    ) {}
 
   // ─── E17.2: Lấy danh sách toàn bộ sinh viên (maVaiTro = 2) ──
   async findAllSinhVien(): Promise<NguoiDung[]> {
@@ -133,4 +135,10 @@ export class NguoiDungService {
     }
     return true;
   }
-}
+
+  // đăng xuất
+  async logout(): Promise<void> {
+    // Không cần làm gì ở server
+    // Client sẽ tự xóa accessToken khỏi localStorage/cookie
+    return;
+}}
