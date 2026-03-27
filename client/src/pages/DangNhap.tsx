@@ -46,13 +46,13 @@ const DangNhap: React.FC = () => {
     try {
       // TODO: Call API to login
       // const response = await api.post('/auth/login', formData);
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Show success message
       alert('Đăng nhập thành công!');
-      
+
       // Navigate to select role page
       navigate('/select-role');
     } catch (error) {
@@ -103,9 +103,8 @@ const DangNhap: React.FC = () => {
                 value={formData.emailOrMSSV}
                 onChange={handleChange}
                 placeholder="Nhập Email hoặc MSSV"
-                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-                  errors.emailOrMSSV ? 'border-red-500' : 'border-white/20'
-                }`}
+                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${errors.emailOrMSSV ? 'border-red-500' : 'border-white/20'
+                  }`}
               />
               {errors.emailOrMSSV && <p className="mt-1 text-sm text-red-400">{errors.emailOrMSSV}</p>}
             </div>
@@ -122,9 +121,8 @@ const DangNhap: React.FC = () => {
                 value={formData.matKhau}
                 onChange={handleChange}
                 placeholder="Nhập mật khẩu"
-                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-                  errors.matKhau ? 'border-red-500' : 'border-white/20'
-                }`}
+                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${errors.matKhau ? 'border-red-500' : 'border-white/20'
+                  }`}
               />
               {errors.matKhau && <p className="mt-1 text-sm text-red-400">{errors.matKhau}</p>}
             </div>
