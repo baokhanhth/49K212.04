@@ -10,20 +10,19 @@ import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
 import { VeDienTuModule } from './ve-dien-tu/ve-dien-tu.module';
 import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
-    // Load .env
     ConfigModule.forRoot({
       isGlobal: true,
-      
+      envFilePath: '.env',
     }),
-    // Serve static file
+
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
 
-    // Database connection - SQL Server
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -35,7 +34,7 @@ import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
         password: configService.get<string>('DB_PASSWORD', '123456'),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Set false in production
+        synchronize: false,
         options: {
           encrypt: false,
           trustServerCertificate: true,
@@ -47,14 +46,18 @@ import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
       }),
     }),
 
-    // Feature modules
     SanBaiModule,
     LichSanModule,
     DatSanModule,
     VeDienTuModule,
     NguoiDungModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
+
+
 export class AppModule {}
+
+

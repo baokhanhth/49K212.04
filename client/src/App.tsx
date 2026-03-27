@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SelectRolePage from './pages/SelectRolePage';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import HomePage from './pages/HomePage';
-import Xemdanhsachsan from "./pages/Xemdanhsachsan";
+// import Header from './components/layout/Header';
+// import Footer from './components/layout/Footer';
+// import HomePage from './pages/HomePage';
+// import Xemdanhsachsan from "./pages/Xemdanhsachsan";
 
 
 // Student pages
@@ -12,6 +12,7 @@ import VeCuaToi from './pages/student/VeCuaToi';
 import YeuCauDatSan from './pages/student/LichSuDatSan';
 import TaiKhoanStudent from './pages/student/TaiKhoanStudent';
 
+
 // Admin pages
 import Dashboard from './pages/admin/Dashboard';
 import DuyetDatSan from './pages/admin/DuyetDatSan';
@@ -19,8 +20,14 @@ import CauHinhSanBai from './pages/admin/CauHinhSanBai';
 import QuanLySan from './pages/admin/QuanLySan';
 import TaiKhoanAdmin from './pages/admin/TaiKhoanAdmin';
 
+// Employee pages
+import Checkin from './pages/employee/Checkin';
+import XacNhanThanhToan from './pages/employee/XacNhanThanhToan';
+import TaiKhoanEmployee from './pages/employee/TaiKhoan';
+
 // Common pages
 import NotFoundPage from './pages/NotFoundPage';
+
 
 const App: React.FC = () => {
   return (
@@ -30,12 +37,14 @@ const App: React.FC = () => {
         <Route path="/" element={<SelectRolePage />} />
         <Route path="/select-role" element={<SelectRolePage />} />
 
+
         {/* Student routes */}
         <Route path="/student" element={<DatSan />} />
         <Route path="/student/dat-san" element={<DatSan />} />
         <Route path="/student/ve-cua-toi" element={<VeCuaToi />} />
         <Route path="/student/lich-su-dat-san" element={<YeuCauDatSan />} />
         <Route path="/student/tai-khoan" element={<TaiKhoanStudent />} />
+
 
         {/* Admin routes */}
         <Route path="/admin" element={<Dashboard />} />
@@ -44,6 +53,12 @@ const App: React.FC = () => {
         <Route path="/admin/quan-ly-san" element={<QuanLySan />} />
         <Route path="/admin/tai-khoan" element={<TaiKhoanAdmin />} />
 
+        {/* Employee routes */}
+        <Route path="/employee" element={<Checkin />} />
+        <Route path="/employee/checkin" element={<Checkin />} />
+        <Route path="/employee/xac-nhan-thanh-toan" element={<XacNhanThanhToan />} />
+        <Route path="/employee/tai-khoan" element={<TaiKhoanEmployee />} />
+
         {/* 404 - Not Found */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
@@ -51,4 +66,8 @@ const App: React.FC = () => {
   );
 };
 
+
 export default App;
+
+
+
