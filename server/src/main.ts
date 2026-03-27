@@ -36,6 +36,8 @@ async function bootstrap() {
     .setTitle('Quản Lý Đặt Sân - API')
     .setDescription('API documentation cho hệ thống quản lý đặt sân bóng đá')
     .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('auth', 'Xác thực đăng nhập (US-02)')
     .addTag('san-bai', 'Quản lý cấu hình sân bãi (US-18)')
     .addTag('lich-san', 'Quản lý lịch hoạt động sân')
     .build();

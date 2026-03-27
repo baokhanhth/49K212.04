@@ -10,6 +10,8 @@ import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
 import { CheckInModule } from './check-in/check-in.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AuthModule } from './auth/auth.module';
+import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
 
 @Module({
   imports: [
@@ -51,6 +53,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
     DatSanModule,
     CheckInModule,
     DashboardModule,
+    AuthModule,
+    NguoiDungModule,
   ],
   controllers: [AppController],
   providers: [AppService],
