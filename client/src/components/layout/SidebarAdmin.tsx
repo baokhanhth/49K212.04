@@ -1,9 +1,17 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 const SidebarAdmin: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // ✅ thêm
   const [openUser, setOpenUser] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/dang-nhap", { replace: true }); // ✅ về login
+  };
 
   const menuItems = [
     { label: 'Dashboard', path: '/admin' },
@@ -15,7 +23,7 @@ const SidebarAdmin: React.FC = () => {
 
   return (
     <aside className="flex w-[250px] flex-col bg-gradient-to-b from-[#3E5D99] to-[#36558F] px-6 py-7 text-white">
-      
+
       {/* Logo */}
       <div className="mb-10">
         <Link to="/select-role" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -54,7 +62,7 @@ const SidebarAdmin: React.FC = () => {
           );
         })}
 
-        {/* 🔽 QUẢN LÝ NGƯỜI DÙNG */}
+        {/* Dropdown user */}
         <div>
           <button
             onClick={() => setOpenUser(!openUser)}
@@ -70,7 +78,6 @@ const SidebarAdmin: React.FC = () => {
             </div>
           </button>
 
-          {/* Dropdown */}
           {openUser && (
             <div className="mt-1 flex flex-col space-y-1">
               <Link
@@ -101,7 +108,10 @@ const SidebarAdmin: React.FC = () => {
 
       {/* Logout */}
       <div className="mt-auto pt-8">
-        <button className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90">
+        <button
+          onClick={handleLogout} // ✅ thêm
+          className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90"
+        >
           Đăng xuất
         </button>
       </div>

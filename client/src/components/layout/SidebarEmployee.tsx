@@ -1,7 +1,15 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const SidebarEmployee: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // ✅ thêm
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/dang-nhap", { replace: true }); // ✅ về login
+  };
 
   const menuItems = [
     { label: "Check-in", path: "/employee/checkin" },
@@ -51,7 +59,10 @@ const SidebarEmployee: React.FC = () => {
       </nav>
 
       <div className="mt-auto pt-8">
-        <button className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90">
+        <button
+          onClick={handleLogout} // ✅ thêm
+          className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90"
+        >
           Đăng xuất
         </button>
       </div>
