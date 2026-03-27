@@ -174,7 +174,7 @@ export class NguoiDungService {
       hoTen,
       emailTruong,
       sdt: null,
-      emailCaNhan: null,
+      emailCaNhan: dto.emailCaNhan.trim().toLowerCase(), 
       anhDaiDien: null,
       trangThai: true,
       diemUyTin: 100,

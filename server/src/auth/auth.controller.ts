@@ -1,14 +1,19 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse as SwaggerResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { DangNhapDto } from './dto/dang-nhap.dto';
 import { successResponse, ApiResponse } from '../common/interfaces/api-response.interface';
 import { DangNhapResponseDto } from './dto/dang-nhap-response.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService,
+              private readonly tokenBlacklistService: TokenBlacklistService,
+    ) {}
 
   @Post('dang-nhap')
   @HttpCode(HttpStatus.OK)
@@ -30,5 +35,16 @@ export class AuthController {
   ): Promise<ApiResponse<DangNhapResponseDto>> {
     const data = await this.authService.dangNhap(dto);
     return successResponse(data, 'Đăng nhập thành công');
+  }
+
+  // dang xuat 
+  @Post('dang-xuat')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Đăng xuất hệ thống' })
+  async dangXuat(@Headers('authorization') authHeader: string) {
+    const token = authHeader?.replace('Bearer ', '');
+    this.tokenBlacklistService.addToBlacklist(token);
+    return { message: 'Đăng xuất thành công' };
   }
 }

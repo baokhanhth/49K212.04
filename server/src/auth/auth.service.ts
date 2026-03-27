@@ -26,7 +26,6 @@ export class AuthService {
     const user = await this.nguoiDungRepo.findOne({
       where: [
         { username: input },
-        { msv: input },
         { emailTruong: input },
       ],
     });
