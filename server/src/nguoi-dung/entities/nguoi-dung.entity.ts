@@ -33,11 +33,11 @@ export class NguoiDung {
   anhDaiDien: string | null;
 
   @Column({ name: 'TrangThai', type: 'bit', default: true })
-  trangThai: boolean; // true (1) = Hoạt động, false (0) = Bị khóa quyền đặt sân
+  trangThai: boolean;
 
   @Column({ name: 'DiemUyTin', type: 'int', default: 100 })
   diemUyTin: number;
 
   @Column({ name: 'MaVaiTro', type: 'int' })
-  maVaiTro: number; // 1 = Admin, 2 = Sinh viên, 3 = Nhân viên
+  maVaiTro: number;
 }
