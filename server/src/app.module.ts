@@ -8,11 +8,9 @@ import { SanBaiModule } from './san-bai/san-bai.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatSanModule } from './dat-san/dat-san.module';
-import { CheckInModule } from './check-in/check-in.module';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { AuthModule } from './auth/auth.module';
+import { VeDienTuModule } from './ve-dien-tu/ve-dien-tu.module';
 import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
-
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,7 +36,7 @@ import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false,
         options: {
-          encrypt: true,
+          encrypt: false,
           trustServerCertificate: true,
         },
         extra: {
@@ -51,12 +49,15 @@ import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
     SanBaiModule,
     LichSanModule,
     DatSanModule,
-    CheckInModule,
-    DashboardModule,
-    AuthModule,
+    VeDienTuModule,
     NguoiDungModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
+
+
 export class AppModule {}
+
+

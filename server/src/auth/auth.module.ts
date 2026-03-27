@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { NguoiDung } from '../nguoi-dung/entities/nguoi-dung.entity';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { NguoiDung } from '../nguoi-dung/entities/nguoi-dung.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtStrategy, PassportModule],
+  providers: [AuthService, JwtStrategy, TokenBlacklistService],
+  exports: [AuthService, JwtStrategy, PassportModule, PassportModule, TokenBlacklistService], 
 })
 export class AuthModule {}
