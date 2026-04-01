@@ -9,8 +9,6 @@ const QuanLySinhVien = () => {
     { id: 4, name: 'Hoàng Minh D', code: 'SV004', status: 'active', score: 69 },
     { id: 5, name: 'Đỗ Thị E', code: 'SV005', status: 'active', score: 78 },
     { id: 6, name: 'Phạm Văn F', code: 'SV006', status: 'locked', score: 68 },
-    { id: 7, name: 'Vũ Thị G', code: 'SV007', status: 'active', score: 75 },
-    { id: 8, name: 'Bùi Quốc H', code: 'SV008', status: 'active', score: 75 },
   ]);
 
   // 👉 STATE POPUP
@@ -54,11 +52,7 @@ const QuanLySinhVien = () => {
         <div className="rounded-2xl bg-white p-6 shadow-sm">
 
           {/* Top */}
-          <div className="mb-5 flex items-center justify-between">
-            <select className="rounded-lg border px-3 py-2 text-sm">
-              <option>Sinh viên</option>
-            </select>
-
+          <div className="mb-5 flex justify-end">
             <input
               type="text"
               placeholder="Tìm kiếm..."
