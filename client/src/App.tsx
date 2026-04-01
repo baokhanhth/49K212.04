@@ -1,10 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import DangKyTaiKhoan from './pages/DangKyTaiKhoan';
+import DangNhap from './pages/DangNhap';
+import QuenMatKhau from './pages/QuenMatKhau';
 import SelectRolePage from './pages/SelectRolePage';
-// import Header from './components/layout/Header';
-// import Footer from './components/layout/Footer';
-// import HomePage from './pages/HomePage';
-// import Xemdanhsachsan from "./pages/Xemdanhsachsan";
-
 
 // Student pages
 import DatSan from './pages/student/DatSan';
@@ -19,6 +18,8 @@ import DuyetDatSan from './pages/admin/DuyetDatSan';
 import CauHinhSanBai from './pages/admin/CauHinhSanBai';
 import QuanLySan from './pages/admin/QuanLySan';
 import TaiKhoanAdmin from './pages/admin/TaiKhoanAdmin';
+import QuanLySinhVien from './pages/admin/QuanLySinhVien';
+import QuanLyNhanVien from './pages/admin/QuanLyNhanVien';
 
 // Employee pages
 import Checkin from './pages/employee/Checkin';
@@ -33,10 +34,14 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        {/* Role selection - default route */}
-        <Route path="/" element={<SelectRolePage />} />
-        <Route path="/select-role" element={<SelectRolePage />} />
+        {/* Authentication routes - default route */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dang-ky" element={<DangKyTaiKhoan />} />
+        <Route path="/dang-nhap" element={<DangNhap />} />
+        <Route path="/quen-mat-khau" element={<QuenMatKhau />} />
 
+        {/* Role selection */}
+        <Route path="/select-role" element={<SelectRolePage />} />
 
         {/* Student routes */}
         <Route path="/student" element={<DatSan />} />
@@ -52,6 +57,8 @@ const App: React.FC = () => {
         <Route path="/admin/cau-hinh-san-bai" element={<CauHinhSanBai />} />
         <Route path="/admin/quan-ly-san" element={<QuanLySan />} />
         <Route path="/admin/tai-khoan" element={<TaiKhoanAdmin />} />
+        <Route path="/admin/sinh-vien" element={<QuanLySinhVien />} />
+        <Route path="/admin/nhan-vien" element={<QuanLyNhanVien />} />
 
         {/* Employee routes */}
         <Route path="/employee" element={<Checkin />} />
