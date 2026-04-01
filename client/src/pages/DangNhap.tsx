@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authApi } from '../services/api';
+import { AxiosError } from 'axios';
 
 const DangNhap: React.FC = () => {
   const navigate = useNavigate();
@@ -11,6 +13,7 @@ const DangNhap: React.FC = () => {
     emailOrMSSV: '',
     matKhau: '',
   });
+  const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validateForm = (): boolean => {
@@ -36,6 +39,7 @@ const DangNhap: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError('');
 
     if (!validateForm()) {
       return;
@@ -44,20 +48,36 @@ const DangNhap: React.FC = () => {
     setLoading(true);
 
     try {
-      // TODO: Call API to login
-      // const response = await api.post('/auth/login', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success message
-      alert('Đăng nhập thành công!');
-      
-      // Navigate to select role page
-      navigate('/select-role');
+      const data = await authApi.dangNhap({
+        username: formData.emailOrMSSV,
+        matKhau: formData.matKhau,
+      });
+
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      const maVaiTro = data.user.maVaiTro;
+      if (maVaiTro === 1) {
+        navigate('/admin');
+      } else if (maVaiTro === 3) {
+        navigate('/employee/checkin');
+      } else {
+        navigate('/student/dat-san');
+      }
     } catch (error) {
-      console.error('Lỗi đăng nhập:', error);
-      alert('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const status = axiosError.response?.status;
+      const message = axiosError.response?.data?.message;
+
+      if (status === 401) {
+        setServerError('Sai tài khoản hoặc mật khẩu');
+      } else if (status === 403) {
+        setServerError(
+          message || 'Tài khoản của bạn đang bị khóa. Vui lòng liên hệ với quản lý để mở khóa quyền truy cập.'
+        );
+      } else {
+        setServerError('Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
@@ -90,6 +110,11 @@ const DangNhap: React.FC = () => {
         </div>
 
         <div className="rounded-2xl bg-white/10 backdrop-blur-sm p-8">
+          {serverError && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {serverError}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email/MSSV */}
             <div>
