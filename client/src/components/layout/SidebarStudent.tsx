@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import Logo from "../common/Logo";
 
 const SidebarStudent: React.FC = () => {
   const location = useLocation();
@@ -14,18 +15,7 @@ const SidebarStudent: React.FC = () => {
     <aside className="flex w-[250px] flex-col bg-gradient-to-b from-[#3E5D99] to-[#36558F] px-6 py-7 text-white">
 
       <div className="mb-10">
-        <Link to="/select-role" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-[#3E5D99] font-bold">
-            DUE
-          </div>
-
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-wide">N4 DUE</h1>
-            <p className="mt-1 text-sm leading-5 text-white/70">
-              Hệ thống quản lý và đặt lịch sân thể thao
-            </p>
-          </div>
-        </Link>
+        <Logo />
       </div>
 
       <nav className="space-y-3">
