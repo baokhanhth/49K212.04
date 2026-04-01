@@ -1,8 +1,21 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../common/Logo";
+import { authApi } from "../../services/api";
 
 const SidebarStudent: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await authApi.dangXuat();
+    } catch {
+      // ignore
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/dang-nhap");
+  };
 
   const menuItems = [
     { label: "Đặt sân", path: "/student/dat-san" },
@@ -42,7 +55,10 @@ const SidebarStudent: React.FC = () => {
       </nav>
 
       <div className="mt-auto pt-8">
-        <button className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90">
+        <button
+          onClick={handleLogout}
+          className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90"
+        >
           Đăng xuất
         </button>
       </div>

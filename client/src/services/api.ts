@@ -10,6 +10,11 @@ import type {
   CreateDatSanDto,
   DuyetDatSanDto,
   MatrixItem,
+  DangNhapDto,
+  DangNhapResponse,
+  HoSoResponse,
+  CapNhatHoSoDto,
+  DoiMatKhauDto,
 } from '../types';
 
 const api = axios.create({
@@ -38,7 +43,8 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      window.location.href = '/dang-nhap';
     }
     return Promise.reject(error);
   }
@@ -122,6 +128,35 @@ export const datSanApi = {
 
   cancel: (id: number): Promise<void> =>
     api.delete(`/dat-san/${id}`),
+};
+
+// ===== Auth API =====
+export const authApi = {
+  dangNhap: (data: DangNhapDto): Promise<DangNhapResponse> =>
+    api.post('/auth/dang-nhap', data),
+
+  dangXuat: (): Promise<void> =>
+    api.post('/auth/dang-xuat'),
+};
+
+// ===== Người Dùng API =====
+export const nguoiDungApi = {
+  layHoSo: (): Promise<HoSoResponse> =>
+    api.get('/nguoi-dung/ho-so'),
+
+  capNhatHoSo: (data: CapNhatHoSoDto): Promise<HoSoResponse> =>
+    api.patch('/nguoi-dung/ho-so', data),
+
+  doiMatKhau: (data: DoiMatKhauDto): Promise<void> =>
+    api.patch('/nguoi-dung/doi-mat-khau', data),
+
+  uploadAnhDaiDien: (file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/nguoi-dung/ho-so/upload-anh-dai-dien', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 export default api;
