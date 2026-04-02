@@ -55,4 +55,11 @@ import {
     @IsNotEmpty()
     @MinLength(8)
     matKhau: string;
+
+    @ApiProperty({ example: 'nguyenvana@gmail.com', description: 'Email cá nhân' })
+    @IsString()
+    @IsNotEmpty({ message: 'Email cá nhân không được để trống' })
+    @IsEmail({}, { message: 'Email cá nhân không hợp lệ' })
+    @MaxLength(80)
+    emailCaNhan: string;
   }
