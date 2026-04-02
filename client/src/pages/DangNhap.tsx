@@ -23,12 +23,23 @@ const DangNhap: React.FC = () => {
     };
     let isValid = true;
 
-    if (!formData.emailOrMSSV) {
+    if (!formData.emailOrMSSV.trim()) {
       newErrors.emailOrMSSV = 'Vui lòng nhập Email hoặc MSSV';
       isValid = false;
+    } else {
+      const input = formData.emailOrMSSV.trim();
+
+      // Nếu nhập email thì phải đúng @due.udn.vn
+      if (input.includes('@')) {
+        const dueEmailRegex = /^[a-zA-Z0-9._%+-]+@due\.udn\.vn$/;
+        if (!dueEmailRegex.test(input)) {
+          newErrors.emailOrMSSV = 'Email phải đúng định dạng @due.udn.vn';
+          isValid = false;
+        }
+      }
     }
 
-    if (!formData.matKhau) {
+    if (!formData.matKhau.trim()) {
       newErrors.matKhau = 'Vui lòng nhập mật khẩu';
       isValid = false;
     }
@@ -89,7 +100,6 @@ const DangNhap: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    // Clear error when user starts typing
     setErrors(prev => ({
       ...prev,
       [name]: '',
@@ -116,10 +126,9 @@ const DangNhap: React.FC = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email/MSSV */}
             <div>
               <label htmlFor="emailOrMSSV" className="mb-2 block text-sm font-medium text-white">
-                Email / Mã sinh viên *
+                Email DUE / Mã sinh viên *
               </label>
               <input
                 type="text"
@@ -127,15 +136,16 @@ const DangNhap: React.FC = () => {
                 name="emailOrMSSV"
                 value={formData.emailOrMSSV}
                 onChange={handleChange}
-                placeholder="Nhập Email hoặc MSSV"
+                placeholder="Nhập email @due.udn.vn hoặc MSSV"
                 className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
                   errors.emailOrMSSV ? 'border-red-500' : 'border-white/20'
                 }`}
               />
-              {errors.emailOrMSSV && <p className="mt-1 text-sm text-red-400">{errors.emailOrMSSV}</p>}
+              {errors.emailOrMSSV && (
+                <p className="mt-1 text-sm text-red-400">{errors.emailOrMSSV}</p>
+              )}
             </div>
 
-            {/* Mật khẩu */}
             <div>
               <label htmlFor="matKhau" className="mb-2 block text-sm font-medium text-white">
                 Mật khẩu *
@@ -151,10 +161,11 @@ const DangNhap: React.FC = () => {
                   errors.matKhau ? 'border-red-500' : 'border-white/20'
                 }`}
               />
-              {errors.matKhau && <p className="mt-1 text-sm text-red-400">{errors.matKhau}</p>}
+              {errors.matKhau && (
+                <p className="mt-1 text-sm text-red-400">{errors.matKhau}</p>
+              )}
             </div>
 
-            {/* Quên mật khẩu */}
             <div className="text-right">
               <button
                 type="button"
@@ -165,7 +176,6 @@ const DangNhap: React.FC = () => {
               </button>
             </div>
 
-            {/* Submit button */}
             <button
               type="submit"
               disabled={loading}
@@ -175,7 +185,6 @@ const DangNhap: React.FC = () => {
             </button>
           </form>
 
-          {/* Register link */}
           <div className="mt-6 text-center">
             <p className="text-white/70">
               Chưa có tài khoản?{' '}
@@ -188,7 +197,6 @@ const DangNhap: React.FC = () => {
             </p>
           </div>
 
-          {/* Back to home */}
           <div className="mt-4 text-center">
             <button
               onClick={() => navigate('/')}
