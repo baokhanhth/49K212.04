@@ -7,15 +7,7 @@ import { LoaiSan } from './entities/loai-san.entity';
 describe('SanBaiService', () => {
   let service: SanBaiService;
 
-  const mockSanBaiRepo = {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    save: jest.fn(),
-    remove: jest.fn(),
-    count: jest.fn(),
-    createQueryBuilder: jest.fn(),
-    manager: { createQueryBuilder: jest.fn(), find: jest.fn() },
-  };
+
 
   const mockLoaiSanRepo = {
     find: jest.fn(),
