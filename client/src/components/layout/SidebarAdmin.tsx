@@ -5,6 +5,16 @@ import { authApi } from '../../services/api';
 
 const SidebarAdmin: React.FC = () => {
   const location = useLocation();
+<<<<<<< HEAD
+  const navigate = useNavigate(); // ✅ thêm
+  const [openUser, setOpenUser] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/dang-nhap", { replace: true }); // ✅ về login
+=======
   const navigate = useNavigate();
   const [openUser, setOpenUser] = useState(false);
 
@@ -17,6 +27,7 @@ const SidebarAdmin: React.FC = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/dang-nhap');
+>>>>>>> e87f781e0a236d98d6fc77b4b795c3626ca6ee52
   };
 
   const menuItems = [
@@ -29,7 +40,7 @@ const SidebarAdmin: React.FC = () => {
 
   return (
     <aside className="flex w-[250px] flex-col bg-gradient-to-b from-[#3E5D99] to-[#36558F] px-6 py-7 text-white">
-      
+
       {/* Logo */}
       <div className="mb-10">
         <Logo />
@@ -58,7 +69,7 @@ const SidebarAdmin: React.FC = () => {
           );
         })}
 
-        {/* 🔽 QUẢN LÝ NGƯỜI DÙNG */}
+        {/* Dropdown user */}
         <div>
           <button
             onClick={() => setOpenUser(!openUser)}
@@ -74,7 +85,6 @@ const SidebarAdmin: React.FC = () => {
             </div>
           </button>
 
-          {/* Dropdown */}
           {openUser && (
             <div className="mt-1 flex flex-col space-y-1">
               <Link
@@ -106,7 +116,11 @@ const SidebarAdmin: React.FC = () => {
       {/* Logout */}
       <div className="mt-auto pt-8">
         <button
+<<<<<<< HEAD
+          onClick={handleLogout} // ✅ thêm
+=======
           onClick={handleLogout}
+>>>>>>> e87f781e0a236d98d6fc77b4b795c3626ca6ee52
           className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90"
         >
           Đăng xuất

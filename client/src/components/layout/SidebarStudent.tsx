@@ -26,7 +26,7 @@ const SidebarStudent: React.FC = () => {
 
   return (
     <aside className="flex w-[250px] flex-col bg-gradient-to-b from-[#3E5D99] to-[#36558F] px-6 py-7 text-white">
-
+      
       <div className="mb-10">
         <Logo />
       </div>
