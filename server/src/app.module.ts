@@ -6,10 +6,8 @@ import { join } from 'path';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { KhungGioModule } from './khung-gio/khung-gio.module';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
-import { CauHinhModule } from './cau-hinh/cau-hinh.module';
 import { FacilitiesModule } from './facilities/facilities.module';
 import { DatSanModule } from './dat-san/dat-san.module';
 import { VeDienTuModule } from './ve-dien-tu/ve-dien-tu.module';
@@ -54,9 +52,7 @@ import { AuthModule } from './auth/auth.module';
     }),
 
     SanBaiModule,
-    KhungGioModule,
     LichSanModule,
-    CauHinhModule,
     FacilitiesModule,
     DatSanModule,
     VeDienTuModule,
