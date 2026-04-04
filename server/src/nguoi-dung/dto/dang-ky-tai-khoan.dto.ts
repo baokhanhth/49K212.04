@@ -53,8 +53,16 @@ import {
     @ApiProperty({ example: 'MatKhau@123' })
     @IsString()
     @IsNotEmpty()
-    @MinLength(8)
+    @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
+    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/, {
+      message: 'Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt',
+    })
     matKhau: string;
+
+    @ApiProperty({ example: 'MatKhau@123', description: 'Xác nhận mật khẩu' })
+    @IsString()
+    @IsNotEmpty({ message: 'Xác nhận mật khẩu không được để trống' })
+    xacNhanMatKhau: string;
 
     @ApiProperty({ example: 'nguyenvana@gmail.com', description: 'Email cá nhân' })
     @IsString()
