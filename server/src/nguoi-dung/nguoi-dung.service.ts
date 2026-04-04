@@ -12,9 +12,11 @@ import { DangKyTaiKhoanDto } from './dto/dang-ky-tai-khoan.dto';
 import { DangKyResponseDto } from './dto/dang-ky-response.dto';
 import { CapNhatHoSoDto } from './dto/cap-nhat-ho-so.dto';
 import { DoiMatKhauDto } from './dto/doi-mat-khau.dto';
+import { TaoNhanVienDto } from './dto/tao-nhan-vien.dto';
+import { TaoNhanVienResponseDto } from './dto/tao-nhan-vien-response.dto';
 import * as fs from 'fs';
 import * as path from 'path';
-
+const MAT_KHAU_MAC_DINH = 'Due@12345';
 @Injectable()
 export class NguoiDungService {
   constructor(
@@ -148,6 +150,9 @@ export class NguoiDungService {
     if (matKhau.length < 8) {
       throw new BadRequestException('Mật khẩu phải có ít nhất 8 ký tự');
     }
+    if (matKhau !== dto.xacNhanMatKhau) {
+      throw new BadRequestException('Mật khẩu xác nhận không khớp');
+    }
 
     const existingUsername = await this.nguoiDungRepo.findOne({ where: { username } });
     if (existingUsername) {
@@ -275,5 +280,57 @@ export class NguoiDungService {
     user.matKhau = await bcrypt.hash(dto.matKhauMoi, 10);
     await this.nguoiDungRepo.save(user);
   }
-}
+  // Thêm constant mật khẩu mặc định
+      
+      async taoNhanVien(dto: TaoNhanVienDto): Promise<TaoNhanVienResponseDto> {
+        const emailCaNhan = dto.emailCaNhan.trim().toLowerCase();
+        const sdt = dto.sdt.trim();
+        const hoTen = dto.hoTen.trim().replace(/\s+/g, ' ');
+    
+        // E21.2 - Ràng buộc 4: Kiểm tra email đã tồn tại chưa (cả emailCaNhan lẫn emailTruong)
+        const existingEmail = await this.nguoiDungRepo.findOne({
+          where: [{ emailCaNhan }, { emailTruong: emailCaNhan }],
+        });
+        if (existingEmail) {
+          throw new BadRequestException('Email này đã được sử dụng trong hệ thống');
+        }
+    
+        // E21.2 - Ràng buộc 4: Kiểm tra SĐT đã tồn tại chưa
+        const existingSdt = await this.nguoiDungRepo.findOne({ where: { sdt } });
+        if (existingSdt) {
+          throw new BadRequestException('Số điện thoại này đã được sử dụng trong hệ thống');
+        }
+    
+        // E21.2 - Ràng buộc 2: Hash mật khẩu mặc định
+        const hashedPassword = await bcrypt.hash(MAT_KHAU_MAC_DINH, 10);
+    
+        const newNhanVien = this.nguoiDungRepo.create({
+          username: emailCaNhan,  // dùng email cá nhân làm username
+          matKhau: hashedPassword,
+          hoTen,
+          emailCaNhan,
+          emailTruong: null,      // nhân viên không có email trường
+          sdt,
+          lop: null,              // nhân viên không có lớp
+          msv: null,              // nhân viên không có MSV
+          anhDaiDien: null,
+          trangThai: true,        // E21.2 - Ràng buộc 3: mặc định Active
+          diemUyTin: 100,         // not null trong DB, fix cứng, nhân viên không dùng field này
+          maVaiTro: 3,            // fix cứng = nhân viên trực sân
+        });
+    
+        const saved = await this.nguoiDungRepo.save(newNhanVien);
+    
+        return {
+          userId: saved.userId,
+          username: saved.username,
+          hoTen: saved.hoTen,
+          emailCaNhan: saved.emailCaNhan,
+          sdt: saved.sdt,
+          maVaiTro: saved.maVaiTro,
+          trangThai: saved.trangThai,
+          matKhauMacDinh: MAT_KHAU_MAC_DINH, // E21.2 - Ràng buộc 2: trả về để admin đọc cho nhân viên
+        };
+      }
+    }
 
