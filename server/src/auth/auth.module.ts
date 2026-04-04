@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+<<<<<<< HEAD
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -29,3 +30,22 @@ import { TokenBlacklistService } from './token-blacklist.service';
   exports: [AuthService, JwtStrategy, PassportModule, PassportModule, TokenBlacklistService], 
 })
 export class AuthModule {}
+=======
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { NguoiDung } from '../nguoi-dung/entities/nguoi-dung.entity';
+import { OtpKhoiPhucMatKhau } from './entities/otp-khoi-phuc.entity';
+
+@Module({
+  imports: [
+    ConfigModule,
+    TypeOrmModule.forFeature([NguoiDung, OtpKhoiPhucMatKhau]),
+  ],
+  providers: [AuthService],
+  controllers: [AuthController],
+})
+export class AuthModule { }
+>>>>>>> feat/US-04-BE
