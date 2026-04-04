@@ -1,19 +1,39 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse as SwaggerResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiResponse as SwaggerResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
 import { AuthService } from './auth.service';
-import { DangNhapDto } from './dto/dang-nhap.dto';
-import { successResponse, ApiResponse } from '../common/interfaces/api-response.interface';
-import { DangNhapResponseDto } from './dto/dang-nhap-response.dto';
-import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { TokenBlacklistService } from './token-blacklist.service';
+
+import { DangNhapDto } from './dto/dang-nhap.dto';
+import { DangNhapResponseDto } from './dto/dang-nhap-response.dto';
+import { QuenMatKhauDto } from './dto/quen-mat-khau.dto';
+import { DatLaiMatKhauDto } from './dto/dat-lai-mat-khau.dto';
+
+import {
+  ApiResponse,
+  successResponse,
+} from '../common/interfaces/api-response.interface';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService,
-              private readonly tokenBlacklistService: TokenBlacklistService,
-    ) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
+  ) { }
 
   @Post('dang-nhap')
   @HttpCode(HttpStatus.OK)
@@ -37,7 +57,6 @@ export class AuthController {
     return successResponse(data, 'Đăng nhập thành công');
   }
 
-  // dang xuat 
   @Post('dang-xuat')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -46,5 +65,21 @@ export class AuthController {
     const token = authHeader?.replace('Bearer ', '');
     this.tokenBlacklistService.addToBlacklist(token);
     return { message: 'Đăng xuất thành công' };
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Gửi OTP quên mật khẩu' })
+  async quenMatKhau(@Body() dto: QuenMatKhauDto) {
+    const data = await this.authService.quenMatKhau(dto);
+    return successResponse(data, 'OTP đã được gửi về email');
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Đặt lại mật khẩu' })
+  async datLaiMatKhau(@Body() dto: DatLaiMatKhauDto) {
+    const data = await this.authService.datLaiMatKhau(dto);
+    return successResponse(data, 'Đặt lại mật khẩu thành công');
   }
 }
