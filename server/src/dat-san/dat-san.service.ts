@@ -277,4 +277,19 @@ export class DatSanService {
       console.error('Lỗi logic US-11:', error);
       throw new InternalServerErrorException(`Lỗi hệ thống: ${(error as Error).message}`);    }
   }
+  // ───────────── Xác nhận thu phí (US-16) ─────────────
+async xacNhanThuPhi(id: number, nguoiDuyet: number): Promise<DatSan> {
+  const datSan = await this.findOne(id);
+
+  if (datSan.trangThai !== 'Đã duyệt') {
+    throw new BadRequestException(
+      `Chỉ có thể xác nhận thu phí cho đơn đã duyệt (trạng thái hiện tại: ${datSan.trangThai})`,
+    );
+  }
+
+  datSan.trangThai = 'Đã thanh toán';
+  datSan.nguoiDuyet = nguoiDuyet;
+  await this.datSanRepo.save(datSan);
+  return this.findOne(id);
+}
 }

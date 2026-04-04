@@ -1,18 +1,22 @@
-import { Module } from "@nestjs/common";
-import { JwtModule } from "@nestjs/jwt";
-import { PassportModule } from "@nestjs/passport";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { JwtStrategy } from "./jwt.strategy";
-import { NguoiDung } from "../nguoi-dung/entities/nguoi-dung.entity";
-import { TokenBlacklistService } from "./token-blacklist.service";
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './jwt.strategy';
+import { TokenBlacklistService } from './token-blacklist.service';
+
+import { NguoiDung } from '../nguoi-dung/entities/nguoi-dung.entity';
+import { OtpKhoiPhucMatKhau } from './entities/otp-khoi-phuc.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([NguoiDung]),
-    PassportModule.register({ defaultStrategy: "jwt" }),
+    ConfigModule,
+    TypeOrmModule.forFeature([NguoiDung, OtpKhoiPhucMatKhau]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -37,4 +41,4 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     TokenBlacklistService,
   ],
 })
-export class AuthModule {}
+export class AuthModule { }
