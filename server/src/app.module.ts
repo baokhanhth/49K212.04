@@ -6,8 +6,11 @@ import { join } from 'path';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { KhungGioModule } from './khung-gio/khung-gio.module';
 import { LichSanModule } from './lich-san/lich-san.module';
 import { SanBaiModule } from './san-bai/san-bai.module';
+import { CauHinhModule } from './cau-hinh/cau-hinh.module';
+import { FacilitiesModule } from './facilities/facilities.module';
 import { DatSanModule } from './dat-san/dat-san.module';
 import { VeDienTuModule } from './ve-dien-tu/ve-dien-tu.module';
 import { NguoiDungModule } from './nguoi-dung/nguoi-dung.module';
@@ -35,7 +38,7 @@ import { AuthModule } from './auth/auth.module';
         host: configService.get<string>('DB_HOST', 'localhost'),
         port: parseInt(configService.get<string>('DB_PORT', '1433'), 10),
         username: configService.get<string>('DB_USERNAME', 'sa'),
-        password: configService.get<string>('DB_PASSWORD', '123456'),
+        password: configService.get<string>('DB_PASSWORD', ''),
         database: configService.get<string>('DB_DATABASE', 'football_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false,
@@ -51,7 +54,10 @@ import { AuthModule } from './auth/auth.module';
     }),
 
     SanBaiModule,
+    KhungGioModule,
     LichSanModule,
+    CauHinhModule,
+    FacilitiesModule,
     DatSanModule,
     VeDienTuModule,
     NguoiDungModule,
