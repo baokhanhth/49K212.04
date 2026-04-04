@@ -11,7 +11,7 @@ export interface JwtPayload {
   username: string;
   maVaiTro: number;
 }
-
+//dăng xuất 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService,
