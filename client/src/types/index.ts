@@ -159,3 +159,13 @@ export interface DoiMatKhauDto {
   matKhauMoi: string;
   xacNhanMatKhau: string;
 }
+
+// ===== Nhân viên (US-22) =====
+export interface NhanVien {
+  userId: number;
+  hoTen: string;
+  sdt: string | null;
+  emailCaNhan: string | null;
+  trangThai: boolean;
+  anhDaiDien: string | null;
+}
