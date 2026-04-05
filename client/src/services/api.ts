@@ -15,10 +15,11 @@ import type {
   HoSoResponse,
   CapNhatHoSoDto,
   DoiMatKhauDto,
+  NhanVien,
 } from '../types';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -157,6 +158,21 @@ export const nguoiDungApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+};
+
+// ===== Nhân Viên API (US-22) =====
+export const nhanVienApi = {
+  getAll: (): Promise<NhanVien[]> =>
+    api.get('/nguoi-dung/nhan-vien'),
+
+  khoaTaiKhoan: (id: number): Promise<NhanVien> =>
+    api.patch(`/nguoi-dung/${id}/khoa-tai-khoan`),
+
+  moKhoaTaiKhoan: (id: number): Promise<NhanVien> =>
+    api.patch(`/nguoi-dung/${id}/mo-khoa-tai-khoan`),
+
+  taoNhanVien: (data: { hoTen: string; sdt: string; emailCaNhan: string }): Promise<any> =>
+    api.post('/nguoi-dung/admin/nhan-vien', data),
 };
 
 export default api;

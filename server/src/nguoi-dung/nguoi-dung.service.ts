@@ -14,6 +14,7 @@ import { CapNhatHoSoDto } from './dto/cap-nhat-ho-so.dto';
 import { DoiMatKhauDto } from './dto/doi-mat-khau.dto';
 import { TaoNhanVienDto } from './dto/tao-nhan-vien.dto';
 import { TaoNhanVienResponseDto } from './dto/tao-nhan-vien-response.dto';
+import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import * as fs from 'fs';
 import * as path from 'path';
 const MAT_KHAU_MAC_DINH = 'Due@12345';
@@ -22,6 +23,7 @@ export class NguoiDungService {
   constructor(
     @InjectRepository(NguoiDung)
     private readonly nguoiDungRepo: Repository<NguoiDung>,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   async findAllSinhVien(): Promise<NguoiDung[]> {
@@ -332,5 +334,60 @@ export class NguoiDungService {
           matKhauMacDinh: MAT_KHAU_MAC_DINH, // E21.2 - Ràng buộc 2: trả về để admin đọc cho nhân viên
         };
       }
+
+  // ===== US-22: Quản lý nhân viên =====
+  async findAllNhanVien(): Promise<NguoiDung[]> {
+    return this.nguoiDungRepo.find({
+      where: { maVaiTro: 3 },
+      select: [
+        'userId',
+        'hoTen',
+        'sdt',
+        'emailCaNhan',
+        'trangThai',
+        'anhDaiDien',
+      ],
+      order: { userId: 'ASC' },
+    });
+  }
+
+  async khoaTaiKhoanNhanVien(userId: number): Promise<NguoiDung> {
+    const user = await this.findOne(userId);
+
+    if (user.maVaiTro !== 3) {
+      throw new BadRequestException('Chỉ có thể khóa tài khoản nhân viên');
     }
 
+    if (!user.trangThai) {
+      throw new BadRequestException('Tài khoản này đã bị vô hiệu hóa');
+    }
+
+    user.trangThai = false;
+    await this.nguoiDungRepo.save(user);
+
+    // Force logout: block userId ngay lập tức
+    this.tokenBlacklistService.blockUser(userId);
+
+    return this.findOne(userId);
+  }
+
+  async moKhoaTaiKhoanNhanVien(userId: number): Promise<NguoiDung> {
+    const user = await this.findOne(userId);
+
+    if (user.maVaiTro !== 3) {
+      throw new BadRequestException('Chỉ có thể mở khóa tài khoản nhân viên');
+    }
+
+    if (user.trangThai) {
+      throw new BadRequestException('Tài khoản này đang hoạt động bình thường');
+    }
+
+    user.trangThai = true;
+    await this.nguoiDungRepo.save(user);
+
+    // Unblock userId
+    this.tokenBlacklistService.unblockUser(userId);
+
+    return this.findOne(userId);
+  }
+    }

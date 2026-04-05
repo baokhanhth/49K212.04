@@ -1,20 +1,10 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Logo from '../common/Logo';
 import { authApi } from '../../services/api';
 
 const SidebarAdmin: React.FC = () => {
   const location = useLocation();
-<<<<<<< HEAD
-  const navigate = useNavigate(); // ✅ thêm
-  const [openUser, setOpenUser] = useState(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    navigate("/dang-nhap", { replace: true }); // ✅ về login
-=======
   const navigate = useNavigate();
   const [openUser, setOpenUser] = useState(false);
 
@@ -27,7 +17,6 @@ const SidebarAdmin: React.FC = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/dang-nhap');
->>>>>>> e87f781e0a236d98d6fc77b4b795c3626ca6ee52
   };
 
   const menuItems = [
@@ -116,13 +105,8 @@ const SidebarAdmin: React.FC = () => {
       {/* Logout */}
       <div className="mt-auto pt-8">
         <button
-<<<<<<< HEAD
-          onClick={handleLogout} // ✅ thêm
-=======
           onClick={handleLogout}
->>>>>>> e87f781e0a236d98d6fc77b4b795c3626ca6ee52
-          className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90"
-        >
+          className="w-full rounded-2xl bg-[#8FB3DB] px-5 py-4 text-left text-lg font-medium text-white transition hover:opacity-90">
           Đăng xuất
         </button>
       </div>
