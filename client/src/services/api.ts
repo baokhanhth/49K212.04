@@ -10,10 +10,16 @@ import type {
   CreateDatSanDto,
   DuyetDatSanDto,
   MatrixItem,
+  DangNhapDto,
+  DangNhapResponse,
+  HoSoResponse,
+  CapNhatHoSoDto,
+  DoiMatKhauDto,
+  NhanVien,
 } from '../types';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -38,7 +44,8 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      window.location.href = '/dang-nhap';
     }
     return Promise.reject(error);
   }
@@ -122,6 +129,50 @@ export const datSanApi = {
 
   cancel: (id: number): Promise<void> =>
     api.delete(`/dat-san/${id}`),
+};
+
+// ===== Auth API =====
+export const authApi = {
+  dangNhap: (data: DangNhapDto): Promise<DangNhapResponse> =>
+    api.post('/auth/dang-nhap', data),
+
+  dangXuat: (): Promise<void> =>
+    api.post('/auth/dang-xuat'),
+};
+
+// ===== Người Dùng API =====
+export const nguoiDungApi = {
+  layHoSo: (): Promise<HoSoResponse> =>
+    api.get('/nguoi-dung/ho-so'),
+
+  capNhatHoSo: (data: CapNhatHoSoDto): Promise<HoSoResponse> =>
+    api.patch('/nguoi-dung/ho-so', data),
+
+  doiMatKhau: (data: DoiMatKhauDto): Promise<void> =>
+    api.patch('/nguoi-dung/doi-mat-khau', data),
+
+  uploadAnhDaiDien: (file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/nguoi-dung/ho-so/upload-anh-dai-dien', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+
+// ===== Nhân Viên API (US-22) =====
+export const nhanVienApi = {
+  getAll: (): Promise<NhanVien[]> =>
+    api.get('/nguoi-dung/nhan-vien'),
+
+  khoaTaiKhoan: (id: number): Promise<NhanVien> =>
+    api.patch(`/nguoi-dung/${id}/khoa-tai-khoan`),
+
+  moKhoaTaiKhoan: (id: number): Promise<NhanVien> =>
+    api.patch(`/nguoi-dung/${id}/mo-khoa-tai-khoan`),
+
+  taoNhanVien: (data: { hoTen: string; sdt: string; emailCaNhan: string }): Promise<any> =>
+    api.post('/nguoi-dung/admin/nhan-vien', data),
 };
 
 export default api;

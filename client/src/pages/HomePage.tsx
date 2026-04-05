@@ -1,66 +1,53 @@
-import { useEffect, useState } from 'react';
-import api from '../services/api';
-
-interface ApiStatus {
-  message: string;
-  version: string;
-}
+import { useNavigate } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
-  const [apiStatus, setApiStatus] = useState<ApiStatus | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const checkApi = async () => {
-      try {
-        const data = await api.get<ApiStatus>('/');
-        setApiStatus(data as unknown as ApiStatus);
-      } catch {
-        setApiStatus(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkApi();
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <div className="text-center py-20">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">
-        ⚽ Chào mừng đến với Football Web
-      </h1>
-      <p className="text-lg text-gray-600 mb-8">
-        Hệ thống quản lý bóng đá trực tuyến
-      </p>
-
-      {/* API Status */}
-      <div className="mb-8 p-4 rounded-lg inline-block">
-        {loading ? (
-          <p className="text-gray-500">🔄 Đang kiểm tra kết nối API...</p>
-        ) : apiStatus ? (
-          <div className="bg-green-100 text-green-800 px-6 py-3 rounded-lg">
-            <p className="font-semibold">✅ API Connected</p>
-            <p className="text-sm">{apiStatus.message} - v{apiStatus.version}</p>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#111827] to-[#1f2937]">
+      <div className="w-full max-w-4xl px-6">
+        <div className="mb-12 text-center">
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-[#3E5D99] text-2xl font-bold">
+              DUE
+            </div>
+            <h1 className="text-5xl font-extrabold tracking-wide text-white">N4 DUE</h1>
           </div>
-        ) : (
-          <div className="bg-red-100 text-red-800 px-6 py-3 rounded-lg">
-            <p className="font-semibold">❌ API Disconnected</p>
-            <p className="text-sm">Không thể kết nối tới server</p>
-          </div>
-        )}
-      </div>
+          <p className="text-lg text-white/70">
+            Hệ thống quản lý và đặt lịch sân thể thao
+          </p>
+        </div>
 
-      <div className="flex justify-center gap-4">
-        <button className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-          Bắt đầu
-        </button>
-        <button className="border-2 border-primary text-primary px-6 py-3 rounded-lg hover:bg-primary hover:text-white transition-colors font-medium">
-          Tìm hiểu thêm
-        </button>
+        <div className="flex justify-center gap-6">
+          <button
+            onClick={() => navigate('/dang-ky')}
+            className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#4CAF50] to-[#45a049] px-12 py-6 text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📝</span>
+              <span className="text-xl font-semibold">Đăng ký</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/dang-nhap')}
+            className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#3E5D99] to-[#36558F] px-12 py-6 text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔐</span>
+              <span className="text-xl font-semibold">Đăng nhập</span>
+            </div>
+          </button>
+        </div>
+
+        <div className="mt-16 text-center">
+          <p className="text-white/50 text-sm">
+            © 2024 N4 DUE - Hệ thống quản lý sân thể thao
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
 export default HomePage;
-
