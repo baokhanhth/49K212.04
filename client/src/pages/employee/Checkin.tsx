@@ -81,7 +81,7 @@ const Checkin = () => {
 
     scanner.render(
       (decodedText) => handleScanSuccess(decodedText),
-      (error) => {
+      (_error) => {
         // Ignore scan errors
       }
     );
