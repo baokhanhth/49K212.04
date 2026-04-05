@@ -114,3 +114,58 @@ export interface MatrixItem {
   hinhAnh?: string | null;
   viTri?: string | null;
 }
+
+// ===== Auth =====
+export interface DangNhapDto {
+  username: string;
+  matKhau: string;
+}
+
+export interface DangNhapResponse {
+  accessToken: string;
+  user: UserInfo;
+}
+
+export interface UserInfo {
+  userId: number;
+  username: string;
+  hoTen: string;
+  maVaiTro: number;
+  msv: string | null;
+  anhDaiDien: string | null;
+}
+
+// ===== Hồ sơ cá nhân =====
+export interface HoSoResponse {
+  userId: number;
+  hoTen: string;
+  emailTruong: string | null;
+  emailCaNhan: string | null;
+  sdt: string | null;
+  anhDaiDien: string | null;
+  maVaiTro: number;
+  msv?: string | null;
+  lop?: string | null;
+  diemUyTin?: number;
+}
+
+export interface CapNhatHoSoDto {
+  emailCaNhan?: string;
+  sdt?: string;
+}
+
+export interface DoiMatKhauDto {
+  matKhauHienTai: string;
+  matKhauMoi: string;
+  xacNhanMatKhau: string;
+}
+
+// ===== Nhân viên (US-22) =====
+export interface NhanVien {
+  userId: number;
+  hoTen: string;
+  sdt: string | null;
+  emailCaNhan: string | null;
+  trangThai: boolean;
+  anhDaiDien: string | null;
+}

@@ -9,5 +9,14 @@
     "dev:server": "cd server && npm run start:dev",
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.6"
   }
 }
