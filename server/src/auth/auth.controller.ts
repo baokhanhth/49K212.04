@@ -16,7 +16,7 @@ import {
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { TokenBlacklistService } from './token-blacklist.service';
-
+import { JwtService } from '@nestjs/jwt';
 import { DangNhapDto } from './dto/dang-nhap.dto';
 import { DangNhapResponseDto } from './dto/dang-nhap-response.dto';
 import { QuenMatKhauDto } from './dto/quen-mat-khau.dto';
