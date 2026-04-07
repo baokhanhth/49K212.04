@@ -11,7 +11,7 @@ export interface JwtPayload {
   username: string;
   maVaiTro: number;
 }
-
+//dăng xuất 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService,
@@ -28,6 +28,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const token = (req.headers['authorization'] ?? '').replace('Bearer ', '');
     if (this.tokenBlacklistService.isBlacklisted(token)) {
       throw new UnauthorizedException('Token đã bị vô hiệu hóa, vui lòng đăng nhập lại');
+    }
+    if (this.tokenBlacklistService.isUserBlocked(payload.sub)) {
+      throw new UnauthorizedException('Tài khoản đã bị vô hiệu hóa');
     }
     return {
       userId: payload.sub,
