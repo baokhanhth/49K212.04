@@ -66,12 +66,26 @@ export class DangKyTaiKhoanDto {
   matKhau: string;
 
   @ApiProperty({
+    example: 'MatKhau@123',
+    description: 'Xác nhận mật khẩu',
+  })
+  @IsString({ message: 'Xác nhận mật khẩu phải là chuỗi' })
+  @IsNotEmpty({ message: 'Xác nhận mật khẩu không được để trống' })
+  @Matches(/^\S+$/, {
+    message: 'Xác nhận mật khẩu không được chứa khoảng trắng',
+  })
+  xacNhanMatKhau: string;
+
+  @ApiProperty({
     example: 'nguyenvana@gmail.com',
     description: 'Email cá nhân',
   })
-  @IsString()
+  @IsString({ message: 'Email cá nhân phải là chuỗi' })
   @IsNotEmpty({ message: 'Email cá nhân không được để trống' })
   @IsEmail({}, { message: 'Email cá nhân không hợp lệ' })
   @MaxLength(80, { message: 'Email cá nhân không được vượt quá 80 ký tự' })
+  @Matches(/^\S+$/, {
+    message: 'Email cá nhân không được chứa khoảng trắng',
+  })
   emailCaNhan: string;
 }
