@@ -126,9 +126,11 @@ const QuenMatKhau: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 flex items-center justify-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-[#3E5D99]">
-              DUE
-            </div>
+            <img
+              src="/logo.png"
+              alt="DUE Logo"
+              className="h-12 w-12 rounded-xl object-contain"
+            />
             <h1 className="text-3xl font-bold text-white">Quên mật khẩu</h1>
           </div>
 
