@@ -118,7 +118,7 @@ const DangNhap: React.FC = () => {
             />
             <h1 className="text-3xl font-bold text-white">Đăng nhập</h1>
           </div>
-          <p className="text-white/70">Chào mừng trở lại!</p>
+          <p className="text-white/70">Đăng nhập hệ thống bằng tài khoản đã đăng ký</p>
         </div>
 
         <div className="rounded-2xl bg-white/10 backdrop-blur-sm p-8">
@@ -130,7 +130,7 @@ const DangNhap: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="emailOrMSSV" className="mb-2 block text-sm font-medium text-white">
-                Email DUE / Mã sinh viên *
+                Email hoặc MSSV *
               </label>
               <input
                 type="text"
