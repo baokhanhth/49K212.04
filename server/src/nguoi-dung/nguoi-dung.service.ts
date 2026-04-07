@@ -20,7 +20,7 @@ export class NguoiDungService {
   constructor(
     @InjectRepository(NguoiDung)
     private readonly nguoiDungRepo: Repository<NguoiDung>,
-  ) {}
+  ) { }
 
   async findAllSinhVien(): Promise<NguoiDung[]> {
     return this.nguoiDungRepo.find({
@@ -145,8 +145,13 @@ export class NguoiDungService {
       throw new BadRequestException('Username phải trùng với email trường');
     }
 
-    if (matKhau.length < 8) {
-      throw new BadRequestException('Mật khẩu phải có ít nhất 8 ký tự');
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+    if (!passwordRegex.test(matKhau)) {
+      throw new BadRequestException(
+        'Mật khẩu phải có ít nhất 8 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt',
+      );
     }
 
     const existingUsername = await this.nguoiDungRepo.findOne({ where: { username } });
@@ -174,7 +179,7 @@ export class NguoiDungService {
       hoTen,
       emailTruong,
       sdt: null,
-      emailCaNhan: dto.emailCaNhan.trim().toLowerCase(), 
+      emailCaNhan: dto.emailCaNhan.trim().toLowerCase(),
       anhDaiDien: null,
       trangThai: true,
       diemUyTin: 100,
