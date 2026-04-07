@@ -8,9 +8,11 @@ const HomePage: React.FC = () => {
       <div className="w-full max-w-4xl px-6">
         <div className="mb-12 text-center">
           <div className="mb-6 flex items-center justify-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-[#3E5D99] text-2xl font-bold">
-              DUE
-            </div>
+            <img
+              src="/logo.png"
+              alt="DUE Logo"
+              className="h-16 w-16 rounded-2xl object-contain"
+            />
             <h1 className="text-5xl font-extrabold tracking-wide text-white">N4 DUE</h1>
           </div>
           <p className="text-lg text-white/70">
