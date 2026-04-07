@@ -17,7 +17,7 @@ const QuenMatKhau: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   const validateSchoolEmail = (value: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@due\.edu\.vn$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@due\.udn\.vn$/;
     return emailRegex.test(value);
   };
 
@@ -62,7 +62,7 @@ const QuenMatKhau: React.FC = () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Mock dữ liệu để test UI theo AC
-    if (schoolEmail === 'notfound@due.edu.vn') {
+    if (schoolEmail === 'notfound@due.udn.vn') {
       return {
         success: false,
         code: 'EMAIL_NOT_FOUND',
@@ -70,7 +70,7 @@ const QuenMatKhau: React.FC = () => {
       };
     }
 
-    if (schoolEmail === 'nopersonal@due.edu.vn') {
+    if (schoolEmail === 'nopersonal@due.udn.vn') {
       return {
         success: false,
         code: 'PERSONAL_EMAIL_MISSING',
@@ -126,9 +126,11 @@ const QuenMatKhau: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 flex items-center justify-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-[#3E5D99]">
-              DUE
-            </div>
+            <img
+              src="/logo.png"
+              alt="DUE Logo"
+              className="h-12 w-12 rounded-xl object-contain"
+            />
             <h1 className="text-3xl font-bold text-white">Quên mật khẩu</h1>
           </div>
 
@@ -156,7 +158,7 @@ const QuenMatKhau: React.FC = () => {
                   name="email"
                   value={email}
                   onChange={handleChange}
-                  placeholder="example@due.edu.vn"
+                  placeholder="example@due.udn.vn"
                   disabled={loading}
                   className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${emailError
                       ? 'border-red-500 focus:ring-red-500/40'

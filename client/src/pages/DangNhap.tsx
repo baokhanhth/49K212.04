@@ -111,12 +111,14 @@ const DangNhap: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 flex items-center justify-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-[#3E5D99] text-xl font-bold">
-              DUE
-            </div>
+            <img
+              src="/logo.png"
+              alt="DUE Logo"
+              className="h-12 w-12 rounded-xl object-contain"
+            />
             <h1 className="text-3xl font-bold text-white">Đăng nhập</h1>
           </div>
-          <p className="text-white/70">Chào mừng trở lại!</p>
+          <p className="text-white/70">Đăng nhập hệ thống bằng tài khoản đã đăng ký</p>
         </div>
 
         <div className="rounded-2xl bg-white/10 backdrop-blur-sm p-8">
@@ -128,7 +130,7 @@ const DangNhap: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="emailOrMSSV" className="mb-2 block text-sm font-medium text-white">
-                Email DUE / Mã sinh viên *
+                Email hoặc MSSV *
               </label>
               <input
                 type="text"

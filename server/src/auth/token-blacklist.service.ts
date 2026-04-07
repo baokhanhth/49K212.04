@@ -45,6 +45,21 @@ export class TokenBlacklistService {
     return true;
   }
 
+  // ===== Force Logout: block theo userId =====
+  private blockedUserIds = new Set<number>();
+
+  blockUser(userId: number): void {
+    this.blockedUserIds.add(userId);
+  }
+
+  unblockUser(userId: number): void {
+    this.blockedUserIds.delete(userId);
+  }
+
+  isUserBlocked(userId: number): boolean {
+    return this.blockedUserIds.has(userId);
+  }
+
   /**
    * Dọn dẹp các token đã hết hạn khỏi Map
    * Được gọi tự động mỗi lần addToBlacklist()

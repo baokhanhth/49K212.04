@@ -67,7 +67,7 @@ export class AuthController {
 
     // Trường hợp không có token (dù đã qua guard, phòng thủ thêm)
     if (!token) {
-      return { message: 'Đăng xuất thành công' };
+      return successResponse(null, 'Đăng xuất thành công');
     }
 
     // Decode token để lấy trường exp (thời điểm hết hạn, tính bằng giây)
@@ -88,7 +88,7 @@ export class AuthController {
       this.tokenBlacklistService.addToBlacklist(token, ttl);
     }
 
-    return { message: 'Đăng xuất thành công' };
+    return successResponse(null, 'Đăng xuất thành công');
   }
 
   @Post('forgot-password')
