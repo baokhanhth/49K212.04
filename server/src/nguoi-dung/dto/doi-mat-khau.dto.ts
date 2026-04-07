@@ -7,12 +7,17 @@ export class DoiMatKhauDto {
   @IsNotEmpty({ message: 'Mật khẩu hiện tại không được để trống' })
   matKhauHienTai: string;
 
-  @ApiProperty({ example: 'MatKhauMoi@456', description: 'Mật khẩu mới (≥8 ký tự, chữ hoa, chữ thường, số, ký tự đặc biệt)' })
+  @ApiProperty({
+    example: 'MatKhauMoi@456',
+    description:
+      'Mật khẩu mới phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt',
+  })
   @IsString()
   @IsNotEmpty({ message: 'Mật khẩu mới không được để trống' })
   @MinLength(8, { message: 'Mật khẩu mới phải có ít nhất 8 ký tự' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/, {
-    message: 'Mật khẩu mới phải có chữ hoa, chữ thường, số và ký tự đặc biệt',
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/, {
+    message:
+      'Mật khẩu mới phải có ít nhất 8 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt',
   })
   matKhauMoi: string;
 

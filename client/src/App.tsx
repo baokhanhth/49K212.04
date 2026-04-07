@@ -34,8 +34,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         {/* Authentication */}
-        <Route path="/" element={<DatLaiMatKhau />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/dang-ky" element={<DangKyTaiKhoan />} />
         <Route path="/dang-nhap" element={<DangNhap />} />
         <Route path="/quen-mat-khau" element={<QuenMatKhau />} />
