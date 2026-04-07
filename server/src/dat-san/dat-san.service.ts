@@ -224,11 +224,16 @@ export class DatSanService {
 
         return {
           maLich: lich.maLichSan,
+          maSan: lich.sanBai?.maSan,
           tenSan: lich.sanBai?.tenSan,
           loaiSan: lich.sanBai?.loaiSan?.tenLoaiSan,
           khungGio: `${timeStartStr.substring(0, 5)} - ${timeEndStr.substring(0, 5)}`,
+          gioBatDau: timeStartStr.substring(0, 5),
+          gioKetThuc: timeEndStr.substring(0, 5),
           trangThai: finalStatus,
           giaThue: lich.sanBai?.giaThue,
+          hinhAnh: lich.sanBai?.hinhAnh,
+          viTri: lich.sanBai?.viTri,
           canBook: finalStatus === 'Trống',
         };
       });
