@@ -6,7 +6,7 @@ import type { SanBai, LoaiSan } from '../../types';
 const QuanLySan: React.FC = () => {
   const [courts, setCourts] = useState<SanBai[]>([]);
   const [loaiSanList, setLoaiSanList] = useState<LoaiSan[]>([]);
-  const [keyword, setKeyword] = useState<string>('');
+  const [keyword] = useState<string>('');
   const [selectedLoaiSan, setSelectedLoaiSan] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 

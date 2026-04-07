@@ -15,11 +15,28 @@ const DangKyTaiKhoan: React.FC = () => {
     matKhau: '',
     xacNhanMatKhau: '',
   });
+  const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@due\.edu\.vn$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@due\.udn\.vn$/;
     return emailRegex.test(email);
+  };
+
+  const validateMSSV = (mssv: string): boolean => {
+    return /^\d{12}$/.test(mssv);
+  };
+
+  const validatePassword = (password: string): boolean => {
+    const hasMinLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const hasNoSpaces = !/\s/.test(password);
+
+    return hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar && hasNoSpaces;
   };
 
   const validateForm = (): boolean => {
@@ -35,20 +52,23 @@ const DangKyTaiKhoan: React.FC = () => {
       newErrors.email = 'Vui lòng nhập email';
       isValid = false;
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Email phải có đuôi @due.edu.vn';
+      newErrors.email = 'Email phải có định dạng @due.udn.vn';
       isValid = false;
     }
 
     if (!formData.maSinhVien) {
       newErrors.maSinhVien = 'Vui lòng nhập mã sinh viên';
       isValid = false;
+    } else if (!validateMSSV(formData.maSinhVien)) {
+      newErrors.maSinhVien = 'Mã sinh viên phải là 12 ký tự số';
+      isValid = false;
     }
 
     if (!formData.matKhau) {
       newErrors.matKhau = 'Vui lòng nhập mật khẩu';
       isValid = false;
-    } else if (formData.matKhau.length < 6) {
-      newErrors.matKhau = 'Mật khẩu phải có ít nhất 6 ký tự';
+    } else if (!validatePassword(formData.matKhau)) {
+      newErrors.matKhau = 'Mật khẩu không hợp lệ. Vui lòng nhập mật khẩu khác!';
       isValid = false;
     }
 
@@ -66,6 +86,7 @@ const DangKyTaiKhoan: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError('');
 
     if (!validateForm()) {
       return;
@@ -76,18 +97,21 @@ const DangKyTaiKhoan: React.FC = () => {
     try {
       // TODO: Call API to register user
       // const response = await api.post('/auth/register', formData);
-      
-      // Simulate API call
+
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success message
+
       alert('Đăng ký thành công! Vui lòng đăng nhập.');
-      
-      // Navigate to login page
       navigate('/dang-nhap');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Lỗi đăng ký:', error);
-      alert('Đăng ký thất bại. Vui lòng thử lại.');
+
+      if (error?.response?.data?.code === 'ACCOUNT_EXISTS') {
+        setServerError('Tài khoản này đã được đăng ký. Vui lòng đăng ký tài khoản khác!');
+      } else if (error?.response?.data?.code === 'INVALID_PASSWORD') {
+        setServerError('Mật khẩu không hợp lệ. Vui lòng nhập mật khẩu khác!');
+      } else {
+        setServerError('Đăng ký thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
@@ -99,11 +123,11 @@ const DangKyTaiKhoan: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    // Clear error when user starts typing
     setErrors(prev => ({
       ...prev,
       [name]: '',
     }));
+    setServerError('');
   };
 
   return (
@@ -120,6 +144,11 @@ const DangKyTaiKhoan: React.FC = () => {
         </div>
 
         <div className="rounded-2xl bg-white/10 backdrop-blur-sm p-8">
+          {serverError && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {serverError}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
@@ -132,7 +161,7 @@ const DangKyTaiKhoan: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="example@due.edu.vn"
+                placeholder="example@due.udn.vn"
                 className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
                   errors.email ? 'border-red-500' : 'border-white/20'
                 }`}
@@ -159,22 +188,41 @@ const DangKyTaiKhoan: React.FC = () => {
               {errors.maSinhVien && <p className="mt-1 text-sm text-red-400">{errors.maSinhVien}</p>}
             </div>
 
-            {/* Mật khẩu */}
+            {/* Mật khẩu — có custom tooltip */}
             <div>
               <label htmlFor="matKhau" className="mb-2 block text-sm font-medium text-white">
                 Mật khẩu *
               </label>
-              <input
-                type="password"
-                id="matKhau"
-                name="matKhau"
-                value={formData.matKhau}
-                onChange={handleChange}
-                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-                  errors.matKhau ? 'border-red-500' : 'border-white/20'
-                }`}
-              />
+              <div className="relative">
+                <input
+                  type="password"
+                  id="matKhau"
+                  name="matKhau"
+                  value={formData.matKhau}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu"
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                  onFocus={() => setShowTooltip(true)}
+                  onBlur={() => setShowTooltip(false)}
+                  className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
+                    errors.matKhau ? 'border-red-500' : 'border-white/20'
+                  }`}
+                />
+
+                {/* Custom Tooltip */}
+                {showTooltip && (
+                  <div className="absolute bottom-full left-0 mb-2 z-10 w-full rounded-lg border border-white/20 bg-[#1f2937] px-4 py-3 text-sm text-white shadow-lg">
+                    <div className="flex items-start gap-2">
+                      <span>
+                        Mật khẩu phải bao gồm ít nhất 8 chữ ký tự, bao gồm ít nhất 1 chữ cái in hoa, 1 chữ cái in thường, 1 chữ số và 1 ký tự đặc biệt
+                      </span>
+                    </div>
+                    {/* Mũi tên tooltip */}
+                    <div className="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 border-b border-r border-white/20 bg-[#1f2937]" />
+                  </div>
+                )}
+              </div>
               {errors.matKhau && <p className="mt-1 text-sm text-red-400">{errors.matKhau}</p>}
             </div>
 

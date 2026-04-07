@@ -1,17 +1,5 @@
-import {
-  Controller,
-  Get,
-  Patch,
-  Param,
-  Body,
-  ParseIntPipe,
-  Post,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller,Get,Patch,Param, Body,ParseIntPipe,Post,
+  UseInterceptors,UploadedFile, BadRequestException, UseGuards, Request,} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse as SwaggerResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { NguoiDungService } from './nguoi-dung.service';
 import { KhoaQuyenDto } from './dto/khoa-quyen.dto';
@@ -25,7 +13,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-
+import { TaoNhanVienDto } from './dto/tao-nhan-vien.dto';
+import { TaoNhanVienResponseDto } from './dto/tao-nhan-vien-response.dto';
 @ApiTags('nguoi-dung')
 @Controller('nguoi-dung')
 export class NguoiDungController {
@@ -114,13 +103,28 @@ export class NguoiDungController {
   }
 
   @Get('sinh-vien')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Lấy danh sách tất cả sinh viên' })
   async findAllSinhVien(): Promise<ApiResponse<NguoiDung[]>> {
     const data = await this.nguoiDungService.findAllSinhVien();
     return successResponse(data, 'Lấy danh sách sinh viên thành công');
   }
 
+  // ===== US-22: Quản lý nhân viên =====
+  @Get('nhan-vien')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Lấy danh sách nhân viên (US-22, E22.1)' })
+  @SwaggerResponse({ status: 200, description: 'Lấy danh sách thành công' })
+  async findAllNhanVien(): Promise<ApiResponse<NguoiDung[]>> {
+    const data = await this.nguoiDungService.findAllNhanVien();
+    return successResponse(data, 'Lấy danh sách nhân viên thành công');
+  }
+
   @Patch(':id/khoa-quyen')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Khóa quyền đặt sân của sinh viên' })
   @ApiParam({ name: 'id', type: Number })
   @SwaggerResponse({ status: 200, description: 'Khóa thành công' })
@@ -134,6 +138,8 @@ export class NguoiDungController {
   }
 
   @Patch(':id/khoi-phuc-quyen')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Khôi phục quyền đặt sân của sinh viên' })
   @ApiParam({ name: 'id', type: Number })
   @SwaggerResponse({ status: 200, description: 'Khôi phục thành công' })
@@ -147,6 +153,8 @@ export class NguoiDungController {
   }
 
   @Patch(':id/diem-uy-tin')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Cập nhật điểm uy tín' })
   @ApiParam({ name: 'id', type: Number })
   async capNhatDiemUyTin(
@@ -208,5 +216,48 @@ export class NguoiDungController {
       `/uploads/avatars/${file.filename}`,
     );
     return successResponse(data, 'Upload ảnh đại diện thành công');
+  }
+  //us21-admin tạo tài khoản nhân viên thủ công 
+  // Thêm endpoint - đặt cùng cấp với các @Post khác
+  @Post('admin/nhan-vien')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Admin tạo tài khoản nhân viên trực sân (E21)' })
+  @SwaggerResponse({ status: 201, description: 'Tạo tài khoản thành công' })
+  @SwaggerResponse({ status: 400, description: 'Email hoặc SĐT đã tồn tại' })
+  @SwaggerResponse({ status: 401, description: 'Chưa đăng nhập' })
+  async taoNhanVien(
+    @Body() dto: TaoNhanVienDto,
+  ): Promise<ApiResponse<TaoNhanVienResponseDto>> {
+    const data = await this.nguoiDungService.taoNhanVien(dto);
+    return successResponse(data, 'Tạo tài khoản nhân viên thành công');
+  }
+
+  @Patch(':id/khoa-tai-khoan')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Khóa tài khoản nhân viên (US-22, E22.2)' })
+  @ApiParam({ name: 'id', type: Number })
+  @SwaggerResponse({ status: 200, description: 'Khóa thành công' })
+  @SwaggerResponse({ status: 400, description: 'Tài khoản đã bị khóa hoặc không phải nhân viên' })
+  async khoaTaiKhoanNhanVien(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ApiResponse<NguoiDung>> {
+    const data = await this.nguoiDungService.khoaTaiKhoanNhanVien(id);
+    return successResponse(data, 'Khóa tài khoản nhân viên thành công');
+  }
+
+  @Patch(':id/mo-khoa-tai-khoan')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mở khóa tài khoản nhân viên (US-22)' })
+  @ApiParam({ name: 'id', type: Number })
+  @SwaggerResponse({ status: 200, description: 'Mở khóa thành công' })
+  @SwaggerResponse({ status: 400, description: 'Tài khoản đang hoạt động hoặc không phải nhân viên' })
+  async moKhoaTaiKhoanNhanVien(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ApiResponse<NguoiDung>> {
+    const data = await this.nguoiDungService.moKhoaTaiKhoanNhanVien(id);
+    return successResponse(data, 'Mở khóa tài khoản nhân viên thành công');
   }
 }

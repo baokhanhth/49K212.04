@@ -33,7 +33,7 @@ const isValidEmail = (value: string) =>
 const isValidPhone = (value: string) => /^\d{10}$/.test(value);
 
 const isStrongPassword = (value: string) =>
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/.test(value);
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(value);
 
 const TaiKhoanStudent = () => {
   const [profile, setProfile] = useState<HoSoResponse | null>(null);
@@ -158,7 +158,7 @@ const TaiKhoanStudent = () => {
 
     if (!isStrongPassword(passwordForm.matKhauMoi)) {
       errors.matKhauMoi =
-        "Mật khẩu mới phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt";
+        "Mật khẩu mới phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt";
     }
 
     if (passwordForm.xacNhanMatKhau !== passwordForm.matKhauMoi) {
@@ -335,7 +335,7 @@ const TaiKhoanStudent = () => {
                     Email trường
                   </label>
                   <input
-                    value={profile.emailTruong}
+                    value={profile.emailTruong ?? ""}
                     disabled
                     className="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 outline-none"
                   />

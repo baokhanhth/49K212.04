@@ -12,14 +12,20 @@ import { DangKyTaiKhoanDto } from './dto/dang-ky-tai-khoan.dto';
 import { DangKyResponseDto } from './dto/dang-ky-response.dto';
 import { CapNhatHoSoDto } from './dto/cap-nhat-ho-so.dto';
 import { DoiMatKhauDto } from './dto/doi-mat-khau.dto';
+import { TaoNhanVienDto } from './dto/tao-nhan-vien.dto';
+import { TaoNhanVienResponseDto } from './dto/tao-nhan-vien-response.dto';
+import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const MAT_KHAU_MAC_DINH = 'Due@12345';
 
 @Injectable()
 export class NguoiDungService {
   constructor(
     @InjectRepository(NguoiDung)
     private readonly nguoiDungRepo: Repository<NguoiDung>,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) { }
 
   async findAllSinhVien(): Promise<NguoiDung[]> {
@@ -40,8 +46,9 @@ export class NguoiDungService {
 
   async findOne(userId: number): Promise<NguoiDung> {
     const user = await this.nguoiDungRepo.findOne({ where: { userId } });
-    if (!user)
+    if (!user) {
       throw new NotFoundException(`Không tìm thấy người dùng với mã ${userId}`);
+    }
     return user;
   }
 
@@ -126,6 +133,9 @@ export class NguoiDungService {
     const hoTen = dto.hoTen.trim().replace(/\s+/g, ' ');
     const lop = dto.lop.trim().toUpperCase();
     const matKhau = dto.matKhau.trim();
+    const emailCaNhan = dto.emailCaNhan
+      ? dto.emailCaNhan.trim().toLowerCase()
+      : null;
 
     if (!/^\d{12}$/.test(msv)) {
       throw new BadRequestException('MSSV phải gồm đúng 12 chữ số');
@@ -154,19 +164,34 @@ export class NguoiDungService {
       );
     }
 
-    const existingUsername = await this.nguoiDungRepo.findOne({ where: { username } });
+    const existingUsername = await this.nguoiDungRepo.findOne({
+      where: { username },
+    });
     if (existingUsername) {
       throw new BadRequestException('Username đã tồn tại');
     }
 
-    const existingMsv = await this.nguoiDungRepo.findOne({ where: { msv } });
+    const existingMsv = await this.nguoiDungRepo.findOne({
+      where: { msv },
+    });
     if (existingMsv) {
       throw new BadRequestException('MSSV đã tồn tại');
     }
 
-    const existingEmail = await this.nguoiDungRepo.findOne({ where: { emailTruong } });
+    const existingEmail = await this.nguoiDungRepo.findOne({
+      where: { emailTruong },
+    });
     if (existingEmail) {
       throw new BadRequestException('Email đã tồn tại');
+    }
+
+    if (emailCaNhan) {
+      const existingPersonalEmail = await this.nguoiDungRepo.findOne({
+        where: { emailCaNhan },
+      });
+      if (existingPersonalEmail) {
+        throw new BadRequestException('Email cá nhân đã tồn tại');
+      }
     }
 
     const hashedPassword = await bcrypt.hash(matKhau, 10);
@@ -179,7 +204,7 @@ export class NguoiDungService {
       hoTen,
       emailTruong,
       sdt: null,
-      emailCaNhan: dto.emailCaNhan.trim().toLowerCase(),
+      emailCaNhan,
       anhDaiDien: null,
       trangThai: true,
       diemUyTin: 100,
@@ -201,11 +226,17 @@ export class NguoiDungService {
     };
   }
 
-  async capNhatAnhDaiDien(userId: number, duongDanAnh: string): Promise<NguoiDung> {
+  async capNhatAnhDaiDien(
+    userId: number,
+    duongDanAnh: string,
+  ): Promise<NguoiDung> {
     const user = await this.findOne(userId);
 
     if (user.anhDaiDien) {
-      const oldFilePath = path.join(process.cwd(), user.anhDaiDien.replace(/^\/+/, ''));
+      const oldFilePath = path.join(
+        process.cwd(),
+        user.anhDaiDien.replace(/^\/+/, ''),
+      );
       if (fs.existsSync(oldFilePath)) {
         fs.unlinkSync(oldFilePath);
       }
@@ -248,7 +279,9 @@ export class NguoiDungService {
           where: { emailCaNhan: dto.emailCaNhan },
         });
         if (existingEmail && existingEmail.userId !== userId) {
-          throw new BadRequestException('Email cá nhân đã được sử dụng bởi tài khoản khác');
+          throw new BadRequestException(
+            'Email cá nhân đã được sử dụng bởi tài khoản khác',
+          );
         }
         user.emailCaNhan = dto.emailCaNhan.trim();
       } else {
@@ -268,7 +301,10 @@ export class NguoiDungService {
   async doiMatKhau(userId: number, dto: DoiMatKhauDto): Promise<void> {
     const user = await this.findOne(userId);
 
-    const isPasswordValid = await bcrypt.compare(dto.matKhauHienTai, user.matKhau);
+    const isPasswordValid = await bcrypt.compare(
+      dto.matKhauHienTai,
+      user.matKhau,
+    );
     if (!isPasswordValid) {
       throw new BadRequestException('Mật khẩu hiện tại không đúng');
     }
@@ -280,5 +316,107 @@ export class NguoiDungService {
     user.matKhau = await bcrypt.hash(dto.matKhauMoi, 10);
     await this.nguoiDungRepo.save(user);
   }
-}
 
+  async taoNhanVien(dto: TaoNhanVienDto): Promise<TaoNhanVienResponseDto> {
+    const emailCaNhan = dto.emailCaNhan.trim().toLowerCase();
+    const sdt = dto.sdt.trim();
+    const hoTen = dto.hoTen.trim().replace(/\s+/g, ' ');
+
+    const existingEmail = await this.nguoiDungRepo.findOne({
+      where: [{ emailCaNhan }, { emailTruong: emailCaNhan }],
+    });
+    if (existingEmail) {
+      throw new BadRequestException('Email này đã được sử dụng trong hệ thống');
+    }
+
+    const existingSdt = await this.nguoiDungRepo.findOne({ where: { sdt } });
+    if (existingSdt) {
+      throw new BadRequestException(
+        'Số điện thoại này đã được sử dụng trong hệ thống',
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(MAT_KHAU_MAC_DINH, 10);
+
+    const newNhanVien = this.nguoiDungRepo.create({
+      username: emailCaNhan,
+      matKhau: hashedPassword,
+      hoTen,
+      emailCaNhan,
+      emailTruong: null,
+      sdt,
+      lop: null,
+      msv: null,
+      anhDaiDien: null,
+      trangThai: true,
+      diemUyTin: 100,
+      maVaiTro: 3,
+    });
+
+    const saved = await this.nguoiDungRepo.save(newNhanVien);
+
+    return {
+      userId: saved.userId,
+      username: saved.username,
+      hoTen: saved.hoTen,
+      emailCaNhan: saved.emailCaNhan,
+      sdt: saved.sdt,
+      maVaiTro: saved.maVaiTro,
+      trangThai: saved.trangThai,
+      matKhauMacDinh: MAT_KHAU_MAC_DINH,
+    };
+  }
+
+  async findAllNhanVien(): Promise<NguoiDung[]> {
+    return this.nguoiDungRepo.find({
+      where: { maVaiTro: 3 },
+      select: [
+        'userId',
+        'hoTen',
+        'sdt',
+        'emailCaNhan',
+        'trangThai',
+        'anhDaiDien',
+      ],
+      order: { userId: 'ASC' },
+    });
+  }
+
+  async khoaTaiKhoanNhanVien(userId: number): Promise<NguoiDung> {
+    const user = await this.findOne(userId);
+
+    if (user.maVaiTro !== 3) {
+      throw new BadRequestException('Chỉ có thể khóa tài khoản nhân viên');
+    }
+
+    if (!user.trangThai) {
+      throw new BadRequestException('Tài khoản này đã bị vô hiệu hóa');
+    }
+
+    user.trangThai = false;
+    await this.nguoiDungRepo.save(user);
+
+    this.tokenBlacklistService.blockUser(userId);
+
+    return this.findOne(userId);
+  }
+
+  async moKhoaTaiKhoanNhanVien(userId: number): Promise<NguoiDung> {
+    const user = await this.findOne(userId);
+
+    if (user.maVaiTro !== 3) {
+      throw new BadRequestException('Chỉ có thể mở khóa tài khoản nhân viên');
+    }
+
+    if (user.trangThai) {
+      throw new BadRequestException('Tài khoản này đang hoạt động bình thường');
+    }
+
+    user.trangThai = true;
+    await this.nguoiDungRepo.save(user);
+
+    this.tokenBlacklistService.unblockUser(userId);
+
+    return this.findOne(userId);
+  }
+}

@@ -21,15 +21,24 @@ import { OtpKhoiPhucMatKhau } from './entities/otp-khoi-phuc.entity';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET', 'football_web_secret_key'),
+        secret: configService.get<string>(
+          "JWT_SECRET",
+          "football_web_secret_key"
+        ),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '24h') as any,
+          expiresIn: configService.get<string>("JWT_EXPIRES_IN", "24h") as any,
         },
       }),
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, TokenBlacklistService],
-  exports: [AuthService, JwtStrategy, PassportModule, TokenBlacklistService],
+  exports: [
+    AuthService,
+    JwtStrategy,
+    PassportModule,
+    PassportModule,
+    TokenBlacklistService,
+  ],
 })
 export class AuthModule { }

@@ -43,17 +43,17 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Sai tài khoản hoặc mật khẩu');
+      throw new UnauthorizedException("Sai tài khoản hoặc mật khẩu");
     }
 
     const isPasswordValid = await bcrypt.compare(matKhau, user.matKhau);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Sai tài khoản hoặc mật khẩu');
+      throw new UnauthorizedException("Sai tài khoản hoặc mật khẩu");
     }
 
     if (!user.trangThai) {
       throw new ForbiddenException(
-        'Tài khoản của bạn đang bị khóa. Vui lòng liên hệ quản lý.',
+        "Tài khoản của bạn đang bị khóa. Vui lòng liên hệ với quản lý để mở khóa quyền truy cập."
       );
     }
 
