@@ -103,6 +103,9 @@ export const lichSanApi = {
   }): Promise<{ message: string; affected: number }> =>
     api.post('/lich-san/toggle', data),
 
+  removeByDate: (maSan: number, ngayApDung: string): Promise<{ deleted: number }> =>
+    api.delete(`/lich-san/by-date/${maSan}/${ngayApDung}`),
+
   delete: (id: number): Promise<void> =>
     api.delete(`/lich-san/${id}`),
 };
