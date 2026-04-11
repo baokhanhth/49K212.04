@@ -1,36 +1,142 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { lichSanApi, sanBaiApi } from '../../services/api';
+import type { SanBai } from '../../types';
 
 
 interface ClosedDay {
+  date: string;
   dayNumber: number;
   weekday: string;
   status: 'open' | 'closed' | 'today';
 }
 
+const COURT_ALL_VALUE = 'all';
 
-const initialDays: ClosedDay[] = [
-  { dayNumber: 1, weekday: 'CN', status: 'closed' },
-  { dayNumber: 2, weekday: 'T2', status: 'open' },
-  { dayNumber: 3, weekday: 'T3', status: 'open' },
-  { dayNumber: 4, weekday: 'T4', status: 'closed' },
-  { dayNumber: 5, weekday: 'T5', status: 'open' },
-  { dayNumber: 6, weekday: 'T6', status: 'today' },
-  { dayNumber: 7, weekday: 'T7', status: 'open' },
-];
+const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
+const getWeekStart = (date: Date) => {
+  const result = new Date(date);
+  const day = result.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  result.setDate(result.getDate() + diff);
+  result.setHours(0, 0, 0, 0);
+  result.setMinutes(0, 0, 0);
+  result.setSeconds(0);
+  result.setMilliseconds(0);
+  return result;
+};
+
+const addDays = (date: Date, amount: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+};
+
+const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
+
+const formatDisplayDate = (date: Date) => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+const parseDisplayDate = (text: string) => {
+  const match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const [, day, month, year] = match;
+  const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+};
+
+const getWeekDays = (weekStart: Date, openDates: Set<string>) => {
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(weekStart, index);
+    const iso = toIsoDate(date);
+    const isToday = iso === toIsoDate(new Date());
+    return {
+      date: iso,
+      dayNumber: date.getDate(),
+      weekday: WEEKDAY_LABELS[date.getDay()],
+      status: isToday ? 'today' : openDates.has(iso) ? 'open' : 'closed',
+    } as ClosedDay;
+  });
+};
 
 const CauHinhSanBai: React.FC = () => {
   const [maxAdvanceDays, setMaxAdvanceDays] = useState<number>(7);
-  const [days, setDays] = useState<ClosedDay[]>(initialDays);
+  const [days, setDays] = useState<ClosedDay[]>([]);
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
-  const [selectedCourt, setSelectedCourt] = useState<string>('Tất cả các sân');
+  const [selectedCourtId, setSelectedCourtId] = useState<string>(COURT_ALL_VALUE);
+  const [courts, setCourts] = useState<SanBai[]>([]);
+  const [loadingCourts, setLoadingCourts] = useState<boolean>(true);
+  const [weekStart] = useState<Date>(() => getWeekStart(new Date()));
 
+  const loadCourts = useCallback(async () => {
+    try {
+      const data = await sanBaiApi.getAll();
+      setCourts(Array.isArray(data) ? data : []);
+    } catch {
+      setCourts([]);
+    } finally {
+      setLoadingCourts(false);
+    }
+  }, []);
+
+  const loadSchedule = useCallback(async () => {
+    try {
+      const tuNgay = toIsoDate(weekStart);
+      const denNgay = toIsoDate(addDays(weekStart, 6));
+      const params = {
+        maSan: selectedCourtId === COURT_ALL_VALUE ? undefined : Number(selectedCourtId),
+        tuNgay,
+        denNgay,
+      };
+      const data = await lichSanApi.getAll(params);
+      const dates = Array.isArray(data)
+        ? data.map((item) => item.ngayApDung)
+        : [];
+      setDays(getWeekDays(weekStart, new Set(dates)));
+    } catch {
+      setDays(getWeekDays(weekStart, new Set()));
+    }
+  }, [selectedCourtId, weekStart]);
+
+  useEffect(() => {
+    loadCourts();
+  }, [loadCourts]);
+
+  useEffect(() => {
+    loadSchedule();
+  }, [loadSchedule]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('cau-hinh-san-bai-maxAdvanceDays');
+    if (saved) {
+      const value = Number(saved);
+      if (!Number.isNaN(value) && value > 0) {
+        setMaxAdvanceDays(value);
+      }
+    }
+  }, []);
+
+  const courtOptions = useMemo(() => {
+    return [{ value: COURT_ALL_VALUE, label: 'Tất cả các sân' }].concat(
+      courts.map((court) => ({ value: String(court.maSan), label: court.tenSan })),
+    );
+  }, [courts]);
+
+  const selectedCourtLabel = useMemo(() => {
+    if (selectedCourtId === COURT_ALL_VALUE) return 'Tất cả các sân';
+    return courts.find((court) => court.maSan === Number(selectedCourtId))?.tenSan ?? 'Sân chưa chọn';
+  }, [selectedCourtId, courts]);
 
   const weekLabel = useMemo(() => {
-    return 'Tuần: 02/03/2026 - 08/03/2026';
-  }, []);
+    return `Tuần: ${formatDisplayDate(weekStart)} - ${formatDisplayDate(addDays(weekStart, 6))}`;
+  }, [weekStart]);
 
 
   const handleDecrease = () => {
@@ -43,29 +149,88 @@ const CauHinhSanBai: React.FC = () => {
   };
 
 
-  const handleToggleDay = (dayNumber: number) => {
-    setDays((prev) =>
-      prev.map((item) => {
-        if (item.dayNumber !== dayNumber) return item;
-        if (item.status === 'today') return item;
-        return {
-          ...item,
-          status: item.status === 'closed' ? 'open' : 'closed',
-        };
-      })
-    );
+  const handleToggleDay = async (dayNumber: number) => {
+    const day = days.find((item) => item.dayNumber === dayNumber);
+    if (!day || day.status === 'today') return;
+
+    const isOpening = day.status === 'closed';
+    const targetCourts = selectedCourtId === COURT_ALL_VALUE
+      ? courts
+      : courts.filter((court) => court.maSan === Number(selectedCourtId));
+
+    if (targetCourts.length === 0) {
+      alert('Không tìm thấy sân để cập nhật.');
+      return;
+    }
+
+    try {
+      const promises = targetCourts.map(async (court) => {
+        if (isOpening) {
+          return lichSanApi.toggle({
+            maSan: court.maSan,
+            ngayApDung: day.date,
+            danhSachKhungGio: [
+              { gioBatDau: '06:00:00', gioKetThuc: '22:00:00' },
+            ],
+            moLich: true,
+          });
+        } else {
+          return lichSanApi.removeByDate(court.maSan, day.date);
+        }
+      });
+
+      await Promise.all(promises);
+
+      const actionText = isOpening ? 'mở' : 'đóng';
+      const courtText = selectedCourtId === COURT_ALL_VALUE
+        ? 'tất cả các sân'
+        : selectedCourtLabel;
+      alert(`Đã ${actionText} lịch cho ${courtText} ngày ${formatDisplayDate(new Date(day.date))}`);
+
+      await loadSchedule();
+    } catch {
+      alert('Cập nhật trạng thái ngày thất bại.');
+    }
   };
 
 
   const handleSave = () => {
-    alert('Lưu thay đổi thành công');
+    localStorage.setItem('cau-hinh-san-bai-maxAdvanceDays', String(maxAdvanceDays));
+    alert('Lưu số ngày đặt trước thành công.');
   };
 
 
-  const handleQuickClose = () => {
-    alert(
-      `Đóng khoảng ngày từ ${fromDate || '...'} đến ${toDate || '...'} cho ${selectedCourt}`
-    );
+  const handleQuickClose = async () => {
+    if (selectedCourtId === COURT_ALL_VALUE) {
+      alert('Vui lòng chọn một sân cụ thể để đóng khoảng ngày.');
+      return;
+    }
+
+    const from = parseDisplayDate(fromDate);
+    const to = parseDisplayDate(toDate);
+    if (!from || !to || from > to) {
+      alert('Vui lòng nhập khoảng ngày hợp lệ theo định dạng dd/mm/yyyy.');
+      return;
+    }
+
+    const dates: string[] = [];
+    let current = new Date(from);
+    while (current <= to) {
+      dates.push(toIsoDate(current));
+      current = addDays(current, 1);
+    }
+
+    try {
+      await Promise.all(
+        dates.map((ngayApDung) =>
+          lichSanApi.removeByDate(Number(selectedCourtId), ngayApDung),
+        ),
+      );
+      alert(`Đóng khoảng ngày từ ${fromDate} đến ${toDate} cho ${selectedCourtLabel} thành công.`);
+      await loadSchedule();
+    } catch {
+      alert('Đóng khoảng ngày thất bại.');
+    }
   };
 
 
@@ -262,15 +427,18 @@ const CauHinhSanBai: React.FC = () => {
                   Sân áp dụng
                 </label>
                 <select
-                  value={selectedCourt}
-                  onChange={(e) => setSelectedCourt(e.target.value)}
+                  value={selectedCourtId}
+                  onChange={(e) => setSelectedCourtId(e.target.value)}
                   className="h-12 w-full rounded-lg border border-slate-200 px-4 text-[16px] text-slate-700 outline-none focus:border-blue-400"
                 >
-                  <option>Tất cả các sân</option>
-                  <option>Sân bóng đá A</option>
-                  <option>Sân bóng đá B</option>
-                  <option>Sân bóng chuyền C</option>
-                  <option>Sân tennis D</option>
+                  {courtOptions.map((court) => (
+                    <option key={court.value} value={court.value}>
+                      {court.label}
+                    </option>
+                  ))}
+                  {loadingCourts && (
+                    <option disabled>Đang tải sân...</option>
+                  )}
                 </select>
               </div>
 
