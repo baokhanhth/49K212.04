@@ -115,12 +115,21 @@ export async function runMigrations(dataSource: DataSource): Promise<void> {
           [Id] [int] IDENTITY(1,1) NOT NULL,
           [Email] [nvarchar](80) NOT NULL,
           [Otp] [varchar](6) NOT NULL,
-          [ExpiresAt] [datetime] NOT NULL,
+          [ExpiresAt] [datetime2] NOT NULL,
           [IsUsed] [bit] NOT NULL DEFAULT (0),
-          [CreatedAt] [datetime] NOT NULL DEFAULT (GETDATE()),
+          [CreatedAt] [datetime2] NOT NULL DEFAULT (SYSUTCDATETIME()),
           PRIMARY KEY CLUSTERED ([Id] ASC)
         )`);
       console.log('[Migration] ✓ OtpKhoiPhucMatKhau created');
+    } else {
+      // Migrate datetime -> datetime2 for better JS Date compatibility
+      try {
+        await queryRunner.query(`ALTER TABLE [dbo].[OtpKhoiPhucMatKhau] ALTER COLUMN [ExpiresAt] [datetime2] NOT NULL`);
+        await queryRunner.query(`ALTER TABLE [dbo].[OtpKhoiPhucMatKhau] ALTER COLUMN [CreatedAt] [datetime2] NOT NULL`);
+        console.log('[Migration] ✓ OtpKhoiPhucMatKhau columns migrated to datetime2');
+      } catch (e) {
+        console.log('[Migration] OtpKhoiPhucMatKhau datetime2 migration skipped:', e.message);
+      }
     }
 
     // ThanhToan

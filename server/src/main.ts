@@ -3,9 +3,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import * as dns from 'dns';
 import { AppModule } from './app.module';
 import { DataSource } from 'typeorm';
 import { runMigrations } from './run-migrations';
+
+// Force IPv4 first to avoid ENETUNREACH on platforms without IPv6
+dns.setDefaultResultOrder('ipv4first');
 
 
 async function bootstrap() {
