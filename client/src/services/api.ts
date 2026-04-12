@@ -138,6 +138,28 @@ export const authApi = {
 
   dangXuat: (): Promise<void> =>
     api.post('/auth/dang-xuat'),
+
+  dangKy: (data: {
+    hoTen: string;
+    username: string;
+    msv: string;
+    lop: string;
+    emailTruong: string;
+    matKhau: string;
+    xacNhanMatKhau: string;
+    emailCaNhan: string;
+  }): Promise<any> =>
+    api.post('/nguoi-dung/dang-ky', data),
+
+  quenMatKhau: (email: string): Promise<any> =>
+    api.post('/auth/forgot-password', { email }),
+
+  datLaiMatKhau: (data: {
+    email: string;
+    otp: string;
+    newPassword: string;
+  }): Promise<any> =>
+    api.post('/auth/reset-password', data),
 };
 
 // ===== Người Dùng API =====
@@ -173,6 +195,38 @@ export const nhanVienApi = {
 
   taoNhanVien: (data: { hoTen: string; sdt: string; emailCaNhan: string }): Promise<any> =>
     api.post('/nguoi-dung/admin/nhan-vien', data),
+};
+
+// ===== Vé Điện Tử API =====
+export const veDienTuApi = {
+  getByUserId: (userId: number): Promise<any[]> =>
+    api.get(`/ve-dien-tu/user/${userId}`),
+
+  getChiTiet: (maVe: string): Promise<any> =>
+    api.get(`/ve-dien-tu/chi-tiet/${maVe}`),
+};
+
+// ===== Check-in API =====
+export const checkInApi = {
+  getThongTinVe: (maDatSan: number): Promise<any> =>
+    api.get(`/check-in/ve/${maDatSan}`),
+
+  checkIn: (maDatSan: number): Promise<any> =>
+    api.post(`/check-in/${maDatSan}`),
+};
+
+// ===== Auth Helper =====
+export const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const isAuthenticated = () => {
+  return !!localStorage.getItem('token');
 };
 
 export default api;

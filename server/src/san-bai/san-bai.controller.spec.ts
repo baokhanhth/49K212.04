@@ -39,9 +39,7 @@ describe('SanBaiController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SanBaiController],
-      providers: [
-        { provide: SanBaiService, useValue: mockSanBaiService },
-      ],
+      providers: [{ provide: SanBaiService, useValue: mockSanBaiService }],
     }).compile();
 
     controller = module.get<SanBaiController>(SanBaiController);
@@ -54,8 +52,6 @@ describe('SanBaiController', () => {
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
-
-  // ───────────── Tests for findOne (Xem chi tiết sân bãi) ─────────────
 
   describe('findOne', () => {
     it('should return success response with SanBai data when found', async () => {
@@ -85,8 +81,8 @@ describe('SanBaiController', () => {
       const result = await controller.findOne(1);
 
       expect(result.data).toBeDefined();
-      expect(result.data.loaiSan).toBeDefined();
-      expect(result.data.loaiSan.tenLoaiSan).toBe('Sân 5 người');
+      expect(result.data!.loaiSan).toBeDefined();
+      expect(result.data!.loaiSan.tenLoaiSan).toBe('Sân 5 người');
     });
 
     it('should handle different SanBai IDs', async () => {
@@ -98,7 +94,7 @@ describe('SanBaiController', () => {
         const result = await controller.findOne(id);
 
         expect(mockSanBaiService.findOne).toHaveBeenCalledWith(id);
-        expect(result.data.maSan).toBe(id);
+        expect(result.data!.maSan).toBe(id);
       }
     });
 
@@ -123,13 +119,13 @@ describe('SanBaiController', () => {
 
       const result = await controller.findOne(1);
 
-      expect(result.data.maSan).toBe(1);
-      expect(result.data.tenSan).toBe('Sân A');
-      expect(result.data.hinhAnh).toBe('/uploads/san-bai/san-123.jpg');
-      expect(result.data.viTri).toBe('Khu A');
-      expect(result.data.giaThue).toBe(200000);
-      expect(result.data.trangThai).toBe('Hoạt động');
-      expect(result.data.maLoaiSan).toBe(1);
+      expect(result.data!.maSan).toBe(1);
+      expect(result.data!.tenSan).toBe('Sân A');
+      expect(result.data!.hinhAnh).toBe('/uploads/san-bai/san-123.jpg');
+      expect(result.data!.viTri).toBe('Khu A');
+      expect(result.data!.giaThue).toBe(200000);
+      expect(result.data!.trangThai).toBe('Hoạt động');
+      expect(result.data!.maLoaiSan).toBe(1);
     });
 
     it('should pass id parameter correctly to service', async () => {
