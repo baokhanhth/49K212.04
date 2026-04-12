@@ -1,61 +1,88 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { datSanApi, getStoredUser } from "../services/api";
 
-const bookings = [
-  {
-    san: "Sân Bóng Đá A",
-    sub: "Sân Bóng Đá A",
-    ngay: "01/04/2026",
-    gio: "07:00 - 08:00",
-    trangthai: "Đã duyệt",
-    color: "bg-emerald-500",
-  },
-  {
-    san: "Sân Tennis A",
-    sub: "Sân Tennis A",
-    ngay: "30/03/2026",
-    gio: "15:00 - 16:00",
-    trangthai: "Không check-in",
-    color: "bg-red-500",
-  },
-  {
-    san: "Sân Cầu Lông C",
-    sub: "Sân Cầu Lông C",
-    ngay: "25/03/2026",
-    gio: "18:00 - 19:00",
-    trangthai: "Chờ duyệt",
-    color: "bg-blue-500",
-  },
-  {
-    san: "Sân Bóng Đá A",
-    sub: "Sân Bóng Đá A",
-    ngay: "15/03/2026",
-    gio: "17:00 - 18:00",
-    trangthai: "Đã duyệt",
-    color: "bg-emerald-500",
-  },
-  {
-    san: "Sân Bóng Rổ B",
-    sub: "Sân Bóng Rổ B",
-    ngay: "12/03/2026",
-    gio: "09:00 - 10:00",
-    trangthai: "Đã hủy",
-    color: "bg-gray-400",
-  },
-];
+interface BookingItem {
+  maDatSan: number;
+  tenSan: string;
+  loaiSan: string;
+  ngayDat: string;
+  ngayApDung: string;
+  khungGio: string;
+  trangThai: string;
+}
 
 export default function Lichsudatsan() {
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("Tất cả");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  // Load booking history from API
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user?.userId) {
+      setLoading(false);
+      return;
+    }
+
+    datSanApi
+      .getLichSu(user.userId)
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : [];
+        setBookings(list.map((item: any) => ({
+          maDatSan: item.maDatSan,
+          tenSan: item.lichSan?.sanBai?.tenSan || `Sân #${item.maLichSan}`,
+          loaiSan: item.lichSan?.sanBai?.loaiSan?.tenLoaiSan || "N/A",
+          ngayDat: item.ngayDat,
+          ngayApDung: item.lichSan?.ngayApDung || item.ngayDat,
+          khungGio: item.lichSan
+            ? `${item.lichSan.gioBatDau?.substring(0, 5)} - ${item.lichSan.gioKetThuc?.substring(0, 5)}`
+            : "N/A",
+          trangThai: item.trangThai,
+        })));
+        setError("");
+      })
+      .catch(() => {
+        setError("Không thể tải lịch sử đặt sân. Vui lòng thử lại.");
+        setBookings([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredBookings = useMemo(() => {
-    if (selectedStatus === "Tất cả") return bookings;
-    return bookings.filter((b) => b.trangthai === selectedStatus);
-  }, [selectedStatus]);
+    let result = bookings;
+    if (selectedStatus !== "Tất cả") {
+      result = result.filter((b) => b.trangThai === selectedStatus);
+    }
+    if (dateFrom) {
+      result = result.filter((b) => b.ngayApDung >= dateFrom);
+    }
+    if (dateTo) {
+      result = result.filter((b) => b.ngayApDung <= dateTo);
+    }
+    return result;
+  }, [selectedStatus, bookings, dateFrom, dateTo]);
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN");
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === "Đã duyệt") return "bg-emerald-500";
+    if (status === "Bị từ chối" || status === "Không check-in") return "bg-red-500";
+    if (status === "Chờ duyệt") return "bg-blue-500";
+    return "bg-gray-400";
+  };
 
   const statusOptions = [
     "Tất cả",
     "Đã duyệt",
-    "Không check-in",
+    "Bị từ chối",
     "Chờ duyệt",
     "Đã hủy",
   ];
@@ -111,13 +138,29 @@ export default function Lichsudatsan() {
             Lịch sử đặt sân
           </h1>
 
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">Đang tải...</div>
+          ) : error ? (
+            <div className="py-8 text-center text-red-500">{error}</div>
+          ) : null}
+
           {/* CARD */}
+          {!loading && !error && (
           <div className="bg-white rounded-2xl p-6 shadow-sm">
             {/* FILTER */}
             <div className="flex gap-4 mb-6">
-              <input type="date" className="border rounded-lg px-4 py-2" />
-
-              <input type="date" className="border rounded-lg px-4 py-2" />
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="border rounded-lg px-4 py-2"
+              />
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="border rounded-lg px-4 py-2"
+              />
 
               <div className="ml-auto relative">
                 <button
@@ -164,22 +207,22 @@ export default function Lichsudatsan() {
               </thead>
 
               <tbody>
-                {filteredBookings.map((b, i) => (
-                  <tr key={i} className="border-b">
+                {filteredBookings.map((b) => (
+                  <tr key={b.maDatSan} className="border-b">
                     <td className="py-4">
-                      <div className="font-semibold">{b.san}</div>
-                      <div className="text-sm text-gray-400">{b.sub}</div>
+                      <div className="font-semibold">{b.tenSan}</div>
+                      <div className="text-sm text-gray-400">{b.loaiSan}</div>
                     </td>
 
-                    <td>{b.ngay}</td>
+                    <td>{formatDate(b.ngayApDung)}</td>
 
-                    <td>{b.gio}</td>
+                    <td>{b.khungGio}</td>
 
                     <td>
                       <span
-                        className={`${b.color} text-white px-4 py-1 rounded-full text-sm`}
+                        className={`${getStatusColor(b.trangThai)} text-white px-4 py-1 rounded-full text-sm`}
                       >
-                        {b.trangthai}
+                        {b.trangThai}
                       </span>
                     </td>
                   </tr>
@@ -209,17 +252,19 @@ export default function Lichsudatsan() {
               <button className="border w-8 h-8 rounded">›</button>
             </div>
           </div>
+          )}
 
           {/* LEGEND */}
+          {!loading && !error && (
           <div className="bg-white rounded-2xl mt-6 p-4 flex gap-6 shadow-sm">
             <span className="flex items-center gap-2">
               <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
               Đã duyệt
             </span>
- 
+
             <span className="flex items-center gap-2">
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              Không check-in
+              Bị từ chối
             </span>
 
             <span className="flex items-center gap-2">
@@ -232,6 +277,7 @@ export default function Lichsudatsan() {
               Đã hủy
             </span>
           </div>
+          )}
         </div>
       </div>
     </div>
