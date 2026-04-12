@@ -81,16 +81,17 @@ const DatLaiMatKhau: React.FC = () => {
     e.preventDefault();
     setServerError('');
 
+    const email = searchParams.get('email') || '';
+    if (!email) {
+      setServerError('Thiếu thông tin email. Vui lòng thử lại từ trang quên mật khẩu.');
+      return;
+    }
+
     if (!validateForm()) return;
 
     setLoading(true);
 
     try {
-      const email = searchParams.get('email') || '';
-      if (!email) {
-        setServerError('Liên kết không hợp lệ. Vui lòng thử lại từ trang quên mật khẩu.');
-        return;
-      }
       await authApi.datLaiMatKhau({
         email,
         otp: formData.otp.trim(),
