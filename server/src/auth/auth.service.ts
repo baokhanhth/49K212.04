@@ -93,17 +93,28 @@ export class AuthService {
   }
 
   private async sendOtpEmail(email: string, otp: string): Promise<void> {
+    const mailUser = this.configService.get<string>('MAIL_USER');
+    const mailPass = this.configService.get<string>('MAIL_PASS');
+
+    if (!mailUser || !mailPass) {
+      console.error('[SendOtpEmail] MAIL_USER hoặc MAIL_PASS chưa được cấu hình!', {
+        hasMailUser: !!mailUser,
+        hasMailPass: !!mailPass,
+      });
+      throw new Error('Cấu hình email chưa đầy đủ. Vui lòng kiểm tra biến môi trường MAIL_USER và MAIL_PASS.');
+    }
+
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: {
-        user: this.configService.get<string>('MAIL_USER'),
-        pass: this.configService.get<string>('MAIL_PASS'),
+        user: mailUser,
+        pass: mailPass,
       },
-      requireTLS: true,
-      connectionTimeout: 10000,
-      socketTimeout: 10000,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 15000,
     } as any);
 
     await transporter.sendMail({
@@ -155,11 +166,17 @@ export class AuthService {
       isUsed: false,
     });
 
-    await this.otpRepo.save(otpRecord);
+    try {
+      await this.otpRepo.save(otpRecord);
+    } catch (dbError) {
+      console.error('[QuenMatKhau] Lỗi lưu OTP vào DB:', dbError);
+      throw new BadRequestException('Lỗi hệ thống khi tạo OTP. Vui lòng thử lại sau.');
+    }
 
     try {
       await this.sendOtpEmail(email, otp);
-    } catch (error) {
+    } catch (mailError) {
+      console.error('[QuenMatKhau] Lỗi gửi email:', mailError);
       await this.otpRepo.delete({ email });
       throw new BadRequestException('Không thể gửi email OTP. Vui lòng thử lại sau.');
     }

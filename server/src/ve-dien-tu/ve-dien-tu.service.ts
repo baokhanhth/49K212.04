@@ -97,11 +97,12 @@ async findByUserId(userId: number): Promise<any[]> {
         'datSan.lichSan.sanBai',
         'datSan.lichSan.sanBai.loaiSan',
       ],
+      where: {
+        datSan: { userId },
+      },
     });
   
-    const result = ves.filter((ve) => ve.datSan?.userId === userId);
-  
-    return result.map((ve) => this.mapVeToResponse(ve));
+    return ves.map((ve) => this.mapVeToResponse(ve));
   }
   
   // E14.3 - Tính trạng thái vé
