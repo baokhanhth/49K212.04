@@ -7,6 +7,7 @@ import { AxiosError } from "axios";
 type ProfileErrors = {
   emailCaNhan?: string;
   sdt?: string;
+  avatar?: string;
 };
 
 type PasswordForm = {
@@ -94,6 +95,11 @@ const TaiKhoanStudent = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setProfileErrors((prev) => ({ ...prev, avatar: "Ảnh không được vượt quá 2MB" }));
+      return;
+    }
+    setProfileErrors((prev) => ({ ...prev, avatar: undefined }));
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
   };
@@ -121,7 +127,15 @@ const TaiKhoanStudent = () => {
     setSavingProfile(true);
     try {
       if (avatarFile) {
-        await nguoiDungApi.uploadAnhDaiDien(avatarFile);
+        try {
+          await nguoiDungApi.uploadAnhDaiDien(avatarFile);
+        } catch (uploadError) {
+          const axiosErr = uploadError as AxiosError<{ message?: string }>;
+          const msg = axiosErr.response?.data?.message || "Upload ảnh thất bại";
+          setProfileErrors({ avatar: msg });
+          setSavingProfile(false);
+          return;
+        }
       }
 
       const data = await nguoiDungApi.capNhatHoSo({
@@ -287,6 +301,11 @@ const TaiKhoanStudent = () => {
                     onChange={handleAvatarChange}
                   />
                 </label>
+              )}
+              {profileErrors.avatar && (
+                <p className="mt-1 text-xs text-red-500 text-center">
+                  {profileErrors.avatar}
+                </p>
               )}
             </div>
 

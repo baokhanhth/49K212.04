@@ -94,12 +94,17 @@ export class AuthService {
 
   private async sendOtpEmail(email: string, otp: string): Promise<void> {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: {
         user: this.configService.get<string>('MAIL_USER'),
         pass: this.configService.get<string>('MAIL_PASS'),
       },
-    });
+      requireTLS: true,
+      connectionTimeout: 10000,
+      socketTimeout: 10000,
+    } as any);
 
     await transporter.sendMail({
       from: this.configService.get<string>('MAIL_USER'),
@@ -151,7 +156,13 @@ export class AuthService {
     });
 
     await this.otpRepo.save(otpRecord);
-    await this.sendOtpEmail(email, otp);
+
+    try {
+      await this.sendOtpEmail(email, otp);
+    } catch (error) {
+      await this.otpRepo.delete({ email });
+      throw new BadRequestException('Không thể gửi email OTP. Vui lòng thử lại sau.');
+    }
 
     return { email, expiresAt };
   }

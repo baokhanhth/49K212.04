@@ -4,7 +4,7 @@ import { nguoiDungApi } from '../../services/api';
 import type { HoSoResponse } from '../../types';
 import { AxiosError } from 'axios';
 
-type ProfileErrors = { emailCaNhan?: string; sdt?: string };
+type ProfileErrors = { emailCaNhan?: string; sdt?: string; avatar?: string };
 type PasswordForm = { matKhauHienTai: string; matKhauMoi: string; xacNhanMatKhau: string };
 type PasswordErrors = { matKhauHienTai?: string; matKhauMoi?: string; xacNhanMatKhau?: string };
 
@@ -61,6 +61,11 @@ const TaiKhoan = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setProfileErrors((prev) => ({ ...prev, avatar: 'Ảnh không được vượt quá 2MB' }));
+      return;
+    }
+    setProfileErrors((prev) => ({ ...prev, avatar: undefined }));
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
   };
@@ -78,7 +83,16 @@ const TaiKhoan = () => {
     if (!validateProfile()) return;
     setSavingProfile(true);
     try {
-      if (avatarFile) await nguoiDungApi.uploadAnhDaiDien(avatarFile);
+      if (avatarFile) {
+        try {
+          await nguoiDungApi.uploadAnhDaiDien(avatarFile);
+        } catch (uploadError) {
+          const msg = (uploadError as AxiosError<{ message?: string }>).response?.data?.message || 'Upload ảnh thất bại';
+          setProfileErrors({ avatar: msg });
+          setSavingProfile(false);
+          return;
+        }
+      }
       const data = await nguoiDungApi.capNhatHoSo({ emailCaNhan: draftEmail.trim(), sdt: draftSdt.trim() || undefined });
       setProfile(data);
       setIsEditing(false);
@@ -188,6 +202,9 @@ const TaiKhoan = () => {
                   Chọn ảnh
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                 </label>
+              )}
+              {profileErrors.avatar && (
+                <p className="mt-1 text-xs text-red-500 text-center">{profileErrors.avatar}</p>
               )}
             </div>
 
