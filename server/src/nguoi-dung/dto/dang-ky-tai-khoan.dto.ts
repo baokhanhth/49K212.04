@@ -25,22 +25,25 @@ export class DangKyTaiKhoanDto {
   })
   msv: string;
 
-  @ApiProperty({ example: '48K21.1' })
-  @IsString()
-  @IsNotEmpty({ message: 'Lớp không được để trống' })
-  @MaxLength(10, { message: 'Lớp không được vượt quá 10 ký tự' })
-  lop: string;
+  // @ApiProperty({
+  //   example: '123456789012@due.udn.vn',
+  //   description: 'Email trường = MSSV + @due.udn.vn',
+  // })
+  // @IsString()
+  // @IsNotEmpty({ message: 'Email trường không được để trống' })
+  // @Matches(/^\d{12}@due\.udn\.vn$/, {
+  //   message: 'Email trường phải có dạng MSSV + @due.udn.vn',
+  // })
+  // emailTruong: string;
 
-  @ApiProperty({
-    example: '123456789012@due.udn.vn',
-    description: 'Email trường = MSSV + @due.udn.vn',
+   // 🔥 THÊM MỚI
+   @ApiProperty({
+    example: 'nguyenvana@gmail.com',
   })
-  @IsString()
-  @IsNotEmpty({ message: 'Email trường không được để trống' })
-  @Matches(/^\d{12}@due\.udn\.vn$/, {
-    message: 'Email trường phải có dạng MSSV + @due.udn.vn',
-  })
-  emailTruong: string;
+  @IsEmail({}, { message: 'Email cá nhân không hợp lệ' })
+  @IsNotEmpty({ message: 'Email cá nhân không được để trống' })
+  @MaxLength(80, { message: 'Email cá nhân không được vượt quá 80 ký tự' })
+  emailCaNhan: string;
 
   @ApiProperty({
     example: 'MatKhau@123',
@@ -66,17 +69,4 @@ export class DangKyTaiKhoanDto {
     message: 'Xác nhận mật khẩu không được chứa khoảng trắng',
   })
   xacNhanMatKhau: string;
-
-  @ApiProperty({
-    example: 'nguyenvana@gmail.com',
-    description: 'Email cá nhân',
-  })
-  @IsString({ message: 'Email cá nhân phải là chuỗi' })
-  @IsNotEmpty({ message: 'Email cá nhân không được để trống' })
-  @IsEmail({}, { message: 'Email cá nhân không hợp lệ' })
-  @MaxLength(80, { message: 'Email cá nhân không được vượt quá 80 ký tự' })
-  @Matches(/^\S+$/, {
-    message: 'Email cá nhân không được chứa khoảng trắng',
-  })
-  emailCaNhan: string;
 }
