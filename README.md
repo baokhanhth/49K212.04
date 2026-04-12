@@ -63,7 +63,7 @@ npm run install:all
 Tạo database trong SQL Server:
 
 ```sql
-CREATE DATABASE football_db;
+CREATE DATABASE QuanLyDatSan;
 ```
 
 Cập nhật file `server/.env`:
