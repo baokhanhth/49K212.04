@@ -140,8 +140,8 @@ export class NguoiDungService {
     const matKhau = dto.matKhau?.trim();
     const xacNhanMatKhau = dto.xacNhanMatKhau?.trim();
   
-    // 👉 username LUÔN = MSSV
-    const username = msv;
+    // 👉 username = dto.username (đã validate qua DTO: MSSV@due.udn.vn)
+    const username = dto.username?.trim().toLowerCase();
   
     // ===== 2. Validate MSSV =====
     if (!msv) {
