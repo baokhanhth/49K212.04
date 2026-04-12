@@ -41,7 +41,7 @@ import { AuthModule } from './auth/auth.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false,
         options: {
-          encrypt: false,
+          encrypt: true,
           trustServerCertificate: true,
         },
         extra: {

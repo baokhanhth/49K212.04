@@ -1,9 +1,31 @@
-import { Controller,Get,Patch,Param, Body,ParseIntPipe,Post,
-  UseInterceptors,UploadedFile, BadRequestException, UseGuards, Request,} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiResponse as SwaggerResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  ParseIntPipe,
+  Post,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  UseGuards,
+  Request,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiResponse as SwaggerResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { NguoiDungService } from './nguoi-dung.service';
 import { KhoaQuyenDto } from './dto/khoa-quyen.dto';
-import { successResponse, ApiResponse } from '../common/interfaces/api-response.interface';
+import {
+  successResponse,
+  ApiResponse,
+} from '../common/interfaces/api-response.interface';
 import { NguoiDung } from './entities/nguoi-dung.entity';
 import { DangKyTaiKhoanDto } from './dto/dang-ky-tai-khoan.dto';
 import { DangKyResponseDto } from './dto/dang-ky-response.dto';
@@ -15,10 +37,11 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { TaoNhanVienDto } from './dto/tao-nhan-vien.dto';
 import { TaoNhanVienResponseDto } from './dto/tao-nhan-vien-response.dto';
+
 @ApiTags('nguoi-dung')
 @Controller('nguoi-dung')
 export class NguoiDungController {
-  constructor(private readonly nguoiDungService: NguoiDungService) {}
+  constructor(private readonly nguoiDungService: NguoiDungService) { }
 
   @Get('ho-so')
   @UseGuards(JwtAuthGuard)
@@ -67,16 +90,24 @@ export class NguoiDungController {
       storage: diskStorage({
         destination: './uploads/avatars',
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const extension = extname(file.originalname);
           callback(null, `avatar-${uniqueSuffix}${extension}`);
         },
       }),
       fileFilter: (req, file, callback) => {
-        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/webp',
+        ];
         if (!allowedMimeTypes.includes(file.mimetype)) {
           return callback(
-            new BadRequestException('Chỉ chấp nhận file ảnh jpg, jpeg, png, webp'),
+            new BadRequestException(
+              'Chỉ chấp nhận file ảnh jpg, jpeg, png, webp',
+            ),
             false,
           );
         }
@@ -105,9 +136,17 @@ export class NguoiDungController {
   @Get('sinh-vien')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Lấy danh sách tất cả sinh viên' })
-  async findAllSinhVien(): Promise<ApiResponse<NguoiDung[]>> {
-    const data = await this.nguoiDungService.findAllSinhVien();
+  @ApiOperation({ summary: 'Lấy danh sách sinh viên có tìm kiếm và phân trang' })
+  async layDanhSachSinhVien(
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<ApiResponse<any>> {
+    const data = await this.nguoiDungService.timKiemSinhVien(
+      keyword,
+      Number(page) || 1,
+      Number(limit) || 10,
+    );
     return successResponse(data, 'Lấy danh sách sinh viên thành công');
   }
 
@@ -168,7 +207,10 @@ export class NguoiDungController {
   @Post('dang-ky')
   @ApiOperation({ summary: 'Sinh viên đăng ký tài khoản' })
   @SwaggerResponse({ status: 201, description: 'Đăng ký thành công' })
-  @SwaggerResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc đã tồn tại' })
+  @SwaggerResponse({
+    status: 400,
+    description: 'Dữ liệu không hợp lệ hoặc đã tồn tại',
+  })
   async dangKyTaiKhoan(
     @Body() dto: DangKyTaiKhoanDto,
   ): Promise<ApiResponse<DangKyResponseDto>> {
@@ -182,16 +224,24 @@ export class NguoiDungController {
       storage: diskStorage({
         destination: './uploads/avatars',
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const extension = extname(file.originalname);
           callback(null, `avatar-${uniqueSuffix}${extension}`);
         },
       }),
       fileFilter: (req, file, callback) => {
-        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/webp',
+        ];
         if (!allowedMimeTypes.includes(file.mimetype)) {
           return callback(
-            new BadRequestException('Chỉ chấp nhận file ảnh jpg, jpeg, png, webp'),
+            new BadRequestException(
+              'Chỉ chấp nhận file ảnh jpg, jpeg, png, webp',
+            ),
             false,
           );
         }
@@ -217,8 +267,7 @@ export class NguoiDungController {
     );
     return successResponse(data, 'Upload ảnh đại diện thành công');
   }
-  //us21-admin tạo tài khoản nhân viên thủ công 
-  // Thêm endpoint - đặt cùng cấp với các @Post khác
+
   @Post('admin/nhan-vien')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -239,7 +288,10 @@ export class NguoiDungController {
   @ApiOperation({ summary: 'Khóa tài khoản nhân viên (US-22, E22.2)' })
   @ApiParam({ name: 'id', type: Number })
   @SwaggerResponse({ status: 200, description: 'Khóa thành công' })
-  @SwaggerResponse({ status: 400, description: 'Tài khoản đã bị khóa hoặc không phải nhân viên' })
+  @SwaggerResponse({
+    status: 400,
+    description: 'Tài khoản đã bị khóa hoặc không phải nhân viên',
+  })
   async khoaTaiKhoanNhanVien(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ApiResponse<NguoiDung>> {
@@ -253,7 +305,10 @@ export class NguoiDungController {
   @ApiOperation({ summary: 'Mở khóa tài khoản nhân viên (US-22)' })
   @ApiParam({ name: 'id', type: Number })
   @SwaggerResponse({ status: 200, description: 'Mở khóa thành công' })
-  @SwaggerResponse({ status: 400, description: 'Tài khoản đang hoạt động hoặc không phải nhân viên' })
+  @SwaggerResponse({
+    status: 400,
+    description: 'Tài khoản đang hoạt động hoặc không phải nhân viên',
+  })
   async moKhoaTaiKhoanNhanVien(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ApiResponse<NguoiDung>> {
