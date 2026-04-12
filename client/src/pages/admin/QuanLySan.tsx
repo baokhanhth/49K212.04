@@ -109,13 +109,6 @@ const QuanLySan: React.FC = () => {
     setEditingCourtId(null);
   };
 
-  const handleChangeAddForm = (field: keyof CourtForm, value: string) => {
-    setAddForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   const handleChangeEditForm = (field: keyof CourtForm, value: string) => {
     setEditForm((prev) => ({
       ...prev,
