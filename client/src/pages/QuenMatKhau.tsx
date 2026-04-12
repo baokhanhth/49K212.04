@@ -63,15 +63,20 @@ const QuenMatKhau: React.FC = () => {
         navigate(`/dat-lai-mat-khau?email=${encodeURIComponent(normalizedEmail)}`);
       }, 2000);
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string; code?: string }>;
+      const axiosError = error as AxiosError<{ message?: string; code?: string; statusCode?: number }>;
       const data = axiosError.response?.data;
+      const status = axiosError.response?.status;
 
-      if (data?.code === 'EMAIL_NOT_FOUND' || axiosError.response?.status === 404) {
+      if (status === 404 || data?.code === 'EMAIL_NOT_FOUND') {
         setEmailError('Email không tồn tại');
       } else if (data?.code === 'PERSONAL_EMAIL_MISSING') {
         setServerError('Vui lòng cập nhật email cá nhân trong hồ sơ để khôi phục mật khẩu');
+      } else if (data?.message) {
+        setServerError(data.message);
+      } else if (!axiosError.response) {
+        setServerError('Không thể kết nối đến server. Vui lòng kiểm tra mạng.');
       } else {
-        setServerError(data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
+        setServerError('Có lỗi xảy ra. Vui lòng thử lại sau.');
       }
     } finally {
       setLoading(false);

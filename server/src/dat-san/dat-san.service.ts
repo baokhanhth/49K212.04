@@ -244,7 +244,7 @@ export class DatSanService {
         }
 
         return {
-          maLich: lich.maLichSan,
+          maLichSan: lich.maLichSan,
           maSan: lich.sanBai?.maSan,
           tenSan: lich.sanBai?.tenSan,
           loaiSan: lich.sanBai?.loaiSan?.tenLoaiSan,
