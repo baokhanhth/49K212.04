@@ -59,6 +59,9 @@ const QuenMatKhau: React.FC = () => {
     try {
       await authApi.quenMatKhau(normalizedEmail);
       setSuccess(true);
+      setTimeout(() => {
+        navigate(`/dat-lai-mat-khau?email=${encodeURIComponent(normalizedEmail)}`);
+      }, 2000);
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; code?: string }>;
       const data = axiosError.response?.data;
@@ -90,7 +93,7 @@ const QuenMatKhau: React.FC = () => {
 
           <p className="text-white/70">
             {success
-              ? 'Yêu cầu khôi phục mật khẩu đã được xử lý'
+              ? 'Mã OTP đã được gửi đến email của bạn'
               : 'Nhập email trường đã đăng ký để khôi phục mật khẩu'}
           </p>
         </div>
@@ -159,19 +162,18 @@ const QuenMatKhau: React.FC = () => {
 
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-white">
-                  Gửi email thành công
+                  Gửi OTP thành công
                 </h3>
                 <p className="text-white/70">
-                  Hệ thống đã gửi liên kết đặt lại mật khẩu đến email cá nhân đã lưu
-                  trong hồ sơ của bạn.
+                  Mã OTP đã được gửi đến email của bạn. Hệ thống sẽ tự động chuyển sang trang đặt lại mật khẩu.
                 </p>
               </div>
 
               <button
-                onClick={() => navigate('/dang-nhap')}
+                onClick={() => navigate(`/dat-lai-mat-khau?email=${encodeURIComponent(email.trim().toLowerCase())}`)}
                 className="w-full rounded-lg bg-gradient-to-r from-[#3E5D99] to-[#36558F] px-6 py-3 font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
               >
-                Quay lại đăng nhập
+                Nhập mã OTP ngay
               </button>
             </div>
           )}

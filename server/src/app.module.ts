@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 
 import { AppController } from './app.controller';
@@ -22,6 +23,8 @@ import { AuthModule } from './auth/auth.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    ScheduleModule.forRoot(),
 
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
@@ -45,8 +48,13 @@ import { AuthModule } from './auth/auth.module';
           trustServerCertificate: true,
         },
         extra: {
-          requestTimeout: 30000,
-          connectionTimeout: 30000,
+          requestTimeout: 60000,
+          connectionTimeout: 60000,
+          pool: {
+            max: 10,
+            min: 0,
+            idleTimeoutMillis: 30000,
+          },
         },
       }),
     }),

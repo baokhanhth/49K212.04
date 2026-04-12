@@ -9,7 +9,7 @@ const config = {
   port: 1433,
   user: 'salesadmin@sale-web-server',
   password: 'SaleWeb@2024!',
-  database: 'QuanLyDatSan',
+  database: 'footballteam',
   options: {
     encrypt: true,
     trustServerCertificate: true,

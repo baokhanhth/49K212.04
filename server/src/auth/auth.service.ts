@@ -38,8 +38,17 @@ export class AuthService {
     const { username, matKhau } = dto;
     const input = username.trim().toLowerCase();
 
+    const whereConditions: any[] = [
+      { username: input },
+      { emailTruong: input },
+    ];
+    // Only search by MSV if input looks like a 12-digit student ID
+    if (/^\d{12}$/.test(input)) {
+      whereConditions.push({ msv: input });
+    }
+
     const user = await this.nguoiDungRepo.findOne({
-      where: [{ username: input }, { emailTruong: input }],
+      where: whereConditions,
     });
 
     if (!user) {

@@ -103,6 +103,9 @@ export const lichSanApi = {
   }): Promise<{ message: string; affected: number }> =>
     api.post('/lich-san/toggle', data),
 
+  removeByDate: (maSan: number, ngayApDung: string): Promise<{ deleted: number }> =>
+    api.delete(`/lich-san/by-date/${maSan}/${ngayApDung}`),
+
   delete: (id: number): Promise<void> =>
     api.delete(`/lich-san/${id}`),
 };
@@ -129,6 +132,18 @@ export const datSanApi = {
 
   cancel: (id: number): Promise<void> =>
     api.delete(`/dat-san/${id}`),
+
+  xacNhanThuPhi: (id: number, nguoiDuyet: number): Promise<DatSan> =>
+    api.patch(`/dat-san/${id}/xac-nhan-thu-phi`, { nguoiDuyet }),
+
+  datSanThuCong: (data: {
+    userId: number;
+    maSan: number;
+    ngayApDung: string;
+    gioBatDau: string;
+    gioKetThuc: string;
+  }): Promise<any> =>
+    api.post('/dat-san/thu-cong', data),
 };
 
 // ===== Auth API =====
@@ -213,6 +228,30 @@ export const checkInApi = {
 
   checkIn: (maDatSan: number): Promise<any> =>
     api.post(`/check-in/${maDatSan}`),
+};
+
+// ===== Dashboard API =====
+export const dashboardApi = {
+  getThongKe: (): Promise<any> =>
+    api.get('/dashboard/thong-ke'),
+
+  getHieuSuat: (): Promise<any> =>
+    api.get('/dashboard/hieu-suat'),
+
+  getLichTongHop: (params: { cheDoXem?: string; ngay?: string; maSan?: number }): Promise<any> =>
+    api.get('/dashboard/lich-tong-hop', { params }),
+};
+
+// ===== Sinh Viên API =====
+export const sinhVienApi = {
+  getAll: (params?: { keyword?: string; page?: number; limit?: number }): Promise<any> =>
+    api.get('/nguoi-dung/sinh-vien', { params }),
+
+  khoaQuyen: (id: number, data: { nguoiThucHien: number; lyDo?: string }): Promise<any> =>
+    api.patch(`/nguoi-dung/${id}/khoa-quyen`, data),
+
+  khoiPhucQuyen: (id: number, data: { nguoiThucHien: number; lyDo?: string }): Promise<any> =>
+    api.patch(`/nguoi-dung/${id}/khoi-phuc-quyen`, data),
 };
 
 // ===== Auth Helper =====
