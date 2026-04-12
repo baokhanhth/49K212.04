@@ -131,12 +131,12 @@ describe("NguoiDungService", () => {
     });
     it("should throw NotFoundException when user not found", async () => {
       repo.findOne.mockResolvedValue(null);
-    
+
       await expect(
         service.capNhatHoSo(999, { emailCaNhan: "test@gmail.com" })
       ).rejects.toThrow(NotFoundException);
     });
-    
+
     it("should update only provided fields", async () => {
       repo.findOne
         .mockResolvedValueOnce(mockSinhVien)
@@ -145,23 +145,21 @@ describe("NguoiDungService", () => {
           ...mockSinhVien,
           sdt: "0999999999",
         });
-    
+
       const result = await service.capNhatHoSo(1, {
         sdt: "0999999999",
       });
-    
+
       expect(result.sdt).toBe("0999999999");
       expect(result.emailCaNhan).toBe("sinhvien1@gmail.com"); // không đổi
     });
-    
+
     it("should throw BadRequestException when sdt is used by another user", async () => {
-      repo.findOne
-        .mockResolvedValueOnce(mockSinhVien)
-        .mockResolvedValueOnce({
-          ...mockNhanVien,
-          sdt: "0905123456",
-        });
-    
+      repo.findOne.mockResolvedValueOnce(mockSinhVien).mockResolvedValueOnce({
+        ...mockNhanVien,
+        sdt: "0905123456",
+      });
+
       await expect(
         service.capNhatHoSo(1, { sdt: "0905123456" })
       ).rejects.toThrow(BadRequestException);
@@ -223,7 +221,7 @@ describe("NguoiDungService", () => {
     });
     it("should throw BadRequestException when new password equals old password", async () => {
       repo.findOne.mockResolvedValue({ ...mockSinhVien });
-    
+
       await expect(
         service.doiMatKhau(1, {
           matKhauHienTai: "OldPass@123",
@@ -270,10 +268,128 @@ describe("NguoiDungService", () => {
     });
   });
 
+  // describe("taoNhanVien", () => {
+  //   it("should create nhan vien with correct fields and default password", async () => {
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.create.mockReturnValue(mockNhanVienMoi);
+  //     repo.save.mockResolvedValue(mockNhanVienMoi);
+
+  //     const result = await service.taoNhanVien({
+  //       hoTen: "Nguyen Van B",
+  //       sdt: "0911111111",
+  //       emailCaNhan: "nhanvienb@gmail.com",
+  //     });
+
+  //     expect(result.matKhauMacDinh).toBe(MAT_KHAU_MAC_DINH);
+  //     expect(result.trangThai).toBe(true);
+  //     expect(result.maVaiTro).toBe(3);
+  //     expect(result.username).toBe("nhanvienb@gmail.com");
+  //     expect(result.hoTen).toBe("Nguyen Van B");
+  //     expect(result.emailCaNhan).toBe("nhanvienb@gmail.com");
+  //     expect(result.sdt).toBe("0911111111");
+  //   });
+
+  //   it("should hash default password before saving", async () => {
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.create.mockReturnValue(mockNhanVienMoi);
+  //     repo.save.mockResolvedValue(mockNhanVienMoi);
+
+  //     await service.taoNhanVien({
+  //       hoTen: "Nguyen Van B",
+  //       sdt: "0911111111",
+  //       emailCaNhan: "nhanvienb@gmail.com",
+  //     });
+
+  //     const createdUser = repo.create.mock.calls[0][0];
+  //     expect(createdUser.matKhau).not.toBe(MAT_KHAU_MAC_DINH);
+  //     const isHashed = await bcrypt.compare(
+  //       MAT_KHAU_MAC_DINH,
+  //       createdUser.matKhau
+  //     );
+  //     expect(isHashed).toBe(true);
+  //   });
+
+  //   it("should throw BadRequestException when email already exists", async () => {
+  //     repo.findOne.mockResolvedValueOnce(mockNhanVienMoi);
+
+  //     await expect(
+  //       service.taoNhanVien({
+  //         hoTen: "Nguyen Van C",
+  //         sdt: "0922222222",
+  //         emailCaNhan: "nhanvienb@gmail.com",
+  //       })
+  //     ).rejects.toThrow("Email này đã được sử dụng trong hệ thống");
+  //   });
+
+  //   it("should throw BadRequestException when sdt already exists", async () => {
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.findOne.mockResolvedValueOnce(mockNhanVienMoi);
+
+  //     await expect(
+  //       service.taoNhanVien({
+  //         hoTen: "Nguyen Van C",
+  //         sdt: "0911111111",
+  //         emailCaNhan: "nhanvienC@gmail.com",
+  //       })
+  //     ).rejects.toThrow("Số điện thoại này đã được sử dụng trong hệ thống");
+  //   });
+
+  //   it("should set maVaiTro = 3 regardless of input", async () => {
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.create.mockReturnValue(mockNhanVienMoi);
+  //     repo.save.mockResolvedValue(mockNhanVienMoi);
+
+  //     await service.taoNhanVien({
+  //       hoTen: "Nguyen Van B",
+  //       sdt: "0911111111",
+  //       emailCaNhan: "nhanvienb@gmail.com",
+  //     });
+
+  //     const createdUser = repo.create.mock.calls[0][0];
+  //     expect(createdUser.maVaiTro).toBe(3);
+  //   });
+
+  //   it("should set trangThai = true by default", async () => {
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.create.mockReturnValue(mockNhanVienMoi);
+  //     repo.save.mockResolvedValue(mockNhanVienMoi);
+
+  //     await service.taoNhanVien({
+  //       hoTen: "Nguyen Van B",
+  //       sdt: "0911111111",
+  //       emailCaNhan: "nhanvienb@gmail.com",
+  //     });
+
+  //     const createdUser = repo.create.mock.calls[0][0];
+  //     expect(createdUser.trangThai).toBe(true);
+  //   });
+
+  //   it("should use emailCaNhan as username and lowercase it", async () => {
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.findOne.mockResolvedValueOnce(null);
+  //     repo.create.mockReturnValue(mockNhanVienMoi);
+  //     repo.save.mockResolvedValue(mockNhanVienMoi);
+
+  //     await service.taoNhanVien({
+  //       hoTen: "Nguyen Van B",
+  //       sdt: "0911111111",
+  //       emailCaNhan: "NHANVIENB@GMAIL.COM", // chữ hoa
+  //     });
+
+  //     const createdUser = repo.create.mock.calls[0][0];
+  //     expect(createdUser.username).toBe("nhanvienb@gmail.com");
+  //     expect(createdUser.emailCaNhan).toBe("nhanvienb@gmail.com");
+  //   });
+  // });
+
+  //------------------
   describe("taoNhanVien", () => {
-    it("should create nhan vien with correct fields and default password", async () => {
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.findOne.mockResolvedValueOnce(null);
+    it("tạo nhân viên thành công với đầy đủ thông tin", async () => {
+      repo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
       repo.create.mockReturnValue(mockNhanVienMoi);
       repo.save.mockResolvedValue(mockNhanVienMoi);
 
@@ -283,20 +399,18 @@ describe("NguoiDungService", () => {
         emailCaNhan: "nhanvienb@gmail.com",
       });
 
-      expect(result.matKhauMacDinh).toBe(MAT_KHAU_MAC_DINH);
-      expect(result.trangThai).toBe(true);
+      expect(result.userId).toBe(22);
       expect(result.maVaiTro).toBe(3);
-      expect(result.username).toBe("nhanvienb@gmail.com");
-      expect(result.hoTen).toBe("Nguyen Van B");
-      expect(result.emailCaNhan).toBe("nhanvienb@gmail.com");
-      expect(result.sdt).toBe("0911111111");
+      expect(result.trangThai).toBe(true);
+      expect(result.matKhauMacDinh).toBe(MAT_KHAU_MAC_DINH);
     });
 
-    it("should hash default password before saving", async () => {
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.create.mockReturnValue(mockNhanVienMoi);
-      repo.save.mockResolvedValue(mockNhanVienMoi);
+    it("mật khẩu mặc định phải được hash trước khi lưu", async () => {
+      repo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      repo.create.mockImplementation((entity) => entity);
+      repo.save.mockImplementation((entity) =>
+        Promise.resolve({ ...entity, userId: 22 })
+      );
 
       await service.taoNhanVien({
         hoTen: "Nguyen Van B",
@@ -313,7 +427,7 @@ describe("NguoiDungService", () => {
       expect(isHashed).toBe(true);
     });
 
-    it("should throw BadRequestException when email already exists", async () => {
+    it("ném BadRequestException khi email đã tồn tại", async () => {
       repo.findOne.mockResolvedValueOnce(mockNhanVienMoi);
 
       await expect(
@@ -325,9 +439,10 @@ describe("NguoiDungService", () => {
       ).rejects.toThrow("Email này đã được sử dụng trong hệ thống");
     });
 
-    it("should throw BadRequestException when sdt already exists", async () => {
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.findOne.mockResolvedValueOnce(mockNhanVienMoi);
+    it("ném BadRequestException khi sdt đã tồn tại", async () => {
+      repo.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockNhanVienMoi);
 
       await expect(
         service.taoNhanVien({
@@ -338,11 +453,12 @@ describe("NguoiDungService", () => {
       ).rejects.toThrow("Số điện thoại này đã được sử dụng trong hệ thống");
     });
 
-    it("should set maVaiTro = 3 regardless of input", async () => {
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.create.mockReturnValue(mockNhanVienMoi);
-      repo.save.mockResolvedValue(mockNhanVienMoi);
+    it("maVaiTro luôn = 3 (nhân viên)", async () => {
+      repo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      repo.create.mockImplementation((entity) => entity);
+      repo.save.mockImplementation((entity) =>
+        Promise.resolve({ ...entity, userId: 22 })
+      );
 
       await service.taoNhanVien({
         hoTen: "Nguyen Van B",
@@ -354,11 +470,12 @@ describe("NguoiDungService", () => {
       expect(createdUser.maVaiTro).toBe(3);
     });
 
-    it("should set trangThai = true by default", async () => {
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.create.mockReturnValue(mockNhanVienMoi);
-      repo.save.mockResolvedValue(mockNhanVienMoi);
+    it("trangThai = true khi tạo nhân viên mới", async () => {
+      repo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      repo.create.mockImplementation((entity) => entity);
+      repo.save.mockImplementation((entity) =>
+        Promise.resolve({ ...entity, userId: 22 })
+      );
 
       await service.taoNhanVien({
         hoTen: "Nguyen Van B",
@@ -370,23 +487,61 @@ describe("NguoiDungService", () => {
       expect(createdUser.trangThai).toBe(true);
     });
 
-    it("should use emailCaNhan as username and lowercase it", async () => {
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.findOne.mockResolvedValueOnce(null);
-      repo.create.mockReturnValue(mockNhanVienMoi);
-      repo.save.mockResolvedValue(mockNhanVienMoi);
+    it("email được lowercase và dùng làm username", async () => {
+      repo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      repo.create.mockImplementation((entity) => entity);
+      repo.save.mockImplementation((entity) =>
+        Promise.resolve({ ...entity, userId: 22 })
+      );
 
       await service.taoNhanVien({
         hoTen: "Nguyen Van B",
         sdt: "0911111111",
-        emailCaNhan: "NHANVIENB@GMAIL.COM", // chữ hoa
+        emailCaNhan: "NHANVIENB@GMAIL.COM",
       });
 
       const createdUser = repo.create.mock.calls[0][0];
       expect(createdUser.username).toBe("nhanvienb@gmail.com");
       expect(createdUser.emailCaNhan).toBe("nhanvienb@gmail.com");
     });
+
+    it("msv, lop, emailTruong phải là null cho nhân viên", async () => {
+      repo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      repo.create.mockImplementation((entity) => entity);
+      repo.save.mockImplementation((entity) =>
+        Promise.resolve({ ...entity, userId: 22 })
+      );
+
+      await service.taoNhanVien({
+        hoTen: "Nguyen Van B",
+        sdt: "0911111111",
+        emailCaNhan: "nhanvienb@gmail.com",
+      });
+
+      const createdUser = repo.create.mock.calls[0][0];
+      expect(createdUser.msv).toBeNull();
+      expect(createdUser.lop).toBeNull();
+      expect(createdUser.emailTruong).toBeNull();
+    });
+
+    it("họ tên được trim và chuẩn hóa khoảng trắng thừa", async () => {
+      repo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      repo.create.mockImplementation((entity) => entity);
+      repo.save.mockImplementation((entity) =>
+        Promise.resolve({ ...entity, userId: 22 })
+      );
+
+      await service.taoNhanVien({
+        hoTen: "  Nguyen   Van   B  ",
+        sdt: "0911111111",
+        emailCaNhan: "nhanvienb@gmail.com",
+      });
+
+      const createdUser = repo.create.mock.calls[0][0];
+      expect(createdUser.hoTen).toBe("Nguyen Van B");
+    });
   });
+
   // Thêm describe('dangKyTaiKhoan') vào trước dòng }); cuối cùng của file:
   describe("dangKyTaiKhoan", () => {
     const validDto = {
@@ -511,12 +666,12 @@ describe("NguoiDungService", () => {
       repo.findOne.mockResolvedValueOnce(null);
       repo.create.mockReturnValue(mockSavedSinhVien);
       repo.save.mockResolvedValue(mockSavedSinhVien);
-    
+
       await service.dangKyTaiKhoan({
         ...validDto,
         hoTen: "  Nguyen Van A  ",
       });
-    
+
       const createdUser = repo.create.mock.calls[0][0];
       expect(createdUser.hoTen).toBe("Nguyen Van A");
     });

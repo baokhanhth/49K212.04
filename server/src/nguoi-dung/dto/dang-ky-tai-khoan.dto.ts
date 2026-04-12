@@ -9,16 +9,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 export class DangKyTaiKhoanDto {
-  @ApiProperty({
-    example: '123456789012@due.udn.vn',
-    description: 'Tên đăng nhập = MSSV + @due.udn.vn',
-  })
-  @IsString()
-  @IsNotEmpty({ message: 'Tên đăng nhập không được để trống' })
-  @Matches(/^\d{12}@due\.udn\.vn$/, {
-    message: 'Username phải có dạng MSSV (12 số) + @due.udn.vn',
-  })
-  username: string;
+ 
 
   @ApiProperty({ example: 'Nguyen Van A' })
   @IsString()
