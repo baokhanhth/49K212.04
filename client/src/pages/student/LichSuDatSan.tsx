@@ -25,6 +25,9 @@ const LichSuDatSan = () => {
   const [selectedStatus, setSelectedStatus] = useState("Tất cả");
   const [bookings, setBookings] = useState<LichSuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const statusOptions = [
     "Tất cả",
@@ -42,15 +45,30 @@ const LichSuDatSan = () => {
     }
     datSanApi
       .getLichSu(user.userId)
-      .then((data: any) => setBookings(Array.isArray(data) ? data : []))
-      .catch(() => setBookings([]))
+      .then((data: any) => {
+        setBookings(Array.isArray(data) ? data : []);
+        setError("");
+      })
+      .catch(() => {
+        setBookings([]);
+        setError("Không thể tải lịch sử đặt sân. Vui lòng thử lại.");
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const filteredBookings = useMemo(() => {
-    if (selectedStatus === "Tất cả") return bookings;
-    return bookings.filter((b) => b.trangThai === selectedStatus);
-  }, [selectedStatus, bookings]);
+    let result = bookings;
+    if (selectedStatus !== "Tất cả") {
+      result = result.filter((b) => b.trangThai === selectedStatus);
+    }
+    if (dateFrom) {
+      result = result.filter((b) => (b.ngayApDung || b.ngayDat) >= dateFrom);
+    }
+    if (dateTo) {
+      result = result.filter((b) => (b.ngayApDung || b.ngayDat) <= dateTo);
+    }
+    return result;
+  }, [selectedStatus, bookings, dateFrom, dateTo]);
 
   const formatDate = (d: string) => {
     if (!d) return "";
@@ -69,8 +87,18 @@ const LichSuDatSan = () => {
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           {/* FILTER */}
           <div className="flex gap-4 mb-6">
-            <input type="date" className="border rounded-lg px-4 py-2" />
-            <input type="date" className="border rounded-lg px-4 py-2" />
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="border rounded-lg px-4 py-2"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="border rounded-lg px-4 py-2"
+            />
 
 
             <div className="ml-auto relative">
@@ -111,6 +139,8 @@ const LichSuDatSan = () => {
           {/* TABLE */}
           {loading ? (
             <div className="py-8 text-center text-gray-500">Đang tải...</div>
+          ) : error ? (
+            <div className="py-8 text-center text-red-500">{error}</div>
           ) : (
           <table className="w-full">
             <thead className="text-gray-500 border-b">

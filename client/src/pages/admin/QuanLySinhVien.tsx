@@ -1,44 +1,72 @@
 import AdminLayout from '../../components/layout/AdminLayout';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { sinhVienApi, getStoredUser } from '../../services/api';
+
+interface SinhVienItem {
+  userId: number;
+  hoTen: string;
+  msv: string;
+  trangThai: boolean;
+  diemUyTin: number;
+}
 
 const QuanLySinhVien = () => {
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Nguyễn Văn A', code: 'SV001', status: 'active', score: 75 },
-    { id: 2, name: 'Lê Thị B', code: 'SV002', status: 'active', score: 95 },
-    { id: 3, name: 'Trần Văn C', code: 'SV003', status: 'locked', score: 20 },
-    { id: 4, name: 'Hoàng Minh D', code: 'SV004', status: 'active', score: 69 },
-    { id: 5, name: 'Đỗ Thị E', code: 'SV005', status: 'active', score: 78 },
-    { id: 6, name: 'Phạm Văn F', code: 'SV006', status: 'locked', score: 68 },
-  ]);
+  const [users, setUsers] = useState<SinhVienItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [keyword, setKeyword] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // 👉 STATE POPUP
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<SinhVienItem | null>(null);
   const [actionType, setActionType] = useState<'lock' | 'unlock' | null>(null);
   const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  // 👉 CONFIRM ACTION
-  const handleConfirm = () => {
+  const fetchStudents = () => {
+    setLoading(true);
+    sinhVienApi.getAll({ keyword: keyword || undefined, page, limit: 10 })
+      .then((data: any) => {
+        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        setUsers(list);
+        if (data?.totalPages) setTotalPages(data.totalPages);
+      })
+      .catch(() => setUsers([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchStudents(); }, [page]);
+
+  const handleSearch = () => {
+    setPage(1);
+    fetchStudents();
+  };
+
+  const handleConfirm = async () => {
     if (!selectedUser) return;
-
-    if (actionType === 'lock') {
-      setUsers(prev =>
-        prev.map(u =>
-          u.id === selectedUser.id ? { ...u, status: 'locked' } : u
-        )
-      );
+    const admin = getStoredUser();
+    setSubmitting(true);
+    try {
+      if (actionType === 'lock') {
+        await sinhVienApi.khoaQuyen(selectedUser.userId, {
+          nguoiThucHien: admin?.userId || 0,
+          lyDo: reason || undefined,
+        });
+      } else {
+        await sinhVienApi.khoiPhucQuyen(selectedUser.userId, {
+          nguoiThucHien: admin?.userId || 0,
+          lyDo: reason || undefined,
+        });
+      }
+      fetchStudents();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Thao tác thất bại');
+    } finally {
+      setSubmitting(false);
+      setSelectedUser(null);
+      setActionType(null);
+      setReason('');
     }
-
-    if (actionType === 'unlock') {
-      setUsers(prev =>
-        prev.map(u =>
-          u.id === selectedUser.id ? { ...u, status: 'active' } : u
-        )
-      );
-    }
-
-    setSelectedUser(null);
-    setActionType(null);
-    setReason('');
   };
 
   return (
@@ -56,11 +84,16 @@ const QuanLySinhVien = () => {
             <input
               type="text"
               placeholder="Tìm kiếm..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="rounded-lg border px-3 py-2 text-sm w-60"
             />
           </div>
 
-          {/* Table */}
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">Đang tải...</div>
+          ) : (
           <div className="overflow-hidden rounded-xl border">
             <table className="w-full text-sm">
               
@@ -76,16 +109,16 @@ const QuanLySinhVien = () => {
 
               <tbody>
                 {users.map(user => (
-                  <tr key={user.id} className="border-t">
+                  <tr key={user.userId} className="border-t">
 
                     <td className="px-4 py-3 font-medium">
-                      {user.name}
+                      {user.hoTen}
                     </td>
 
-                    <td className="px-4 py-3">{user.code}</td>
+                    <td className="px-4 py-3">{user.msv}</td>
 
                     <td className="px-4 py-3">
-                      {user.status === 'active' ? (
+                      {user.trangThai ? (
                         <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
                           Hoạt động
                         </span>
@@ -96,7 +129,7 @@ const QuanLySinhVien = () => {
                       )}
                     </td>
 
-                    <td className="px-4 py-3">{user.score}</td>
+                    <td className="px-4 py-3">{user.diemUyTin ?? '--'}</td>
 
                     {/* ACTION */}
                     <td className="px-4 py-3">
@@ -108,10 +141,10 @@ const QuanLySinhVien = () => {
                             setSelectedUser(user);
                             setActionType('lock');
                           }}
-                          disabled={user.status === 'locked'}
+                          disabled={!user.trangThai}
                           className={`rounded-lg px-3 py-2 text-xs font-medium
                             ${
-                              user.status === 'active'
+                              user.trangThai
                                 ? 'bg-green-600 text-white hover:bg-green-700'
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}
@@ -125,10 +158,10 @@ const QuanLySinhVien = () => {
                             setSelectedUser(user);
                             setActionType('unlock');
                           }}
-                          disabled={user.status === 'active'}
+                          disabled={user.trangThai}
                           className={`rounded-lg px-3 py-2 text-xs font-medium
                             ${
-                              user.status === 'locked'
+                              !user.trangThai
                                 ? 'bg-green-600 text-white hover:bg-green-700'
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}
@@ -144,12 +177,25 @@ const QuanLySinhVien = () => {
               </tbody>
             </table>
           </div>
+          )}
 
           {/* Pagination */}
           <div className="mt-4 flex justify-end gap-2">
-            <button className="rounded-md border px-3 py-1 text-sm">‹</button>
-            <button className="rounded-md bg-blue-500 px-3 py-1 text-sm text-white">1</button>
-            <button className="rounded-md border px-3 py-1 text-sm">›</button>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              ‹
+            </button>
+            <span className="rounded-md bg-blue-500 px-3 py-1 text-sm text-white">{page}</span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= totalPages}
+              className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              ›
+            </button>
           </div>
 
         </div>
@@ -195,7 +241,8 @@ const QuanLySinhVien = () => {
 
                 <button
                   onClick={handleConfirm}
-                  className="rounded-lg px-4 py-2 text-sm bg-green-600 text-white hover:bg-green-700"
+                  disabled={submitting}
+                  className="rounded-lg px-4 py-2 text-sm bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
                 >
                   Xác nhận
                 </button>

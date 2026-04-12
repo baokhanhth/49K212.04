@@ -24,7 +24,7 @@ const DatLaiMatKhau: React.FC = () => {
 
   const isValidPassword = (password: string): boolean => {
     const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])\S{8,}$/;
     return passwordRegex.test(password);
   };
 
@@ -87,6 +87,10 @@ const DatLaiMatKhau: React.FC = () => {
 
     try {
       const email = searchParams.get('email') || '';
+      if (!email) {
+        setServerError('Liên kết không hợp lệ. Vui lòng thử lại từ trang quên mật khẩu.');
+        return;
+      }
       await authApi.datLaiMatKhau({
         email,
         otp: formData.otp.trim(),
