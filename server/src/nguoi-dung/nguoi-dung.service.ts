@@ -174,6 +174,7 @@ export class NguoiDungService {
     if (!matKhau) {
       throw new BadRequestException('Mật khẩu không được để trống');
     }
+   
 
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
@@ -182,6 +183,9 @@ export class NguoiDungService {
       throw new BadRequestException(
         'Mật khẩu phải có ít nhất 8 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt',
       );
+    }
+    if (matKhau !== xacNhanMatKhau) {
+      throw new BadRequestException('Xác nhận mật khẩu không khớp');
     }
 
     const existingUsername = await this.nguoiDungRepo.findOne({
@@ -226,7 +230,6 @@ export class NguoiDungService {
       emailTruong,
       emailCaNhan,
       sdt: null,
-      emailCaNhan,
       anhDaiDien: null,
       trangThai: true,
       diemUyTin: 100,
@@ -399,58 +402,58 @@ export class NguoiDungService {
       matKhauMacDinh: MAT_KHAU_MAC_DINH, // E21.2 - Ràng buộc 2: trả về để admin đọc cho nhân viên
     };
   }
-}
 
 
-  async taoNhanVien(dto: TaoNhanVienDto): Promise<TaoNhanVienResponseDto> {
-    const emailCaNhan = dto.emailCaNhan.trim().toLowerCase();
-    const sdt = dto.sdt.trim();
-    const hoTen = dto.hoTen.trim().replace(/\s+/g, ' ');
 
-    const existingEmail = await this.nguoiDungRepo.findOne({
-      where: [{ emailCaNhan }, { emailTruong: emailCaNhan }],
-    });
-    if (existingEmail) {
-      throw new BadRequestException('Email này đã được sử dụng trong hệ thống');
-    }
+  // async taoNhanVien(dto: TaoNhanVienDto): Promise<TaoNhanVienResponseDto> {
+  //   const emailCaNhan = dto.emailCaNhan.trim().toLowerCase();
+  //   const sdt = dto.sdt.trim();
+  //   const hoTen = dto.hoTen.trim().replace(/\s+/g, ' ');
 
-    const existingSdt = await this.nguoiDungRepo.findOne({ where: { sdt } });
-    if (existingSdt) {
-      throw new BadRequestException(
-        'Số điện thoại này đã được sử dụng trong hệ thống',
-      );
-    }
+  //   const existingEmail = await this.nguoiDungRepo.findOne({
+  //     where: [{ emailCaNhan }, { emailTruong: emailCaNhan }],
+  //   });
+  //   if (existingEmail) {
+  //     throw new BadRequestException('Email này đã được sử dụng trong hệ thống');
+  //   }
 
-    const hashedPassword = await bcrypt.hash(MAT_KHAU_MAC_DINH, 10);
+  //   const existingSdt = await this.nguoiDungRepo.findOne({ where: { sdt } });
+  //   if (existingSdt) {
+  //     throw new BadRequestException(
+  //       'Số điện thoại này đã được sử dụng trong hệ thống',
+  //     );
+  //   }
 
-    const newNhanVien = this.nguoiDungRepo.create({
-      username: emailCaNhan,
-      matKhau: hashedPassword,
-      hoTen,
-      emailCaNhan,
-      emailTruong: null,
-      sdt,
-      lop: null,
-      msv: null,
-      anhDaiDien: null,
-      trangThai: true,
-      diemUyTin: 100,
-      maVaiTro: 3,
-    });
+  //   const hashedPassword = await bcrypt.hash(MAT_KHAU_MAC_DINH, 10);
 
-    const saved = await this.nguoiDungRepo.save(newNhanVien);
+  //   const newNhanVien = this.nguoiDungRepo.create({
+  //     username: emailCaNhan,
+  //     matKhau: hashedPassword,
+  //     hoTen,
+  //     emailCaNhan,
+  //     emailTruong: null,
+  //     sdt,
+  //     lop: null,
+  //     msv: null,
+  //     anhDaiDien: null,
+  //     trangThai: true,
+  //     diemUyTin: 100,
+  //     maVaiTro: 3,
+  //   });
 
-    return {
-      userId: saved.userId,
-      username: saved.username,
-      hoTen: saved.hoTen,
-      emailCaNhan: saved.emailCaNhan,
-      sdt: saved.sdt,
-      maVaiTro: saved.maVaiTro,
-      trangThai: saved.trangThai,
-      matKhauMacDinh: MAT_KHAU_MAC_DINH,
-    };
-  }
+  //   const saved = await this.nguoiDungRepo.save(newNhanVien);
+
+  //   return {
+  //     userId: saved.userId,
+  //     username: saved.username,
+  //     hoTen: saved.hoTen,
+  //     emailCaNhan: saved.emailCaNhan,
+  //     sdt: saved.sdt,
+  //     maVaiTro: saved.maVaiTro,
+  //     trangThai: saved.trangThai,
+  //     matKhauMacDinh: MAT_KHAU_MAC_DINH,
+  //   };
+  // }
 
   async findAllNhanVien(): Promise<NguoiDung[]> {
     return this.nguoiDungRepo.find({
