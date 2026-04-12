@@ -1,73 +1,91 @@
 import {
-    IsEmail,
-    IsNotEmpty,
-    IsString,
-    Matches,
-    MinLength,
-    MaxLength,
-  } from 'class-validator';
-  import { ApiProperty } from '@nestjs/swagger';
-  
-  export class DangKyTaiKhoanDto {
-    @ApiProperty({
-      example: '123456789012@due.udn.vn',
-      description: 'Tên đăng nhập = MSSV + @due.udn.vn',
-    })
-    @IsString()
-    @IsNotEmpty({ message: 'Tên đăng nhập không được để trống' })
-    @Matches(/^\d{12}@due\.udn\.vn$/, {
-      message: 'Username phải có dạng MSSV (12 số) + @due.udn.vn',
-    })
-    username: string;
-  
-    @ApiProperty({ example: 'Nguyen Van A' })
-    @IsString()
-    @IsNotEmpty()
-    @MaxLength(100)
-    hoTen: string;
-  
-    @ApiProperty({ example: '123456789012' })
-    @IsString()
-    @IsNotEmpty()
-    @Matches(/^\d{12}$/, {
-      message: 'MSSV phải gồm đúng 12 chữ số',
-    })
-    msv: string;
-  
-    @ApiProperty({ example: '48K21.1' })
-    @IsString()
-    @IsNotEmpty()
-    @MaxLength(10)
-    lop: string;
-  
-    @ApiProperty({
-      example: '123456789012@due.udn.vn',
-    })
-    @IsString()
-    @IsNotEmpty()
-    @Matches(/^\d{12}@due\.udn\.vn$/, {
-      message: 'Email trường phải có dạng MSSV + @due.udn.vn',
-    })
-    emailTruong: string;
-  
-    @ApiProperty({ example: 'MatKhau@123' })
-    @IsString()
-    @IsNotEmpty()
-    @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
-    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/, {
-      message: 'Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt',
-    })
-    matKhau: string;
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
-    @ApiProperty({ example: 'MatKhau@123', description: 'Xác nhận mật khẩu' })
-    @IsString()
-    @IsNotEmpty({ message: 'Xác nhận mật khẩu không được để trống' })
-    xacNhanMatKhau: string;
+export class DangKyTaiKhoanDto {
+  @ApiProperty({
+    example: '123456789012@due.udn.vn',
+    description: 'Tên đăng nhập = MSSV + @due.udn.vn',
+  })
+  @IsString({ message: 'username must be a string' })
+  @IsNotEmpty({ message: 'Tên đăng nhập không được để trống' })
+  @Matches(/^\d{12}@due\.udn\.vn$/, {
+    message: 'Username phải có dạng MSSV (12 số) + @due.udn.vn',
+  })
+  username: string;
 
-    @ApiProperty({ example: 'nguyenvana@gmail.com', description: 'Email cá nhân' })
-    @IsString()
-    @IsNotEmpty({ message: 'Email cá nhân không được để trống' })
-    @IsEmail({}, { message: 'Email cá nhân không hợp lệ' })
-    @MaxLength(80)
-    emailCaNhan: string;
-  }
+  @ApiProperty({ example: 'Nguyen Van A' })
+  @IsString()
+  @IsNotEmpty({ message: 'Họ tên không được để trống' })
+  @MaxLength(100, { message: 'Họ tên không được vượt quá 100 ký tự' })
+  hoTen: string;
+
+  @ApiProperty({ example: '123456789012' })
+  @IsString()
+  @IsNotEmpty({ message: 'MSSV không được để trống' })
+  @Matches(/^\d{12}$/, {
+    message: 'MSSV phải gồm đúng 12 chữ số',
+  })
+  msv: string;
+
+  @ApiProperty({ example: '48K21.1' })
+  @IsString()
+  @IsNotEmpty({ message: 'Lớp không được để trống' })
+  @MaxLength(10, { message: 'Lớp không được vượt quá 10 ký tự' })
+  lop: string;
+
+  @ApiProperty({
+    example: '123456789012@due.udn.vn',
+    description: 'Email trường = MSSV + @due.udn.vn',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Email trường không được để trống' })
+  @Matches(/^\d{12}@due\.udn\.vn$/, {
+    message: 'Email trường phải có dạng MSSV + @due.udn.vn',
+  })
+  emailTruong: string;
+
+  @ApiProperty({
+    example: 'MatKhau@123',
+    description:
+      'Tối thiểu 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
+  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/, {
+    message:
+      'Mật khẩu phải có ít nhất 8 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt',
+  })
+  matKhau: string;
+
+  @ApiProperty({
+    example: 'MatKhau@123',
+    description: 'Xác nhận mật khẩu',
+  })
+  @IsString({ message: 'Xác nhận mật khẩu phải là chuỗi' })
+  @IsNotEmpty({ message: 'Xác nhận mật khẩu không được để trống' })
+  @Matches(/^\S+$/, {
+    message: 'Xác nhận mật khẩu không được chứa khoảng trắng',
+  })
+  xacNhanMatKhau: string;
+
+  @ApiProperty({
+    example: 'nguyenvana@gmail.com',
+    description: 'Email cá nhân',
+  })
+  @IsString({ message: 'Email cá nhân phải là chuỗi' })
+  @IsNotEmpty({ message: 'Email cá nhân không được để trống' })
+  @IsEmail({}, { message: 'Email cá nhân không hợp lệ' })
+  @MaxLength(80, { message: 'Email cá nhân không được vượt quá 80 ký tự' })
+  @Matches(/^\S+$/, {
+    message: 'Email cá nhân không được chứa khoảng trắng',
+  })
+  emailCaNhan: string;
+}

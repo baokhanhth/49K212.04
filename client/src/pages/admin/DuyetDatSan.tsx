@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { datSanApi, sanBaiApi } from '../../services/api';
+import { datSanApi, sanBaiApi, getStoredUser } from '../../services/api';
 import type { DatSan, SanBai } from '../../types';
 
 const statusOptions = [
@@ -49,9 +49,10 @@ const DuyetDatSan = () => {
 
   const handleApprove = async (id: number) => {
     try {
+      const adminUser = getStoredUser();
       const updated = await datSanApi.duyet(id, {
         trangThai: 'Đã duyệt',
-        nguoiDuyet: 1, // TODO: replace with actual admin user ID
+        nguoiDuyet: adminUser?.userId || 0,
       });
       setRequests((prev) =>
         prev.map((item) => (item.maDatSan === id ? { ...item, ...updated } : item))
@@ -63,9 +64,10 @@ const DuyetDatSan = () => {
 
   const handleReject = async (id: number) => {
     try {
+      const adminUser = getStoredUser();
       const updated = await datSanApi.duyet(id, {
         trangThai: 'Bị từ chối',
-        nguoiDuyet: 1,
+        nguoiDuyet: adminUser?.userId || 0,
       });
       setRequests((prev) =>
         prev.map((item) => (item.maDatSan === id ? { ...item, ...updated } : item))
