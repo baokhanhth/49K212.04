@@ -3,7 +3,6 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { lichSanApi, sanBaiApi } from '../../services/api';
 import type { SanBai } from '../../types';
 
-
 interface ClosedDay {
   date: string;
   dayNumber: number;
@@ -12,7 +11,6 @@ interface ClosedDay {
 }
 
 const COURT_ALL_VALUE = 'all';
-
 const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
 const getWeekStart = (date: Date) => {
@@ -21,9 +19,6 @@ const getWeekStart = (date: Date) => {
   const diff = day === 0 ? -6 : 1 - day;
   result.setDate(result.getDate() + diff);
   result.setHours(0, 0, 0, 0);
-  result.setMinutes(0, 0, 0);
-  result.setSeconds(0);
-  result.setMilliseconds(0);
   return result;
 };
 
@@ -33,8 +28,24 @@ const addDays = (date: Date, amount: number) => {
   return next;
 };
 
-const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
+// Trả về YYYY-MM-DD theo local time, tránh lệch múi giờ
+const toInputDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
+// Parse từ input date YYYY-MM-DD
+const parseInputDate = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+};
+
+// Hiển thị dd/mm/yyyy
 const formatDisplayDate = (date: Date) => {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -42,20 +53,12 @@ const formatDisplayDate = (date: Date) => {
   return `${day}/${month}/${year}`;
 };
 
-const parseDisplayDate = (text: string) => {
-  const match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return null;
-  const [, day, month, year] = match;
-  const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
-  if (Number.isNaN(date.getTime())) return null;
-  return date;
-};
-
 const getWeekDays = (weekStart: Date, openDates: Set<string>) => {
   return Array.from({ length: 7 }, (_, index) => {
     const date = addDays(weekStart, index);
-    const iso = toIsoDate(date);
-    const isToday = iso === toIsoDate(new Date());
+    const iso = toInputDate(date);
+    const isToday = iso === toInputDate(new Date());
+
     return {
       date: iso,
       dayNumber: date.getDate(),
@@ -73,7 +76,7 @@ const CauHinhSanBai: React.FC = () => {
   const [selectedCourtId, setSelectedCourtId] = useState<string>(COURT_ALL_VALUE);
   const [courts, setCourts] = useState<SanBai[]>([]);
   const [loadingCourts, setLoadingCourts] = useState<boolean>(true);
-  const [weekStart] = useState<Date>(() => getWeekStart(new Date()));
+  const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(new Date()));
 
   const loadCourts = useCallback(async () => {
     try {
@@ -88,17 +91,20 @@ const CauHinhSanBai: React.FC = () => {
 
   const loadSchedule = useCallback(async () => {
     try {
-      const tuNgay = toIsoDate(weekStart);
-      const denNgay = toIsoDate(addDays(weekStart, 6));
+      const tuNgay = toInputDate(weekStart);
+      const denNgay = toInputDate(addDays(weekStart, 6));
+
       const params = {
         maSan: selectedCourtId === COURT_ALL_VALUE ? undefined : Number(selectedCourtId),
         tuNgay,
         denNgay,
       };
+
       const data = await lichSanApi.getAll(params);
       const dates = Array.isArray(data)
         ? data.map((item) => item.ngayApDung)
         : [];
+
       setDays(getWeekDays(weekStart, new Set(dates)));
     } catch {
       setDays(getWeekDays(weekStart, new Set()));
@@ -125,38 +131,52 @@ const CauHinhSanBai: React.FC = () => {
 
   const courtOptions = useMemo(() => {
     return [{ value: COURT_ALL_VALUE, label: 'Tất cả các sân' }].concat(
-      courts.map((court) => ({ value: String(court.maSan), label: court.tenSan })),
+      courts.map((court) => ({
+        value: String(court.maSan),
+        label: court.tenSan,
+      }))
     );
   }, [courts]);
 
   const selectedCourtLabel = useMemo(() => {
     if (selectedCourtId === COURT_ALL_VALUE) return 'Tất cả các sân';
-    return courts.find((court) => court.maSan === Number(selectedCourtId))?.tenSan ?? 'Sân chưa chọn';
+    return (
+      courts.find((court) => court.maSan === Number(selectedCourtId))?.tenSan ??
+      'Sân chưa chọn'
+    );
   }, [selectedCourtId, courts]);
 
   const weekLabel = useMemo(() => {
-    return `Tuần: ${formatDisplayDate(weekStart)} - ${formatDisplayDate(addDays(weekStart, 6))}`;
+    return `Tuần: ${formatDisplayDate(weekStart)} - ${formatDisplayDate(
+      addDays(weekStart, 6)
+    )}`;
   }, [weekStart]);
-
 
   const handleDecrease = () => {
     setMaxAdvanceDays((prev) => (prev > 1 ? prev - 1 : 1));
   };
 
-
   const handleIncrease = () => {
     setMaxAdvanceDays((prev) => prev + 1);
   };
 
+  const handlePrevWeek = () => {
+    setWeekStart((prev) => getWeekStart(addDays(prev, -7)));
+  };
+
+  const handleNextWeek = () => {
+    setWeekStart((prev) => getWeekStart(addDays(prev, 7)));
+  };
 
   const handleToggleDay = async (dayNumber: number) => {
     const day = days.find((item) => item.dayNumber === dayNumber);
     if (!day || day.status === 'today') return;
 
     const isOpening = day.status === 'closed';
-    const targetCourts = selectedCourtId === COURT_ALL_VALUE
-      ? courts
-      : courts.filter((court) => court.maSan === Number(selectedCourtId));
+    const targetCourts =
+      selectedCourtId === COURT_ALL_VALUE
+        ? courts
+        : courts.filter((court) => court.maSan === Number(selectedCourtId));
 
     if (targetCourts.length === 0) {
       alert('Không tìm thấy sân để cập nhật.');
@@ -169,23 +189,25 @@ const CauHinhSanBai: React.FC = () => {
           return lichSanApi.toggle({
             maSan: court.maSan,
             ngayApDung: day.date,
-            danhSachKhungGio: [
-              { gioBatDau: '06:00:00', gioKetThuc: '22:00:00' },
-            ],
+            danhSachKhungGio: [{ gioBatDau: '06:00:00', gioKetThuc: '22:00:00' }],
             moLich: true,
           });
-        } else {
-          return lichSanApi.removeByDate(court.maSan, day.date);
         }
+
+        return lichSanApi.removeByDate(court.maSan, day.date);
       });
 
       await Promise.all(promises);
 
       const actionText = isOpening ? 'mở' : 'đóng';
-      const courtText = selectedCourtId === COURT_ALL_VALUE
-        ? 'tất cả các sân'
-        : selectedCourtLabel;
-      alert(`Đã ${actionText} lịch cho ${courtText} ngày ${formatDisplayDate(new Date(day.date))}`);
+      const courtText =
+        selectedCourtId === COURT_ALL_VALUE ? 'tất cả các sân' : selectedCourtLabel;
+
+      alert(
+        `Đã ${actionText} lịch cho ${courtText} ngày ${formatDisplayDate(
+          new Date(day.date)
+        )}`
+      );
 
       await loadSchedule();
     } catch {
@@ -193,12 +215,13 @@ const CauHinhSanBai: React.FC = () => {
     }
   };
 
-
   const handleSave = () => {
-    localStorage.setItem('cau-hinh-san-bai-maxAdvanceDays', String(maxAdvanceDays));
+    localStorage.setItem(
+      'cau-hinh-san-bai-maxAdvanceDays',
+      String(maxAdvanceDays)
+    );
     alert('Lưu số ngày đặt trước thành công.');
   };
-
 
   const handleQuickClose = async () => {
     if (selectedCourtId === COURT_ALL_VALUE) {
@@ -206,33 +229,40 @@ const CauHinhSanBai: React.FC = () => {
       return;
     }
 
-    const from = parseDisplayDate(fromDate);
-    const to = parseDisplayDate(toDate);
-    if (!from || !to || from > to) {
-      alert('Vui lòng nhập khoảng ngày hợp lệ theo định dạng dd/mm/yyyy.');
+    const from = parseInputDate(fromDate);
+    const to = parseInputDate(toDate);
+
+    if (!fromDate || !toDate || !from || !to || from > to) {
+      alert('Vui lòng nhập khoảng ngày hợp lệ.');
       return;
     }
 
     const dates: string[] = [];
     let current = new Date(from);
+
     while (current <= to) {
-      dates.push(toIsoDate(current));
+      dates.push(toInputDate(current));
       current = addDays(current, 1);
     }
 
     try {
       await Promise.all(
         dates.map((ngayApDung) =>
-          lichSanApi.removeByDate(Number(selectedCourtId), ngayApDung),
-        ),
+          lichSanApi.removeByDate(Number(selectedCourtId), ngayApDung)
+        )
       );
-      alert(`Đóng khoảng ngày từ ${fromDate} đến ${toDate} cho ${selectedCourtLabel} thành công.`);
+
+      alert(
+        `Đóng khoảng ngày từ ${formatDisplayDate(from)} đến ${formatDisplayDate(
+          to
+        )} cho ${selectedCourtLabel} thành công.`
+      );
+
       await loadSchedule();
     } catch {
       alert('Đóng khoảng ngày thất bại.');
     }
   };
-
 
   const getDayClass = (status: ClosedDay['status']) => {
     if (status === 'closed') {
@@ -244,7 +274,6 @@ const CauHinhSanBai: React.FC = () => {
     return 'border-slate-200 text-slate-800';
   };
 
-
   const getBadge = (status: ClosedDay['status']) => {
     if (status === 'closed') {
       return <span className="mt-2 text-sm font-medium text-red-500">Đóng</span>;
@@ -252,212 +281,192 @@ const CauHinhSanBai: React.FC = () => {
     return <span className="mt-2 text-sm font-medium text-transparent">.</span>;
   };
 
-
   return (
     <AdminLayout>
       <div className="px-7 py-8">
         <div className="mx-auto max-w-[1120px]">
-        <section className="mb-6">
-          <h2 className="mb-4 text-[18px] font-semibold text-slate-800">
-            Thiết lập thời gian đặt sân
-          </h2>
+          <section className="mb-6">
+            <h2 className="mb-4 text-[18px] font-semibold text-slate-800">
+              Thiết lập thời gian đặt sân
+            </h2>
 
-
-          <div className="flex min-h-[84px] items-center justify-between rounded-2xl bg-white px-6 shadow-sm">
-            <div className="flex items-center gap-6">
-              <span className="text-[18px] font-medium text-slate-700">
-                Số ngày đặt trước tối đa
-              </span>
-
-
+            <div className="flex min-h-[84px] items-center justify-between rounded-2xl bg-white px-6 shadow-sm">
               <div className="flex items-center gap-6">
-                <button
-                  type="button"
-                  onClick={handleDecrease}
-                  className="flex h-11 w-11 items-center justify-center rounded-md bg-slate-100 text-[28px] text-slate-400"
-                >
-                  -
-                </button>
-
-
-                <span className="min-w-[18px] text-center text-[28px] font-medium text-slate-700">
-                  {maxAdvanceDays}
+                <span className="text-[18px] font-medium text-slate-700">
+                  Số ngày đặt trước tối đa
                 </span>
 
-
-                <button
-                  type="button"
-                  onClick={handleIncrease}
-                  className="flex h-11 w-11 items-center justify-center rounded-md bg-slate-100 text-[28px] text-slate-400"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-
-            <button
-              type="button"
-              onClick={handleSave}
-              className="rounded-lg bg-[#4169E1] px-6 py-3 text-[18px] font-semibold text-white transition hover:opacity-90"
-            >
-              Lưu thay đổi
-            </button>
-          </div>
-        </section>
-
-
-        <section>
-          <h2 className="mb-4 text-[18px] font-semibold text-slate-800">
-            Thiết lập ngày đóng/mở đặt sân
-          </h2>
-
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_270px]">
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <button
-                  type="button"
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-[16px] text-slate-500"
-                >
-                  {'<'} Trước
-                </button>
-
-
-                <h3 className="text-[20px] font-semibold text-slate-700">
-                  {weekLabel}
-                </h3>
-
-
-                <button
-                  type="button"
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-[16px] text-slate-500"
-                >
-                  Sau {'>'}
-                </button>
-              </div>
-
-
-              <div className="mb-3 grid grid-cols-7 gap-3 px-1">
-                {days.map((item) => (
-                  <div
-                    key={`weekday-${item.dayNumber}`}
-                    className="text-center text-[16px] font-medium text-slate-500"
-                  >
-                    {item.weekday}
-                  </div>
-                ))}
-              </div>
-
-
-              <div className="grid grid-cols-7 gap-3">
-                {days.map((item) => (
+                <div className="flex items-center gap-6">
                   <button
-                    key={item.dayNumber}
                     type="button"
-                    onClick={() => handleToggleDay(item.dayNumber)}
-                    className={`flex h-[94px] flex-col items-center justify-center rounded-xl border-2 bg-white transition ${getDayClass(
-                      item.status
-                    )}`}
+                    onClick={handleDecrease}
+                    className="flex h-11 w-11 items-center justify-center rounded-md bg-slate-100 text-[28px] text-slate-400"
                   >
-                    <span className="text-[24px] font-semibold">{item.dayNumber}</span>
-                    {getBadge(item.status)}
+                    -
                   </button>
-                ))}
-              </div>
 
+                  <span className="min-w-[18px] text-center text-[28px] font-medium text-slate-700">
+                    {maxAdvanceDays}
+                  </span>
 
-              <div className="mt-8 flex flex-wrap items-center gap-8 text-[16px] text-slate-500">
-                <div className="flex items-center gap-3">
-                  <span className="h-6 w-6 rounded-md border-[3px] border-blue-500 bg-white" />
-                  <span>Hôm nay</span>
-                </div>
-
-
-                <div className="flex items-center gap-3">
-                  <span className="h-6 w-6 rounded-md border border-slate-300 bg-white" />
-                  <span>Mở đặt</span>
-                </div>
-
-
-                <div className="flex items-center gap-3">
-                  <span className="h-6 w-6 rounded-md border-[3px] border-red-500 bg-white" />
-                  <span>Đóng đặt</span>
+                  <button
+                    type="button"
+                    onClick={handleIncrease}
+                    className="flex h-11 w-11 items-center justify-center rounded-md bg-slate-100 text-[28px] text-slate-400"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
-            </div>
-
-
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h3 className="mb-6 text-[20px] font-semibold text-slate-800">
-                Thao tác nhanh
-              </h3>
-
-
-              <div className="mb-4">
-                <label className="mb-2 block text-[16px] font-medium text-slate-600">
-                  Từ ngày
-                </label>
-                <input
-                  type="text"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  placeholder="dd/mm/yyyy"
-                  className="h-12 w-full rounded-lg border border-slate-200 px-4 text-[16px] outline-none focus:border-blue-400"
-                />
-              </div>
-
-
-              <div className="mb-4">
-                <label className="mb-2 block text-[16px] font-medium text-slate-600">
-                  Đến ngày
-                </label>
-                <input
-                  type="text"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  placeholder="dd/mm/yyyy"
-                  className="h-12 w-full rounded-lg border border-slate-200 px-4 text-[16px] outline-none focus:border-blue-400"
-                />
-              </div>
-
-
-              <div className="mb-6">
-                <label className="mb-2 block text-[16px] font-medium text-slate-600">
-                  Sân áp dụng
-                </label>
-                <select
-                  value={selectedCourtId}
-                  onChange={(e) => setSelectedCourtId(e.target.value)}
-                  className="h-12 w-full rounded-lg border border-slate-200 px-4 text-[16px] text-slate-700 outline-none focus:border-blue-400"
-                >
-                  {courtOptions.map((court) => (
-                    <option key={court.value} value={court.value}>
-                      {court.label}
-                    </option>
-                  ))}
-                  {loadingCourts && (
-                    <option disabled>Đang tải sân...</option>
-                  )}
-                </select>
-              </div>
-
 
               <button
                 type="button"
-                onClick={handleQuickClose}
-                className="w-full rounded-lg bg-[#E53935] px-4 py-3 text-[18px] font-semibold text-white transition hover:opacity-90"
+                onClick={handleSave}
+                className="rounded-lg bg-[#4169E1] px-6 py-3 text-[18px] font-semibold text-white transition hover:opacity-90"
               >
-                ⊗ Đóng khoảng ngày
+                Lưu thay đổi
               </button>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <section>
+            <h2 className="mb-4 text-[18px] font-semibold text-slate-800">
+              Thiết lập ngày đóng/mở đặt sân
+            </h2>
+
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_270px]">
+              <div className="rounded-2xl bg-white p-6 shadow-sm">
+                <div className="mb-6 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handlePrevWeek}
+                    className="rounded-lg border border-slate-200 px-4 py-2 text-[16px] text-slate-500"
+                  >
+                    {'<'} Trước
+                  </button>
+
+                  <h3 className="text-[20px] font-semibold text-slate-700">
+                    {weekLabel}
+                  </h3>
+
+                  <button
+                    type="button"
+                    onClick={handleNextWeek}
+                    className="rounded-lg border border-slate-200 px-4 py-2 text-[16px] text-slate-500"
+                  >
+                    Sau {'>'}
+                  </button>
+                </div>
+
+                <div className="mb-3 grid grid-cols-7 gap-3 px-1">
+                  {days.map((item) => (
+                    <div
+                      key={`weekday-${item.date}`}
+                      className="text-center text-[16px] font-medium text-slate-500"
+                    >
+                      {item.weekday}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-3">
+                  {days.map((item) => (
+                    <button
+                      key={item.date}
+                      type="button"
+                      onClick={() => handleToggleDay(item.dayNumber)}
+                      className={`flex h-[94px] flex-col items-center justify-center rounded-xl border-2 bg-white transition ${getDayClass(
+                        item.status
+                      )}`}
+                    >
+                      <span className="text-[24px] font-semibold">
+                        {item.dayNumber}
+                      </span>
+                      {getBadge(item.status)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center gap-8 text-[16px] text-slate-500">
+                  <div className="flex items-center gap-3">
+                    <span className="h-6 w-6 rounded-md border-[3px] border-blue-500 bg-white" />
+                    <span>Hôm nay</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="h-6 w-6 rounded-md border border-slate-300 bg-white" />
+                    <span>Mở đặt</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="h-6 w-6 rounded-md border-[3px] border-red-500 bg-white" />
+                    <span>Đóng đặt</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white p-6 shadow-sm">
+                <h3 className="mb-6 text-[20px] font-semibold text-slate-800">
+                  Thao tác nhanh
+                </h3>
+
+                <div className="mb-4">
+                  <label className="mb-2 block text-[16px] font-medium text-slate-600">
+                    Từ ngày
+                  </label>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="h-12 w-full rounded-lg border border-slate-200 px-4 text-[16px] outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="mb-2 block text-[16px] font-medium text-slate-600">
+                    Đến ngày
+                  </label>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    min={fromDate || undefined}
+                    className="h-12 w-full rounded-lg border border-slate-200 px-4 text-[16px] outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="mb-2 block text-[16px] font-medium text-slate-600">
+                    Sân áp dụng
+                  </label>
+                  <select
+                    value={selectedCourtId}
+                    onChange={(e) => setSelectedCourtId(e.target.value)}
+                    className="h-12 w-full rounded-lg border border-slate-200 px-4 text-[16px] text-slate-700 outline-none focus:border-blue-400"
+                  >
+                    {courtOptions.map((court) => (
+                      <option key={court.value} value={court.value}>
+                        {court.label}
+                      </option>
+                    ))}
+                    {loadingCourts && <option disabled>Đang tải sân...</option>}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleQuickClose}
+                  className="w-full rounded-lg bg-[#E53935] px-4 py-3 text-[18px] font-semibold text-white transition hover:opacity-90"
+                >
+                  ⊗ Đóng khoảng ngày
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </AdminLayout>
   );
 };
-
 
 export default CauHinhSanBai;
