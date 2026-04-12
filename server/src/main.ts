@@ -4,6 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { DataSource } from 'typeorm';
+import { runMigrations } from './run-migrations';
 
 
 async function bootstrap() {
@@ -49,6 +51,15 @@ async function bootstrap() {
 
 //
   const port = process.env.PORT || 5000;
+
+  // Run database migrations (create missing tables)
+  try {
+    const dataSource = app.get(DataSource);
+    await runMigrations(dataSource);
+  } catch (err) {
+    console.error('[Migration] Failed:', err.message);
+  }
+
   await app.listen(port);
   console.log(`🚀 Server is running on http://localhost:${port}`);
   console.log(`📄 Swagger docs: http://localhost:${port}/api/docs`);
