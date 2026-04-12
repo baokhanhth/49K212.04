@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-type ForgotPasswordApiResponse = {
-  success: boolean;
-  code?: 'EMAIL_NOT_FOUND' | 'PERSONAL_EMAIL_MISSING' | 'SEND_FAILED';
-  message?: string;
-};
+import { authApi } from '../services/api';
+import { AxiosError } from 'axios';
 
 const QuenMatKhau: React.FC = () => {
   const navigate = useNavigate();
@@ -51,38 +47,6 @@ const QuenMatKhau: React.FC = () => {
     return true;
   };
 
-  const forgotPasswordApi = async (
-    schoolEmail: string
-  ): Promise<ForgotPasswordApiResponse> => {
-    // TODO: thay bằng API thật
-    // Ví dụ:
-    // const res = await api.post('/auth/forgot-password', { email: schoolEmail });
-    // return res.data;
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Mock dữ liệu để test UI theo AC
-    if (schoolEmail === 'notfound@due.udn.vn') {
-      return {
-        success: false,
-        code: 'EMAIL_NOT_FOUND',
-        message: 'Email không tồn tại',
-      };
-    }
-
-    if (schoolEmail === 'nopersonal@due.udn.vn') {
-      return {
-        success: false,
-        code: 'PERSONAL_EMAIL_MISSING',
-        message: 'Vui lòng cập nhật email cá nhân trong hồ sơ để khôi phục mật khẩu',
-      };
-    }
-
-    return {
-      success: true,
-    };
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
@@ -93,29 +57,19 @@ const QuenMatKhau: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await forgotPasswordApi(normalizedEmail);
-
-      if (!response.success) {
-        if (response.code === 'EMAIL_NOT_FOUND') {
-          setEmailError('Email không tồn tại');
-          return;
-        }
-
-        if (response.code === 'PERSONAL_EMAIL_MISSING') {
-          setServerError(
-            'Vui lòng cập nhật email cá nhân trong hồ sơ để khôi phục mật khẩu'
-          );
-          return;
-        }
-
-        setServerError(response.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
-        return;
-      }
-
+      await authApi.quenMatKhau(normalizedEmail);
       setSuccess(true);
     } catch (error) {
-      console.error('Lỗi gửi email khôi phục:', error);
-      setServerError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+      const axiosError = error as AxiosError<{ message?: string; code?: string }>;
+      const data = axiosError.response?.data;
+
+      if (data?.code === 'EMAIL_NOT_FOUND' || axiosError.response?.status === 404) {
+        setEmailError('Email không tồn tại');
+      } else if (data?.code === 'PERSONAL_EMAIL_MISSING') {
+        setServerError('Vui lòng cập nhật email cá nhân trong hồ sơ để khôi phục mật khẩu');
+      } else {
+        setServerError(data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
+      }
     } finally {
       setLoading(false);
     }
