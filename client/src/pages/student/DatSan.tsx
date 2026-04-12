@@ -94,8 +94,12 @@ const DatSan = () => {
       alert("Đã đặt sân thành công, vui lòng kiểm tra lịch sử đặt sân");
       setDetail(null);
       // Reload matrix
-      const data = await datSanApi.getMatrix({ ngay: selectedDate });
-      setMatrixData(Array.isArray(data) ? data : []);
+      try {
+        const data = await datSanApi.getMatrix({ ngay: selectedDate });
+        setMatrixData(Array.isArray(data) ? data : []);
+      } catch {
+        // Booking succeeded but matrix reload failed - don't show error
+      }
     } catch (err: any) {
       alert(err?.response?.data?.message || "Đặt sân thất bại");
     } finally {

@@ -175,10 +175,6 @@ const QuanLySan: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      const selectedLoai = FIXED_LOAI_SAN.find(
-        (item) => String(item.maLoaiSan) === addForm.maLoaiSan
-      );
-
       const payload = {
         tenSan: addForm.tenSan.trim(),
         giaThue: Number(addForm.giaThue),
@@ -187,18 +183,14 @@ const QuanLySan: React.FC = () => {
         maLoaiSan: Number(addForm.maLoaiSan),
       };
 
-      // Nếu backend có API create thì mở dòng dưới
-      // const created = normalizeCourt(await sanBaiApi.create(payload));
+      const formData = new FormData();
+      formData.append('tenSan', payload.tenSan);
+      formData.append('giaThue', String(payload.giaThue));
+      formData.append('trangThai', payload.trangThai);
+      formData.append('maLoaiSan', String(payload.maLoaiSan));
+      if (payload.hinhAnh) formData.append('hinhAnh', payload.hinhAnh);
 
-      const created = {
-        maSan: Date.now(),
-        tenSan: payload.tenSan,
-        giaThue: payload.giaThue,
-        trangThai: payload.trangThai,
-        hinhAnh: payload.hinhAnh,
-        maLoaiSan: payload.maLoaiSan,
-        loaiSan: selectedLoai,
-      } as SanBai;
+      const created = normalizeCourt(await sanBaiApi.create(formData));
 
       setCourts((prev) => [created, ...prev]);
       handleCloseAddModal();
@@ -232,20 +224,16 @@ const QuanLySan: React.FC = () => {
         maLoaiSan: Number(editForm.maLoaiSan),
       };
 
-      // Nếu backend có API update thật thì dùng:
-      // const updated = normalizeCourt(
-      //   await sanBaiApi.update(editingCourtId, payload)
-      // );
+      const formData = new FormData();
+      formData.append('tenSan', payload.tenSan);
+      formData.append('giaThue', String(payload.giaThue));
+      formData.append('trangThai', payload.trangThai);
+      formData.append('maLoaiSan', String(payload.maLoaiSan));
+      if (payload.hinhAnh) formData.append('hinhAnh', payload.hinhAnh);
 
-      const updated = {
-        maSan: editingCourtId,
-        tenSan: payload.tenSan,
-        giaThue: payload.giaThue,
-        trangThai: payload.trangThai,
-        hinhAnh: payload.hinhAnh,
-        maLoaiSan: payload.maLoaiSan,
-        loaiSan: selectedLoai,
-      } as SanBai;
+      const updated = normalizeCourt(
+        await sanBaiApi.update(editingCourtId, formData)
+      );
 
       setCourts((prev) =>
         prev.map((court) =>

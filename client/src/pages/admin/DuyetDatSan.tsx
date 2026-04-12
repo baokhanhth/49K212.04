@@ -20,6 +20,7 @@ const DuyetDatSan = () => {
   const [requests, setRequests] = useState<DatSan[]>([]);
   const [sanList, setSanList] = useState<SanBai[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showModal, setShowModal] = useState<boolean>(false);
 
@@ -38,7 +39,9 @@ const DuyetDatSan = () => {
         setSanList(sArr);
         if (sArr.length > 0) setManualMaSan(sArr[0].maSan);
       })
-      .catch(() => {})
+      .catch(() => {
+        setError('Không thể tải dữ liệu. Vui lòng thử lại.');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -79,8 +82,7 @@ const DuyetDatSan = () => {
 
   const handleCreateManualBooking = async () => {
     try {
-      const { default: api } = await import('../../services/api');
-      await api.post('/dat-san/thu-cong', {
+      await datSanApi.datSanThuCong({
         userId: manualUserId,
         maSan: manualMaSan,
         ngayApDung: manualDate,
@@ -89,7 +91,7 @@ const DuyetDatSan = () => {
       });
       alert('Tạo lịch đặt sân thủ công thành công');
       setShowModal(false);
-      const data = await datSanApi.getAll();
+      const data = await datSanApi.getAll({ trangThai: selectedStatus !== 'all' ? selectedStatus : undefined });
       setRequests(Array.isArray(data) ? data : []);
     } catch (err: any) {
       alert(err?.response?.data?.message || 'Tạo lịch thủ công thất bại');
@@ -156,6 +158,8 @@ const DuyetDatSan = () => {
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           {loading ? (
             <div className="py-12 text-center text-base text-slate-500">Đang tải...</div>
+          ) : error ? (
+            <div className="py-12 text-center text-base text-red-500">{error}</div>
           ) : (
           <table className="w-full">
             <thead className="bg-[#F8FAFC]">

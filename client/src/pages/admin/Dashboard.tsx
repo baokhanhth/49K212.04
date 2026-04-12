@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { dashboardApi } from '../../services/api';
 import {
   CalendarDays,
   ChevronLeft,
@@ -44,69 +45,112 @@ type CalendarEventMap = Record<number, EventItem[]>;
 
 const weekDayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+const cheDoXemMap: Record<CalendarView, string> = {
+  day: 'ngay',
+  week: 'tuan',
+  month: 'thang',
+};
+
+const tinhTrangColorMap: Record<string, string> = {
+  'Trống': 'bg-violet-400 text-white',
+  'Chờ duyệt': 'bg-orange-500 text-white',
+  'Đã được đặt': 'bg-blue-400 text-white',
+  'Đang sử dụng': 'bg-yellow-300 text-black',
+  'Đã sử dụng xong': 'bg-green-500 text-white',
+  'Không sử dụng': 'bg-red-500 text-white',
+  'Bảo trì': 'bg-amber-400 text-black',
+};
+
 const Dashboard = () => {
   const [chartMode, setChartMode] = useState<ChartMode>('booking');
   const [calendarView, setCalendarView] = useState<CalendarView>('month');
+  const [calendarDate, setCalendarDate] = useState(new Date());
 
-  // đổi true để test empty state
-  const isSummaryEmpty = false;
-  const isChartEmpty = false;
-  const isCalendarEmpty = false;
+  // API data states
+  const [thongKe, setThongKe] = useState<any>(null);
+  const [hieuSuat, setHieuSuat] = useState<any[]>([]);
+  const [lichTongHop, setLichTongHop] = useState<any[]>([]);
+
+  // Fetch summary stats
+  useEffect(() => {
+    dashboardApi.getThongKe()
+      .then((data) => setThongKe(data))
+      .catch(() => { /* silent */ });
+  }, []);
+
+  // Fetch chart data
+  useEffect(() => {
+    dashboardApi.getHieuSuat()
+      .then((data) => setHieuSuat(Array.isArray(data) ? data : []))
+      .catch(() => setHieuSuat([]));
+  }, []);
+
+  // Fetch calendar data
+  const formatDateStr = (d: Date) => d.toISOString().split('T')[0];
+
+  const loadCalendar = useCallback(() => {
+    dashboardApi.getLichTongHop({
+      cheDoXem: cheDoXemMap[calendarView],
+      ngay: formatDateStr(calendarDate),
+    })
+      .then((data) => setLichTongHop(Array.isArray(data) ? data : []))
+      .catch(() => setLichTongHop([]));
+  }, [calendarView, calendarDate]);
+
+  useEffect(() => { loadCalendar(); }, [loadCalendar]);
+
+  const navigateCalendar = (direction: number) => {
+    setCalendarDate((prev) => {
+      const d = new Date(prev);
+      if (calendarView === 'day') d.setDate(d.getDate() + direction);
+      else if (calendarView === 'week') d.setDate(d.getDate() + direction * 7);
+      else d.setMonth(d.getMonth() + direction);
+      return d;
+    });
+  };
+
+  const isSummaryEmpty = !thongKe;
 
   const summaryCards: SummaryCard[] = [
     {
       title: 'Tổng số sân',
-      value: '12',
+      value: thongKe?.tongSoSan?.toString() || '--',
       icon: <CalendarDays size={20} />,
       bg: 'from-blue-500 to-blue-400',
       iconBg: 'bg-blue-600/30',
     },
     {
       title: 'Số lượt đặt sân hôm nay',
-      value: '32',
+      value: thongKe?.datSanHomNay?.toString() || '--',
       icon: <Grid2x2 size={20} />,
       bg: 'from-emerald-500 to-green-400',
       iconBg: 'bg-emerald-600/30',
     },
     {
       title: 'Doanh thu của tháng hiện tại',
-      value: '1,200,000đ',
+      value: thongKe ? `${Number(thongKe.doanhThuThang).toLocaleString('vi-VN')}đ` : '--',
       icon: <DollarSign size={20} />,
       bg: 'from-orange-500 to-orange-600',
       iconBg: 'bg-orange-700/30',
     },
     {
       title: 'Số lượt đặt sân có trạng thái "Chờ duyệt"',
-      value: '12',
+      value: thongKe?.choDuyet?.toString() || '--',
       icon: <QrCode size={20} />,
       bg: 'from-rose-500 to-red-500',
       iconBg: 'bg-red-700/30',
     },
   ];
 
-  const bookingData: ChartItem[] = isChartEmpty
-    ? []
-    : [
-        { name: 'Mon', value: 15 },
-        { name: 'Tue', value: 27 },
-        { name: 'Wed', value: 13 },
-        { name: 'Thu', value: 29 },
-        { name: 'Fri', value: 13 },
-        { name: 'Sat', value: 16 },
-        { name: 'Sun', value: 13 },
-      ];
+  const bookingData: ChartItem[] = hieuSuat.map((item) => ({
+    name: item.tenSan || `Sân ${item.maSan}`,
+    value: Number(item.soLuongBooking) || 0,
+  }));
 
-  const revenueData: ChartItem[] = isChartEmpty
-    ? []
-    : [
-        { name: 'Mon', value: 2200000 },
-        { name: 'Tue', value: 4100000 },
-        { name: 'Wed', value: 2800000 },
-        { name: 'Thu', value: 4600000 },
-        { name: 'Fri', value: 2500000 },
-        { name: 'Sat', value: 3200000 },
-        { name: 'Sun', value: 2700000 },
-      ];
+  const revenueData: ChartItem[] = hieuSuat.map((item) => ({
+    name: item.tenSan || `Sân ${item.maSan}`,
+    value: Number(item.doanhThu) || 0,
+  }));
 
   const chartData = chartMode === 'booking' ? bookingData : revenueData;
 
@@ -122,101 +166,77 @@ const Dashboard = () => {
     return `${numericValue.toLocaleString('vi-VN')}đ`;
   };
 
-  const monthCalendarDays: (number | '')[][] = useMemo(
-    () => [
-      ['', '', '', 1, 2, 3, 4],
-      [5, 6, 7, 8, 9, 10, 11],
-      [12, 13, 14, 15, 16, 17, 18],
-      [19, 20, 21, 22, 23, 24, 25],
-      [26, 27, 28, 29, 30, '', ''],
-    ],
-    []
-  );
+  // Month calendar: build from calendarDate
+  const calYear = calendarDate.getFullYear();
+  const calMonth = calendarDate.getMonth();
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === calYear && today.getMonth() === calMonth;
+  const todayDate = today.getDate();
 
-  const monthEvents: CalendarEventMap = isCalendarEmpty
-    ? {}
-    : {
-        8: [{ label: 'Sân 2', color: 'bg-blue-400 text-white' }],
-        12: [{ label: 'BT trì', color: 'bg-amber-400 text-black' }],
-        18: [{ label: 'Trống', color: 'bg-violet-400 text-white' }],
-        25: [
-          { label: 'Trần H...', color: 'bg-blue-400 text-white' },
-          { label: 'Văn Anh', color: 'bg-yellow-300 text-black' },
-        ],
+  const monthCalendarDays: (number | '')[][] = useMemo(() => {
+    const firstDay = new Date(calYear, calMonth, 1);
+    const lastDay = new Date(calYear, calMonth + 1, 0);
+    const startDayOfWeek = (firstDay.getDay() + 6) % 7; // Monday-based
+    const weeks: (number | '')[][] = [];
+    let week: (number | '')[] = Array(startDayOfWeek).fill('');
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      week.push(d);
+      if (week.length === 7) { weeks.push(week); week = []; }
+    }
+    if (week.length > 0) {
+      while (week.length < 7) week.push('');
+      weeks.push(week);
+    }
+    return weeks;
+  }, [calYear, calMonth]);
+
+  const monthEvents: CalendarEventMap = useMemo(() => {
+    const map: CalendarEventMap = {};
+    lichTongHop.forEach((item) => {
+      const day = new Date(item.ngayApDung).getDate();
+      if (!map[day]) map[day] = [];
+      map[day].push({
+        label: `${item.tenSan || 'Sân'} ${item.khungGio || ''}`.trim(),
+        color: tinhTrangColorMap[item.tinhTrang] || 'bg-gray-400 text-white',
+      });
+    });
+    return map;
+  }, [lichTongHop]);
+
+  // Week view
+  const weekEvents = useMemo(() => {
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const grouped: Record<string, { label: string; color: string }[]> = {};
+    lichTongHop.forEach((item) => {
+      const d = new Date(item.ngayApDung);
+      const dayIdx = (d.getDay() + 6) % 7;
+      const key = dayLabels[dayIdx];
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push({
+        label: `${item.tenSan || 'Sân'} - ${item.khungGio || ''}`.trim(),
+        color: tinhTrangColorMap[item.tinhTrang] || 'bg-gray-400 text-white',
+      });
+    });
+    return dayLabels.map((day) => {
+      const dateForDay = new Date(calendarDate);
+      const currentDayIdx = (dateForDay.getDay() + 6) % 7;
+      dateForDay.setDate(dateForDay.getDate() - currentDayIdx + dayLabels.indexOf(day));
+      return {
+        day,
+        date: dateForDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+        events: grouped[day] || [],
       };
+    });
+  }, [lichTongHop, calendarDate]);
 
-  const weekEvents = isCalendarEmpty
-    ? []
-    : [
-        {
-          day: 'Mon',
-          date: '21/04',
-          events: [{ label: 'Sân 1 - 07:00', color: 'bg-blue-400 text-white' }],
-        },
-        {
-          day: 'Tue',
-          date: '22/04',
-          events: [{ label: 'Sân 3 - 09:00', color: 'bg-orange-500 text-white' }],
-        },
-        {
-          day: 'Wed',
-          date: '23/04',
-          events: [],
-        },
-        {
-          day: 'Thu',
-          date: '24/04',
-          events: [{ label: 'Bảo trì sân 2', color: 'bg-amber-400 text-black' }],
-        },
-        {
-          day: 'Fri',
-          date: '25/04',
-          events: [
-            { label: 'Trần H... - 16:00', color: 'bg-blue-400 text-white' },
-            { label: 'Văn Anh - 18:00', color: 'bg-yellow-300 text-black' },
-          ],
-        },
-        {
-          day: 'Sat',
-          date: '26/04',
-          events: [{ label: 'Giải nội bộ', color: 'bg-green-500 text-white' }],
-        },
-        {
-          day: 'Sun',
-          date: '27/04',
-          events: [{ label: 'Trống', color: 'bg-violet-400 text-white' }],
-        },
-      ];
-
-  const dayEvents = isCalendarEmpty
-    ? []
-    : [
-        {
-          time: '06:00 - 08:00',
-          title: 'Sân 1 - Đã được đặt',
-          color: 'bg-blue-400 text-white',
-        },
-        {
-          time: '08:30 - 10:00',
-          title: 'Sân 2 - Chờ duyệt',
-          color: 'bg-orange-500 text-white',
-        },
-        {
-          time: '10:30 - 12:00',
-          title: 'Sân 3 - Đang sử dụng',
-          color: 'bg-yellow-300 text-black',
-        },
-        {
-          time: '14:00 - 16:00',
-          title: 'Sân 4 - Đã sử dụng xong',
-          color: 'bg-green-500 text-white',
-        },
-        {
-          time: '17:00 - 19:00',
-          title: 'Sân 5 - Bảo trì',
-          color: 'bg-amber-400 text-black',
-        },
-      ];
+  // Day view
+  const dayEvents = useMemo(() => {
+    return lichTongHop.map((item) => ({
+      time: item.khungGio || '',
+      title: `${item.tenSan || 'Sân'} - ${item.tinhTrang || ''}`,
+      color: tinhTrangColorMap[item.tinhTrang] || 'bg-gray-400 text-white',
+    }));
+  }, [lichTongHop]);
 
   const legendItems = [
     { label: 'Đã được đặt', color: 'bg-blue-400' },
@@ -242,12 +262,20 @@ const Dashboard = () => {
       ? totalWeekEvents
       : totalDayEvents;
 
-  const calendarTitle =
-    calendarView === 'month'
-      ? 'Tháng 4, 2026'
-      : calendarView === 'week'
-      ? 'Tuần 21/04 - 27/04, 2026'
-      : 'Ngày 25/04/2026';
+  const calendarTitle = useMemo(() => {
+    if (calendarView === 'month') {
+      return calendarDate.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+    }
+    if (calendarView === 'week') {
+      const monday = new Date(calendarDate);
+      const dayIdx = (monday.getDay() + 6) % 7;
+      monday.setDate(monday.getDate() - dayIdx);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return `Tuần ${monday.toLocaleDateString('vi-VN')} - ${sunday.toLocaleDateString('vi-VN')}`;
+    }
+    return calendarDate.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+  }, [calendarView, calendarDate]);
 
   return (
     <AdminLayout>
@@ -413,6 +441,7 @@ const Dashboard = () => {
               <div className="mb-3 flex items-center justify-between">
                 <button
                   type="button"
+                  onClick={() => navigateCalendar(-1)}
                   className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"
                 >
                   <ChevronLeft size={20} />
@@ -422,6 +451,7 @@ const Dashboard = () => {
                 </h3>
                 <button
                   type="button"
+                  onClick={() => navigateCalendar(1)}
                   className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"
                 >
                   <ChevronRight size={20} />
@@ -459,7 +489,7 @@ const Dashboard = () => {
                                   <>
                                     <div
                                       className={`mb-1 flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-                                        day === 25
+                                        isCurrentMonth && day === todayDate
                                           ? 'bg-blue-50 font-semibold text-blue-600'
                                           : 'text-slate-700'
                                       }`}
