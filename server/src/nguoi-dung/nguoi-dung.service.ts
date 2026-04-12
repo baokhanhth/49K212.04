@@ -134,14 +134,17 @@ export class NguoiDungService {
     const msv = msvRaw.trim();
   
     const hoTen = dto.hoTen?.trim().replace(/\s+/g, ' ');
-    const lop = dto.lop?.trim().toUpperCase();
-    const emailTruong = dto.emailTruong?.trim().toLowerCase();
-    const emailCaNhan = dto.emailCaNhan?.trim().toLowerCase();
+    // const emailTruong = dto.emailTruong?.trim().toLowerCase();
     const matKhau = dto.matKhau?.trim();
     const xacNhanMatKhau = dto.xacNhanMatKhau?.trim();
   
     // 👉 username LUÔN = MSSV
     const username = msv;
+    const emailCaNhan = dto.emailCaNhan.trim().toLowerCase();
+
+    if (!hoTen) {
+      throw new BadRequestException('Họ tên không được để trống');
+    }
   
     // ===== 2. Validate MSSV =====
     if (!msv) {
@@ -160,16 +163,25 @@ export class NguoiDungService {
     // ===== 3. Validate email trường =====
     const expectedEmail = `${msv}@due.udn.vn`;
   
-    if (!emailTruong) {
-      throw new BadRequestException('Email trường không được để trống');
-    }
+    // if (!emailTruong) {
+    //   throw new BadRequestException('Email trường không được để trống');
+    // }
   
-    if (emailTruong !== expectedEmail) {
-      throw new BadRequestException(
-        'Email trường phải có dạng MSSV + @due.udn.vn',
-      );
+    // if (emailTruong !== expectedEmail) {
+    //   throw new BadRequestException(
+    //     'Email trường phải có dạng MSSV + @due.udn.vn',
+    //   );
+    // }
+    if (!emailCaNhan) {
+      throw new BadRequestException('Email cá nhân không được để trống');
     }
-  
+    // const existingEmail1 = await this.nguoiDungRepo.findOne({
+    //   where: { emailCaNhan },
+    // });
+    
+    // if (existingEmail1) {
+    //   throw new BadRequestException('Email cá nhân đã tồn tại');
+    // }
     // ===== 4. Validate mật khẩu =====
     if (!matKhau) {
       throw new BadRequestException('Mật khẩu không được để trống');
@@ -202,22 +214,25 @@ export class NguoiDungService {
       throw new BadRequestException('MSSV đã tồn tại');
     }
 
-    const existingEmail = await this.nguoiDungRepo.findOne({
-      where: { emailTruong },
-    });
-    if (existingEmail) {
-      throw new BadRequestException('Email đã tồn tại');
-    }
-
-    if (emailCaNhan) {
+    // const existingEmail = await this.nguoiDungRepo.findOne({
+    //   where: { emailTruong },
+    // });
+    // if (existingEmail) {
+    //   throw new BadRequestException('Email đã tồn tại');
+    // }
+    
+    if (dto.emailCaNhan) {
       const existingPersonalEmail = await this.nguoiDungRepo.findOne({
         where: { emailCaNhan },
       });
+    
       if (existingPersonalEmail) {
         throw new BadRequestException('Email cá nhân đã tồn tại');
       }
     }
 
+   
+    const emailTruong = `${msv}@due.udn.vn`;
     const hashedPassword = await bcrypt.hash(matKhau, 10);
   
     // ===== 10. Tạo user =====
@@ -225,7 +240,6 @@ export class NguoiDungService {
       username,
       matKhau: hashedPassword,
       msv,
-      lop,
       hoTen,
       emailTruong,
       emailCaNhan,
