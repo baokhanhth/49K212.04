@@ -168,45 +168,52 @@ export class NguoiDungService {
   }
 
   async dangKyTaiKhoan(dto: DangKyTaiKhoanDto): Promise<DangKyResponseDto> {
+    // ===== 1. Normalize dữ liệu =====
     const msvRaw = dto.msv || '';
     const msv = msvRaw.trim();
-
+  
     const hoTen = dto.hoTen?.trim().replace(/\s+/g, ' ');
-    // const emailTruong = dto.emailTruong?.trim().toLowerCase();
+    const lop = dto.lop?.trim().toUpperCase();
+    const emailTruong = dto.emailTruong?.trim().toLowerCase();
+    const emailCaNhan = dto.emailCaNhan?.trim().toLowerCase();
     const matKhau = dto.matKhau?.trim();
     const xacNhanMatKhau = dto.xacNhanMatKhau?.trim();
-
-    const username = msv;
-
+  
+    // 👉 username = dto.username (đã validate qua DTO: MSSV@due.udn.vn)
+    const username = dto.username?.trim().toLowerCase();
+  
+    // ===== 2. Validate MSSV =====
     if (!msv) {
       throw new BadRequestException('MSSV không được để trống');
     }
-
+  
+    // ❗ Không cho có khoảng trắng ở bất kỳ đâu
     if (/\s/.test(msv)) {
       throw new BadRequestException('MSSV không được chứa khoảng trắng');
     }
-
+  
     if (!/^\d{12}$/.test(msv)) {
-      throw new BadRequestException(
-        'MSSV phải gồm đúng 12 chữ số và không được chứa khoảng trắng',
-      );
+      throw new BadRequestException('MSSV phải gồm đúng 12 chữ số và không được chứa khoảng trắng');
     }
-
+  
+    // ===== 3. Validate email trường =====
     const expectedEmail = `${msv}@due.udn.vn`;
-
+  
     if (!emailTruong) {
       throw new BadRequestException('Email trường không được để trống');
     }
-
+  
     if (emailTruong !== expectedEmail) {
       throw new BadRequestException(
         'Email trường phải có dạng MSSV + @due.udn.vn',
       );
     }
-
+  
+    // ===== 4. Validate mật khẩu =====
     if (!matKhau) {
       throw new BadRequestException('Mật khẩu không được để trống');
     }
+   
 
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
@@ -216,7 +223,6 @@ export class NguoiDungService {
         'Mật khẩu phải có ít nhất 8 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt',
       );
     }
-
     if (matKhau !== xacNhanMatKhau) {
       throw new BadRequestException('Xác nhận mật khẩu không khớp');
     }
@@ -235,31 +241,30 @@ export class NguoiDungService {
       throw new BadRequestException('MSSV đã tồn tại');
     }
 
-    // const existingEmail = await this.nguoiDungRepo.findOne({
-    //   where: { emailTruong },
-    // });
-    // if (existingEmail) {
-    //   throw new BadRequestException('Email đã tồn tại');
-    // }
-    
-    if (dto.emailCaNhan) {
+    const existingEmail = await this.nguoiDungRepo.findOne({
+      where: { emailTruong },
+    });
+    if (existingEmail) {
+      throw new BadRequestException('Email đã tồn tại');
+    }
+
+    if (emailCaNhan) {
       const existingPersonalEmail = await this.nguoiDungRepo.findOne({
         where: { emailCaNhan },
       });
-    
       if (existingPersonalEmail) {
         throw new BadRequestException('Email cá nhân đã tồn tại');
       }
     }
 
-   
-    const emailTruong = `${msv}@due.udn.vn`;
     const hashedPassword = await bcrypt.hash(matKhau, 10);
-
+  
+    // ===== 10. Tạo user =====
     const newUser = this.nguoiDungRepo.create({
       username,
       matKhau: hashedPassword,
       msv,
+      lop,
       hoTen,
       emailTruong,
       emailCaNhan,
@@ -269,10 +274,10 @@ export class NguoiDungService {
       diemUyTin: 100,
       maVaiTro: 2,
     });
-
+  
     try {
       const savedUser = await this.nguoiDungRepo.save(newUser);
-
+  
       return {
         userId: savedUser.userId,
         username: savedUser.username,
@@ -285,7 +290,10 @@ export class NguoiDungService {
         diemUyTin: savedUser.diemUyTin,
       };
     } catch (error) {
-      throw new BadRequestException('Dữ liệu đã tồn tại hoặc không hợp lệ');
+      // fallback nếu DB vẫn bị race condition
+      throw new BadRequestException(
+        'Dữ liệu đã tồn tại hoặc không hợp lệ',
+      );
     }
   }
 
@@ -391,13 +399,26 @@ export class NguoiDungService {
     if (existingEmail) {
       throw new BadRequestException('Email này đã được sử dụng trong hệ thống');
     }
+    if (!hoTen) {
+      throw new BadRequestException('Họ tên không được để trống');
+    }
+    const regexTen = /^[A-Za-zÀ-ỹ\s]+$/;
+    if (!regexTen.test(hoTen)) {
+      throw new BadRequestException(
+        'Họ tên chỉ được chứa chữ cái và khoảng trắng, không được chứa số hoặc ký tự đặc biệt',
+      );
+    }
 
+    if (hoTen.length < 5) {
+      throw new BadRequestException('Họ và tên phải dài hơn 5 ký tự');
+    }
     const existingSdt = await this.nguoiDungRepo.findOne({ where: { sdt } });
     if (existingSdt) {
       throw new BadRequestException(
         'Số điện thoại này đã được sử dụng trong hệ thống',
       );
     }
+    
 
     const hashedPassword = await bcrypt.hash(MAT_KHAU_MAC_DINH, 10);
 
