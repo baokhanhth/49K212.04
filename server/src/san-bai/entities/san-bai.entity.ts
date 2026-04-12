@@ -39,6 +39,10 @@ export class SanBai {
   @Column({ name: 'TrangThai', type: 'nvarchar', length: 50, default: 'Hoạt động' })
   trangThai: string;
 
+  @ApiProperty({ description: 'Số ngày cho phép đặt trước', example: 7, default: 7 })
+  @Column({ name: 'SoNgayDatTruoc', type: 'int', default: 7 })
+  soNgayDatTruoc: number;
+
   @ApiProperty({ description: 'Mã loại sân', example: 1 })
   @Column({ name: 'MaLoaiSan' })
   maLoaiSan: number;

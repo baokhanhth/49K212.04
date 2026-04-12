@@ -87,6 +87,16 @@ export class DatSanService {
       throw new BadRequestException('Không thể đặt sân cho ngày đã qua');
     }
 
+    // Kiểm tra giới hạn số ngày đặt trước
+    const soNgayDatTruoc = lichSan.sanBai?.soNgayDatTruoc ?? 7;
+    const ngayGioiHan = new Date(today);
+    ngayGioiHan.setDate(ngayGioiHan.getDate() + soNgayDatTruoc);
+    if (ngayApDung > ngayGioiHan) {
+      throw new BadRequestException(
+        `Chỉ được đặt sân trước tối đa ${soNgayDatTruoc} ngày`,
+      );
+    }
+
     const datSan = this.datSanRepo.create({
       userId,
       maLichSan,
@@ -212,12 +222,23 @@ export class DatSanService {
         const slotStartTime = new Date(dateStr);
         slotStartTime.setHours(Number(hour), Number(min), 0, 0);
 
+        // Tính ngày giới hạn đặt trước theo cấu hình sân
+        const soNgayDatTruoc = lich.sanBai?.soNgayDatTruoc ?? 7;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const ngayGioiHan = new Date(today);
+        ngayGioiHan.setDate(ngayGioiHan.getDate() + soNgayDatTruoc);
+        const ngaySlot = new Date(dateStr);
+        ngaySlot.setHours(0, 0, 0, 0);
+
         let finalStatus = 'Trống';
 
         if (lich.sanBai?.trangThai === 'Bảo trì') {
           finalStatus = 'Bảo trì';
         } else if (slotStartTime < now) {
           finalStatus = 'Quá giờ';
+        } else if (ngaySlot > ngayGioiHan) {
+          finalStatus = 'Chưa mở đặt';
         } else if (lich.datSan) {
           finalStatus = 'Đã đặt';
         }
@@ -234,6 +255,7 @@ export class DatSanService {
           giaThue: lich.sanBai?.giaThue,
           hinhAnh: lich.sanBai?.hinhAnh,
           viTri: lich.sanBai?.viTri,
+          soNgayDatTruoc,
           canBook: finalStatus === 'Trống',
         };
       });

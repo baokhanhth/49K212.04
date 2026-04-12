@@ -11,7 +11,7 @@ export class NguoiDung {
   @Column({ name: 'MatKhau', type: 'nvarchar', length: 255 })
   matKhau: string;
 
-  @Column({ name: 'MSV', type: 'varchar', length: 12, nullable: true, unique: true })
+  @Column({ name: 'MSV', type: 'varchar', length: 12, nullable: true })
   msv: string | null;
 
   @Column({ name: 'Lop', type: 'varchar', length: 10, nullable: true })
@@ -23,10 +23,10 @@ export class NguoiDung {
   @Column({ name: 'SDT', type: 'varchar', length: 10, nullable: true })
   sdt: string | null;
 
-  @Column({ name: 'EmailTruong', type: 'varchar', length: 80, nullable: true, unique: true })
+  @Column({ name: 'EmailTruong', type: 'varchar', length: 80, nullable: true })
   emailTruong: string | null;
 
-  @Column({ name: 'EmailCaNhan', type: 'varchar', length: 80, nullable: true, unique: true })
+  @Column({ name: 'EmailCaNhan', type: 'varchar', length: 80, nullable: true })
   emailCaNhan!: string | null;
 
   @Column({ name: 'AnhDaiDien', type: 'nvarchar', length: 255, nullable: true })

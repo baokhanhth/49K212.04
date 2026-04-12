@@ -25,6 +25,9 @@ export class SanBai {
   @Column({ name: 'MaLoaiSan' })
   maLoaiSan: number;
 
+  @Column({ name: 'SoNgayDatTruoc', type: 'int', default: 7 })
+  soNgayDatTruoc: number;
+
   @ManyToOne(() => LoaiSan)
   @JoinColumn({ name: 'MaLoaiSan' })
   loaiSan: LoaiSan;

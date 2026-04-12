@@ -27,6 +27,13 @@ export class UpdateSanBaiDto {
   @Min(1, { message: 'Giá không được nhỏ hơn hoặc bằng 0' })
   giaThue?: number;
 
+  @ApiPropertyOptional({ description: 'Số ngày cho phép đặt trước', example: 7 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Số ngày đặt trước phải là số' })
+  @Min(1, { message: 'Số ngày đặt trước phải >= 1' })
+  soNgayDatTruoc?: number;
+
   @ApiPropertyOptional({ description: 'Vị trí sân', example: 'Khu A' })
   @IsOptional()
   @IsString()
