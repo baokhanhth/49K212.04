@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/api';
 import { AxiosError } from 'axios';
+import { Eye, EyeOff } from 'lucide-react';
 
 const DangKyTaiKhoan: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ const DangKyTaiKhoan: React.FC = () => {
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateMSSV = (mssv: string): boolean => {
     return /^\d{12}$/.test(mssv);
@@ -271,7 +274,7 @@ const DangKyTaiKhoan: React.FC = () => {
               </label>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   id="matKhau"
                   name="matKhau"
                   value={formData.matKhau}
@@ -281,10 +284,22 @@ const DangKyTaiKhoan: React.FC = () => {
                   onMouseLeave={() => setShowTooltip(false)}
                   onFocus={() => setShowTooltip(true)}
                   onBlur={() => setShowTooltip(false)}
-                  className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
+                  className={`w-full rounded-lg border bg-white/10 px-4 py-3 pr-12 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
                     errors.matKhau ? 'border-red-500' : 'border-white/20'
                   }`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
 
                 {/* Custom Tooltip */}
                 {showTooltip && (
@@ -307,17 +322,31 @@ const DangKyTaiKhoan: React.FC = () => {
               <label htmlFor="xacNhanMatKhau" className="mb-2 block text-sm font-medium text-white">
                 Xác nhận mật khẩu *
               </label>
-              <input
-                type="password"
-                id="xacNhanMatKhau"
-                name="xacNhanMatKhau"
-                value={formData.xacNhanMatKhau}
-                onChange={handleChange}
-                placeholder="Nhập lại mật khẩu"
-                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-                  errors.xacNhanMatKhau ? 'border-red-500' : 'border-white/20'
-                }`}
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  id="xacNhanMatKhau"
+                  name="xacNhanMatKhau"
+                  value={formData.xacNhanMatKhau}
+                  onChange={handleChange}
+                  placeholder="Nhập lại mật khẩu"
+                  className={`w-full rounded-lg border bg-white/10 px-4 py-3 pr-12 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
+                    errors.xacNhanMatKhau ? 'border-red-500' : 'border-white/20'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                  aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
               {errors.xacNhanMatKhau && <p className="mt-1 text-sm text-red-400">{errors.xacNhanMatKhau}</p>}
             </div>
 

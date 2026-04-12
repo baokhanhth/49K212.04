@@ -2,41 +2,36 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/api';
 import { AxiosError } from 'axios';
+import { Eye, EyeOff } from 'lucide-react';
 
 const DangNhap: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    emailOrMSSV: '',
+    mssv: '',
     matKhau: '',
   });
   const [errors, setErrors] = useState({
-    emailOrMSSV: '',
+    mssv: '',
     matKhau: '',
   });
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors = {
-      emailOrMSSV: '',
+      mssv: '',
       matKhau: '',
     };
     let isValid = true;
 
-    if (!formData.emailOrMSSV.trim()) {
-      newErrors.emailOrMSSV = 'Vui lòng nhập Email hoặc MSSV';
+    const mssv = formData.mssv.trim();
+    if (!mssv) {
+      newErrors.mssv = 'Vui lòng nhập MSSV';
       isValid = false;
-    } else {
-      const input = formData.emailOrMSSV.trim();
-
-      // Nếu nhập email thì phải đúng @due.udn.vn
-      if (input.includes('@')) {
-        const dueEmailRegex = /^[a-zA-Z0-9._%+-]+@due\.udn\.vn$/;
-        if (!dueEmailRegex.test(input)) {
-          newErrors.emailOrMSSV = 'Email phải đúng định dạng @due.udn.vn';
-          isValid = false;
-        }
-      }
+    } else if (!/^\d{12}$/.test(mssv)) {
+      newErrors.mssv = 'MSSV phải gồm đúng 12 chữ số';
+      isValid = false;
     }
 
     if (!formData.matKhau.trim()) {
@@ -60,7 +55,7 @@ const DangNhap: React.FC = () => {
 
     try {
       const data = await authApi.dangNhap({
-        username: formData.emailOrMSSV,
+        username: formData.mssv.trim(),
         matKhau: formData.matKhau,
       });
 
@@ -96,9 +91,10 @@ const DangNhap: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const newValue = name === 'mssv' ? value.replace(/\D/g, '').slice(0, 12) : value;
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: newValue,
     }));
     setErrors(prev => ({
       ...prev,
@@ -129,22 +125,24 @@ const DangNhap: React.FC = () => {
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="emailOrMSSV" className="mb-2 block text-sm font-medium text-white">
-                Email hoặc MSSV *
+              <label htmlFor="mssv" className="mb-2 block text-sm font-medium text-white">
+                MSSV *
               </label>
               <input
                 type="text"
-                id="emailOrMSSV"
-                name="emailOrMSSV"
-                value={formData.emailOrMSSV}
+                id="mssv"
+                name="mssv"
+                inputMode="numeric"
+                maxLength={12}
+                value={formData.mssv}
                 onChange={handleChange}
-                placeholder="Nhập email @due.udn.vn hoặc MSSV"
+                placeholder="Nhập MSSV 12 chữ số"
                 className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-                  errors.emailOrMSSV ? 'border-red-500' : 'border-white/20'
+                  errors.mssv ? 'border-red-500' : 'border-white/20'
                 }`}
               />
-              {errors.emailOrMSSV && (
-                <p className="mt-1 text-sm text-red-400">{errors.emailOrMSSV}</p>
+              {errors.mssv && (
+                <p className="mt-1 text-sm text-red-400">{errors.mssv}</p>
               )}
             </div>
 
@@ -152,17 +150,31 @@ const DangNhap: React.FC = () => {
               <label htmlFor="matKhau" className="mb-2 block text-sm font-medium text-white">
                 Mật khẩu *
               </label>
-              <input
-                type="password"
-                id="matKhau"
-                name="matKhau"
-                value={formData.matKhau}
-                onChange={handleChange}
-                placeholder="Nhập mật khẩu"
-                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-                  errors.matKhau ? 'border-red-500' : 'border-white/20'
-                }`}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="matKhau"
+                  name="matKhau"
+                  value={formData.matKhau}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu"
+                  className={`w-full rounded-lg border bg-white/10 px-4 py-3 pr-12 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
+                    errors.matKhau ? 'border-red-500' : 'border-white/20'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
               {errors.matKhau && (
                 <p className="mt-1 text-sm text-red-400">{errors.matKhau}</p>
               )}
