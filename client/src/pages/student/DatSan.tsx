@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import StudentLayout from "../../components/layout/StudentLayout";
-import { sanBaiApi, datSanApi } from "../../services/api";
+import { sanBaiApi, datSanApi, getStoredUser } from "../../services/api";
 import type { LoaiSan, MatrixItem } from "../../types";
 
 const statusColor = (s: string) => {
@@ -14,6 +14,7 @@ const statusColor = (s: string) => {
 const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
 const DatSan = () => {
+  const user = getStoredUser();
   const [loaiSanList, setLoaiSanList] = useState<LoaiSan[]>([]);
   const [selectedLoaiSan, setSelectedLoaiSan] = useState<number[]>([]);
   const [showFilter, setShowFilter] = useState(false);
@@ -86,11 +87,10 @@ const DatSan = () => {
     filtered.find((item) => item.khungGio === time && item.tenSan === tenSan);
 
   const handleBooking = async () => {
-    if (!detail || !detail.maLichSan) return;
+    if (!detail || !detail.maLichSan || !user?.userId) return;
     setBooking(true);
     try {
-      // TODO: replace userId=1 with actual logged-in user
-      await datSanApi.create({ userId: 1, maLichSan: detail.maLichSan });
+      await datSanApi.create({ userId: user.userId, maLichSan: detail.maLichSan });
       alert("Đã đặt sân thành công, vui lòng kiểm tra lịch sử đặt sân");
       setDetail(null);
       // Reload matrix
@@ -116,11 +116,11 @@ const DatSan = () => {
           <div className="bg-white rounded-xl p-6 shadow flex gap-10 mb-6">
             <div>
               <p className="text-gray-400 text-sm">Sinh viên</p>
-              <p className="font-semibold">Quang Minh</p>
+              <p className="font-semibold">{user?.hoTen || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Lớp</p>
-              <p className="font-semibold">20K01</p>
+              <p className="text-gray-400 text-sm">MSSV</p>
+              <p className="font-semibold">{user?.msv || 'N/A'}</p>
             </div>
             <div>
               <p className="text-gray-400 text-sm">Ngày</p>
@@ -256,7 +256,7 @@ const DatSan = () => {
                 <div className="space-y-3 text-sm">
                   <div>
                     <p className="text-gray-400">Tên người đặt</p>
-                    <p className="font-semibold">Quang Minh</p>
+                    <p className="font-semibold">{user?.hoTen || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-gray-400">Ngày</p>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import StudentLayout from "../../components/layout/StudentLayout";
-import { datSanApi } from "../../services/api";
+import { datSanApi, getStoredUser } from "../../services/api";
 
 interface LichSuItem {
   maDatSan: number;
@@ -33,10 +33,15 @@ const LichSuDatSan = () => {
     "Bị từ chối",
   ];
 
-  // TODO: replace userId=1 with actual logged-in user
+  // Load booking history for logged-in user
   useEffect(() => {
+    const user = getStoredUser();
+    if (!user?.userId) {
+      setLoading(false);
+      return;
+    }
     datSanApi
-      .getLichSu(1)
+      .getLichSu(user.userId)
       .then((data: any) => setBookings(Array.isArray(data) ? data : []))
       .catch(() => setBookings([]))
       .finally(() => setLoading(false));

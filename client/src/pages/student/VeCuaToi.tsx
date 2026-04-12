@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import StudentLayout from '../../components/layout/StudentLayout';
+import { veDienTuApi, getStoredUser } from '../../services/api';
 
 interface VeItem {
   maVe: string;
@@ -16,8 +17,6 @@ interface VeItem {
   thoiGianCheckOut: string | null;
 }
 
-const API = 'http://localhost:5000/api';
-
 const statusStyle: Record<string, { bg: string; text: string; dot: string }> = {
   'Chưa check-in': { bg: 'bg-blue-50', text: 'text-blue-600', dot: 'bg-blue-500' },
   'Đã Check-in': { bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500' },
@@ -30,7 +29,8 @@ const fmtMoney = (value: number) =>
   new Intl.NumberFormat('vi-VN').format(value) + 'đ';
 
 const VeCuaToi = () => {
-  const userId = 2;
+  const user = getStoredUser();
+  const userId = user?.userId;
 
   const [ves, setVes] = useState<VeItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,11 +40,14 @@ const VeCuaToi = () => {
 
   // ================= FETCH DATA =================
   useEffect(() => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     const fetchVes = async () => {
       try {
-        const res = await fetch(`${API}/ve-dien-tu/user/${userId}`);
-        const json = await res.json();
-        setVes(json.data ?? []);
+        const data = await veDienTuApi.getByUserId(userId);
+        setVes(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error(error);
         setVes([]);
@@ -65,9 +68,8 @@ const VeCuaToi = () => {
 
     setLoadingQr(true);
     try {
-      const res = await fetch(`${API}/ve-dien-tu/chi-tiet/${ve.maVe}`);
-      const json = await res.json();
-      setQrImage(json.data?.qrImage ?? null);
+      const data = await veDienTuApi.getChiTiet(ve.maVe);
+      setQrImage(data?.qrImage ?? null);
     } catch (error) {
       console.error(error);
       setQrImage(null);
