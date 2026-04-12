@@ -1,59 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EmployeeLayout from '../../components/layout/EmployeeLayout';
+import { datSanApi, getStoredUser } from '../../services/api';
 
 
-type BookingStatus = "Đã check-in" | "Đã thanh toán" | "Đã hủy" | "No-show";
+type BookingStatus = "Đã check-in" | "Đã thanh toán" | "Đã hủy" | "No-show" | string;
 
 
 type Booking = {
-  id: string;
-  studentName: string;
-  courtName: string;
-  date: string;
-  time: string;
-  amount: number;
-  status: BookingStatus;
+  maDatSan: number;
+  tenSan: string;
+  tenSinhVien: string;
+  ngayDat: string;
+  khungGio: string;
+  tongTien: number;
+  trangThai: BookingStatus;
 };
-
-
-const mockBookings: Booking[] = [
-  {
-    id: "BK001",
-    studentName: "Nguyễn Văn A",
-    courtName: "Sân cầu lông A",
-    date: "24/04/2026",
-    time: "18:00 - 19:00",
-    amount: 150000,
-    status: "Đã check-in",
-  },
-  {
-    id: "BK002",
-    studentName: "Trần Thị B",
-    courtName: "Sân bóng đá B",
-    date: "24/04/2026",
-    time: "19:00 - 20:00",
-    amount: 300000,
-    status: "Đã thanh toán",
-  },
-  {
-    id: "BK003",
-    studentName: "Lê Văn C",
-    courtName: "Sân tennis A",
-    date: "24/04/2026",
-    time: "20:00 - 21:00",
-    amount: 200000,
-    status: "Đã hủy",
-  },
-  {
-    id: "BK004",
-    studentName: "Phạm Thị D",
-    courtName: "Sân bóng chuyền A",
-    date: "24/04/2026",
-    time: "17:00 - 18:00",
-    amount: 180000,
-    status: "No-show",
-  },
-];
 
 
 const formatCurrency = (value: number) =>
@@ -77,13 +38,35 @@ const getStatusClass = (status: BookingStatus): string => {
 
 
 const XacNhanThanhToan: React.FC = () => {
-  const [bookings, setBookings] = useState<Booking[]>(mockBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    datSanApi.getAll({ trangThai: 'Đã check-in' })
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : [];
+        setBookings(list.map((item: any) => ({
+          maDatSan: item.maDatSan,
+          tenSan: item.lichSan?.sanBai?.tenSan || `Lịch #${item.maLichSan}`,
+          tenSinhVien: item.nguoiDung?.hoTen || `User #${item.userId}`,
+          ngayDat: item.lichSan?.ngayApDung || item.ngayDat,
+          khungGio: item.lichSan
+            ? `${item.lichSan.gioBatDau?.substring(0, 5)} - ${item.lichSan.gioKetThuc?.substring(0, 5)}`
+            : '-',
+          tongTien: item.tongTien || item.lichSan?.sanBai?.giaThue || 0,
+          trangThai: item.trangThai,
+        })));
+      })
+      .catch(() => setBookings([]))
+      .finally(() => setLoading(false));
+  }, []);
 
 
   const handleOpenModal = (booking: Booking) => {
-    if (booking.status !== "Đã check-in") {
+    if (booking.trangThai !== "Đã check-in") {
       setMessage('Chỉ cho phép thanh toán khi trạng thái là "Đã check-in".');
       return;
     }
@@ -94,25 +77,26 @@ const XacNhanThanhToan: React.FC = () => {
   };
 
 
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     if (!selectedBooking) return;
-
-
-    setBookings((prev) =>
-      prev.map((item) =>
-        item.id === selectedBooking.id
-          ? { ...item, status: "Đã thanh toán" }
-          : item
-      )
-    );
-
-
-    setSelectedBooking(null);
-    setMessage('Xác nhận thanh toán thành công. Trạng thái đã cập nhật thành "Đã thanh toán".');
-
-
-    // TODO: Gọi API để cập nhật trạng thái trên Backend
-    // await api.confirmPayment({ maDatSan: selectedBooking.id });
+    setSubmitting(true);
+    try {
+      const user = getStoredUser();
+      await datSanApi.xacNhanThuPhi(selectedBooking.maDatSan, user?.userId || 0);
+      setBookings((prev) =>
+        prev.map((item) =>
+          item.maDatSan === selectedBooking.maDatSan
+            ? { ...item, trangThai: "Đã thanh toán" as BookingStatus }
+            : item
+        )
+      );
+      setSelectedBooking(null);
+      setMessage('Xác nhận thanh toán thành công. Trạng thái đã cập nhật thành "Đã thanh toán".');
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message || 'Xác nhận thanh toán thất bại');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
 
@@ -130,6 +114,9 @@ const XacNhanThanhToan: React.FC = () => {
 
 
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">Đang tải...</div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -162,43 +149,43 @@ const XacNhanThanhToan: React.FC = () => {
               </thead>
               <tbody>
                 {bookings.map((booking) => (
-                  <tr key={booking.id} className="border-b border-slate-100">
+                  <tr key={booking.maDatSan} className="border-b border-slate-100">
                     <td className="px-4 py-3 text-sm text-slate-800">
-                      {booking.id}
+                      #{booking.maDatSan}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-800">
-                      {booking.studentName}
+                      {booking.tenSinhVien}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-800">
-                      {booking.courtName}
+                      {booking.tenSan}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-800">
-                      {booking.date}
+                      {booking.ngayDat ? new Date(booking.ngayDat).toLocaleDateString('vi-VN') : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-800">
-                      {booking.time}
+                      {booking.khungGio}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-800">
-                      {formatCurrency(booking.amount)}
+                      {formatCurrency(booking.tongTien)}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
-                          booking.status
+                          booking.trangThai
                         )}`}
                       >
-                        {booking.status}
+                        {booking.trangThai}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <button
                         className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                          booking.status === "Đã check-in"
+                          booking.trangThai === "Đã check-in"
                             ? "bg-blue-600 text-white hover:bg-blue-700"
                             : "bg-slate-200 text-slate-500 cursor-not-allowed"
                         }`}
                         onClick={() => handleOpenModal(booking)}
-                        disabled={booking.status !== "Đã check-in"}
+                        disabled={booking.trangThai !== "Đã check-in"}
                       >
                         Xác nhận thanh toán
                       </button>
@@ -208,6 +195,7 @@ const XacNhanThanhToan: React.FC = () => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
 
 
@@ -244,47 +232,47 @@ const XacNhanThanhToan: React.FC = () => {
                 <div className="flex justify-between border-b border-slate-100 pb-3">
                   <span className="text-slate-600">Mã booking:</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedBooking.id}
+                    #{selectedBooking.maDatSan}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 pb-3">
                   <span className="text-slate-600">Sinh viên:</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedBooking.studentName}
+                    {selectedBooking.tenSinhVien}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 pb-3">
                   <span className="text-slate-600">Sân:</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedBooking.courtName}
+                    {selectedBooking.tenSan}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 pb-3">
                   <span className="text-slate-600">Ngày:</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedBooking.date}
+                    {selectedBooking.ngayDat ? new Date(selectedBooking.ngayDat).toLocaleDateString('vi-VN') : '-'}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 pb-3">
                   <span className="text-slate-600">Thời gian:</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedBooking.time}
+                    {selectedBooking.khungGio}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 pb-3">
                   <span className="text-slate-600">Trạng thái:</span>
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
-                      selectedBooking.status
+                      selectedBooking.trangThai
                     )}`}
                   >
-                    {selectedBooking.status}
+                    {selectedBooking.trangThai}
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 pb-3">
                   <span className="text-slate-600">Số tiền:</span>
                   <span className="text-2xl font-semibold text-slate-800">
-                    {formatCurrency(selectedBooking.amount)}
+                    {formatCurrency(selectedBooking.tongTien)}
                   </span>
                 </div>
               </div>
@@ -299,7 +287,8 @@ const XacNhanThanhToan: React.FC = () => {
                 </button>
                 <button
                   onClick={handleConfirmPayment}
-                  className="rounded-xl bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+                  disabled={submitting}
+                  className="rounded-xl bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                 >
                   Xác nhận thanh toán
                 </button>
