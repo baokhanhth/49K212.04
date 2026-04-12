@@ -1,19 +1,25 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { authApi } from '../services/api';
+import { AxiosError } from 'axios';
 
 const DatLaiMatKhau: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     matKhauMoi: '',
     xacNhanMatKhau: '',
+    otp: '',
   });
 
   const [errors, setErrors] = useState({
     matKhauMoi: '',
     xacNhanMatKhau: '',
+    otp: '',
   });
 
+  const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const isValidPassword = (password: string): boolean => {
@@ -26,9 +32,15 @@ const DatLaiMatKhau: React.FC = () => {
     const newErrors = {
       matKhauMoi: '',
       xacNhanMatKhau: '',
+      otp: '',
     };
 
     let isValid = true;
+
+    if (!formData.otp.trim()) {
+      newErrors.otp = 'Vui lòng nhập mã OTP';
+      isValid = false;
+    }
 
     if (!formData.matKhauMoi.trim()) {
       newErrors.matKhauMoi = 'Vui lòng nhập mật khẩu!';
@@ -67,18 +79,25 @@ const DatLaiMatKhau: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError('');
 
     if (!validateForm()) return;
 
     setLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const email = searchParams.get('email') || '';
+      await authApi.datLaiMatKhau({
+        email,
+        otp: formData.otp.trim(),
+        newPassword: formData.matKhauMoi,
+      });
       alert('Đổi mật khẩu thành công');
       navigate('/dang-nhap');
     } catch (error) {
-      console.error('Lỗi đổi mật khẩu:', error);
-      alert('Có lỗi xảy ra. Vui lòng thử lại!');
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const msg = axiosError.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại!';
+      setServerError(msg);
     } finally {
       setLoading(false);
     }
@@ -98,7 +117,37 @@ const DatLaiMatKhau: React.FC = () => {
         </div>
 
         <div className="rounded-2xl bg-white/10 p-8 backdrop-blur-sm">
+          {serverError && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {serverError}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* OTP */}
+            <div>
+              <label
+                htmlFor="otp"
+                className="mb-2 block text-sm font-medium text-white"
+              >
+                Mã OTP *
+              </label>
+              <input
+                type="text"
+                id="otp"
+                name="otp"
+                value={formData.otp}
+                onChange={handleChange}
+                placeholder="Nhập mã OTP từ email"
+                maxLength={6}
+                className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
+                  errors.otp ? 'border-red-500' : 'border-white/20'
+                }`}
+              />
+              {errors.otp && (
+                <p className="mt-1 text-sm text-red-400">{errors.otp}</p>
+              )}
+            </div>
+
             <div>
               <label
                 htmlFor="matKhauMoi"

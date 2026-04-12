@@ -8,6 +8,7 @@ import QuenMatKhau from './pages/QuenMatKhau';
 import DatLaiMatKhau from './pages/Datlaimatkhau';
 import SelectRolePage from './pages/SelectRolePage';
 import NotFoundPage from './pages/NotFoundPage';
+import PrivateRoute from './components/common/PrivateRoute';
 
 // Student pages
 import DatSan from './pages/student/DatSan';
@@ -34,8 +35,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         {/* Authentication */}
-        <Route path="/" element={<DatLaiMatKhau />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/dang-ky" element={<DangKyTaiKhoan />} />
         <Route path="/dang-nhap" element={<DangNhap />} />
         <Route path="/quen-mat-khau" element={<QuenMatKhau />} />
@@ -44,27 +44,27 @@ const App: React.FC = () => {
         {/* Role selection */}
         <Route path="/select-role" element={<SelectRolePage />} />
 
-        {/* Student */}
-        <Route path="/student" element={<DatSan />} />
-        <Route path="/student/dat-san" element={<DatSan />} />
-        <Route path="/student/ve-cua-toi" element={<VeCuaToi />} />
-        <Route path="/student/lich-su-dat-san" element={<LichSuDatSan />} />
-        <Route path="/student/tai-khoan" element={<TaiKhoanStudent />} />
+        {/* Student (maVaiTro = 2) */}
+        <Route path="/student" element={<PrivateRoute allowedRoles={[2]}><DatSan /></PrivateRoute>} />
+        <Route path="/student/dat-san" element={<PrivateRoute allowedRoles={[2]}><DatSan /></PrivateRoute>} />
+        <Route path="/student/ve-cua-toi" element={<PrivateRoute allowedRoles={[2]}><VeCuaToi /></PrivateRoute>} />
+        <Route path="/student/lich-su-dat-san" element={<PrivateRoute allowedRoles={[2]}><LichSuDatSan /></PrivateRoute>} />
+        <Route path="/student/tai-khoan" element={<PrivateRoute allowedRoles={[2]}><TaiKhoanStudent /></PrivateRoute>} />
 
-        {/* Admin */}
-        <Route path="/admin" element={<Dashboard />} />
-        <Route path="/admin/duyet-dat-san" element={<DuyetDatSan />} />
-        <Route path="/admin/cau-hinh-san-bai" element={<CauHinhSanBai />} />
-        <Route path="/admin/quan-ly-san" element={<QuanLySan />} />
-        <Route path="/admin/tai-khoan" element={<TaiKhoanAdmin />} />
-        <Route path="/admin/sinh-vien" element={<QuanLySinhVien />} />
-        <Route path="/admin/nhan-vien" element={<QuanLyNhanVien />} />
+        {/* Admin (maVaiTro = 1) */}
+        <Route path="/admin" element={<PrivateRoute allowedRoles={[1]}><Dashboard /></PrivateRoute>} />
+        <Route path="/admin/duyet-dat-san" element={<PrivateRoute allowedRoles={[1]}><DuyetDatSan /></PrivateRoute>} />
+        <Route path="/admin/cau-hinh-san-bai" element={<PrivateRoute allowedRoles={[1]}><CauHinhSanBai /></PrivateRoute>} />
+        <Route path="/admin/quan-ly-san" element={<PrivateRoute allowedRoles={[1]}><QuanLySan /></PrivateRoute>} />
+        <Route path="/admin/tai-khoan" element={<PrivateRoute allowedRoles={[1]}><TaiKhoanAdmin /></PrivateRoute>} />
+        <Route path="/admin/sinh-vien" element={<PrivateRoute allowedRoles={[1]}><QuanLySinhVien /></PrivateRoute>} />
+        <Route path="/admin/nhan-vien" element={<PrivateRoute allowedRoles={[1]}><QuanLyNhanVien /></PrivateRoute>} />
 
-        {/* Employee */}
-        <Route path="/employee" element={<Checkin />} />
-        <Route path="/employee/checkin" element={<Checkin />} />
-        <Route path="/employee/xac-nhan-thanh-toan" element={<XacNhanThanhToan />} />
-        <Route path="/employee/tai-khoan" element={<TaiKhoanEmployee />} />
+        {/* Employee (maVaiTro = 3) */}
+        <Route path="/employee" element={<PrivateRoute allowedRoles={[3]}><Checkin /></PrivateRoute>} />
+        <Route path="/employee/checkin" element={<PrivateRoute allowedRoles={[3]}><Checkin /></PrivateRoute>} />
+        <Route path="/employee/xac-nhan-thanh-toan" element={<PrivateRoute allowedRoles={[3]}><XacNhanThanhToan /></PrivateRoute>} />
+        <Route path="/employee/tai-khoan" element={<PrivateRoute allowedRoles={[3]}><TaiKhoanEmployee /></PrivateRoute>} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

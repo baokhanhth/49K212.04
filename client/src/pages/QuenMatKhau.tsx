@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-type ForgotPasswordApiResponse = {
-  success: boolean;
-  code?: 'EMAIL_NOT_FOUND' | 'PERSONAL_EMAIL_MISSING' | 'SEND_FAILED';
-  message?: string;
-};
+import { authApi } from '../services/api';
+import { AxiosError } from 'axios';
 
 const QuenMatKhau: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +13,7 @@ const QuenMatKhau: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   const validateSchoolEmail = (value: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@due\.edu\.vn$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@due\.udn\.vn$/;
     return emailRegex.test(value);
   };
 
@@ -51,38 +47,6 @@ const QuenMatKhau: React.FC = () => {
     return true;
   };
 
-  const forgotPasswordApi = async (
-    schoolEmail: string
-  ): Promise<ForgotPasswordApiResponse> => {
-    // TODO: thay bằng API thật
-    // Ví dụ:
-    // const res = await api.post('/auth/forgot-password', { email: schoolEmail });
-    // return res.data;
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Mock dữ liệu để test UI theo AC
-    if (schoolEmail === 'notfound@due.edu.vn') {
-      return {
-        success: false,
-        code: 'EMAIL_NOT_FOUND',
-        message: 'Email không tồn tại',
-      };
-    }
-
-    if (schoolEmail === 'nopersonal@due.edu.vn') {
-      return {
-        success: false,
-        code: 'PERSONAL_EMAIL_MISSING',
-        message: 'Vui lòng cập nhật email cá nhân trong hồ sơ để khôi phục mật khẩu',
-      };
-    }
-
-    return {
-      success: true,
-    };
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
@@ -93,29 +57,19 @@ const QuenMatKhau: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await forgotPasswordApi(normalizedEmail);
-
-      if (!response.success) {
-        if (response.code === 'EMAIL_NOT_FOUND') {
-          setEmailError('Email không tồn tại');
-          return;
-        }
-
-        if (response.code === 'PERSONAL_EMAIL_MISSING') {
-          setServerError(
-            'Vui lòng cập nhật email cá nhân trong hồ sơ để khôi phục mật khẩu'
-          );
-          return;
-        }
-
-        setServerError(response.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
-        return;
-      }
-
+      await authApi.quenMatKhau(normalizedEmail);
       setSuccess(true);
     } catch (error) {
-      console.error('Lỗi gửi email khôi phục:', error);
-      setServerError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+      const axiosError = error as AxiosError<{ message?: string; code?: string }>;
+      const data = axiosError.response?.data;
+
+      if (data?.code === 'EMAIL_NOT_FOUND' || axiosError.response?.status === 404) {
+        setEmailError('Email không tồn tại');
+      } else if (data?.code === 'PERSONAL_EMAIL_MISSING') {
+        setServerError('Vui lòng cập nhật email cá nhân trong hồ sơ để khôi phục mật khẩu');
+      } else {
+        setServerError(data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
+      }
     } finally {
       setLoading(false);
     }
@@ -126,9 +80,11 @@ const QuenMatKhau: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 flex items-center justify-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-[#3E5D99]">
-              DUE
-            </div>
+            <img
+              src="/logo.png"
+              alt="DUE Logo"
+              className="h-12 w-12 rounded-xl object-contain"
+            />
             <h1 className="text-3xl font-bold text-white">Quên mật khẩu</h1>
           </div>
 
@@ -156,7 +112,7 @@ const QuenMatKhau: React.FC = () => {
                   name="email"
                   value={email}
                   onChange={handleChange}
-                  placeholder="example@due.edu.vn"
+                  placeholder="example@due.udn.vn"
                   disabled={loading}
                   className={`w-full rounded-lg border bg-white/10 px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${emailError
                       ? 'border-red-500 focus:ring-red-500/40'

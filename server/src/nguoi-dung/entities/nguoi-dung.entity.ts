@@ -11,10 +11,10 @@ export class NguoiDung {
   @Column({ name: 'MatKhau', type: 'nvarchar', length: 255 })
   matKhau: string;
 
-  @Column({ name: 'MSV', type: 'nvarchar', length: 12, nullable: true, unique: true })
+  @Column({ name: 'MSV', type: 'varchar', length: 12, nullable: true, unique: true })
   msv: string | null;
 
-  @Column({ name: 'Lop', type: 'nvarchar', length: 10, nullable: true })
+  @Column({ name: 'Lop', type: 'varchar', length: 10, nullable: true })
   lop: string | null;
 
   @Column({ name: 'HoTen', type: 'nvarchar', length: 100 })
@@ -23,10 +23,10 @@ export class NguoiDung {
   @Column({ name: 'SDT', type: 'varchar', length: 10, nullable: true })
   sdt: string | null;
 
-  @Column({ name: 'EmailTruong', type: 'nvarchar', length: 80, nullable: true, unique: true })
+  @Column({ name: 'EmailTruong', type: 'varchar', length: 80, nullable: true, unique: true })
   emailTruong: string | null;
 
-  @Column({ name: 'EmailCaNhan', type: 'nvarchar', length: 80, nullable: true, unique: true })
+  @Column({ name: 'EmailCaNhan', type: 'varchar', length: 80, nullable: true, unique: true })
   emailCaNhan!: string | null;
 
   @Column({ name: 'AnhDaiDien', type: 'nvarchar', length: 255, nullable: true })

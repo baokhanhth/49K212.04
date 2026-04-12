@@ -1,34 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import EmployeeLayout from '../../components/layout/EmployeeLayout';
-
-// Mock data cho vé
-const mockTickets = [
-  {
-    maDatSan: '#DS123',
-    tenSinhVien: 'Nguyễn Văn A',
-    san: 'Sân A',
-    thoiGian: '20/03/2026 18:00 - 19:00',
-    trangThai: 'Đã duyệt',
-    diemUyTin: 85,
-  },
-  {
-    maDatSan: '#DS124',
-    tenSinhVien: 'Trần Thị B',
-    san: 'Sân B',
-    thoiGian: '21/03/2026 20:00 - 21:00',
-    trangThai: 'Đã check-in',
-    diemUyTin: 92,
-  },
-  {
-    maDatSan: '#DS125',
-    tenSinhVien: 'Lê Văn C',
-    san: 'Sân C',
-    thoiGian: '22/03/2026 15:00 - 16:00',
-    trangThai: 'Chờ duyệt',
-    diemUyTin: 78,
-  },
-];
+import { checkInApi } from '../../services/api';
 
 const Checkin = () => {
   const [showScanner, setShowScanner] = useState(false);
@@ -37,28 +10,40 @@ const Checkin = () => {
     success: boolean;
     message: string;
   } | null>(null);
+  const [loadingTicket, setLoadingTicket] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   // Xử lý khi quét QR thành công
-  const handleScanSuccess = (decodedText: string) => {
-    // Tìm vé trong mock data theo mã QR
-    const ticket = mockTickets.find((t) => t.maDatSan === decodedText);
-    
-    if (ticket) {
-      setScannedTicket(ticket);
-      setShowScanner(false);
-      setCheckinResult(null);
-    } else {
-      setCheckinResult({
-        success: false,
-        message: 'Không tìm thấy vé với mã này!',
-      });
-    }
-
+  const handleScanSuccess = async (decodedText: string) => {
     // Dừng scanner
     if (scannerRef.current) {
       scannerRef.current.clear();
       scannerRef.current = null;
+    }
+    setShowScanner(false);
+    setCheckinResult(null);
+
+    // Parse mã đặt sân from QR
+    const maDatSan = parseInt(decodedText, 10);
+    if (isNaN(maDatSan)) {
+      setCheckinResult({
+        success: false,
+        message: 'Mã QR không hợp lệ!',
+      });
+      return;
+    }
+
+    setLoadingTicket(true);
+    try {
+      const ticket = await checkInApi.getThongTinVe(maDatSan);
+      setScannedTicket(ticket);
+    } catch {
+      setCheckinResult({
+        success: false,
+        message: 'Không tìm thấy vé với mã này!',
+      });
+    } finally {
+      setLoadingTicket(false);
     }
   };
 
@@ -99,32 +84,26 @@ const Checkin = () => {
   };
 
   // Xử lý check-in
-  const handleCheckin = () => {
+  const handleCheckin = async () => {
     if (!scannedTicket) return;
 
-    // Rule: Chỉ cho phép check-in nếu trạng thái là "Đã duyệt"
-    if (scannedTicket.trangThai !== 'Đã duyệt') {
+    try {
+      const result = await checkInApi.checkIn(scannedTicket.maDatSan);
+      setScannedTicket({
+        ...scannedTicket,
+        trangThai: result.trangThai || 'Đã check-in',
+        diemUyTin: result.diemUyTin ?? scannedTicket.diemUyTin,
+      });
+      setCheckinResult({
+        success: true,
+        message: result.message || 'Check-in thành công!',
+      });
+    } catch (err: any) {
       setCheckinResult({
         success: false,
-        message: `Vé này không thể check-in! Trạng thái hiện tại: ${scannedTicket.trangThai}`,
+        message: err?.response?.data?.message || 'Check-in thất bại!',
       });
-      return;
     }
-
-    // Giả lập check-in thành công
-    setScannedTicket({
-      ...scannedTicket,
-      trangThai: 'Đã check-in',
-      diemUyTin: scannedTicket.diemUyTin + 10,
-    });
-
-    setCheckinResult({
-      success: true,
-      message: 'Check-in thành công! Điểm uy tín +10',
-    });
-
-    // TODO: Gọi API để cập nhật trạng thái trên Backend
-    // await api.checkinTicket({ maDatSan: scannedTicket.maDatSan });
   };
 
   // Reset để quét vé mới
@@ -182,8 +161,15 @@ const Checkin = () => {
           </div>
         )}
 
+        {/* Loading after scan */}
+        {loadingTicket && (
+          <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm text-center text-slate-500">
+            Đang tải thông tin vé...
+          </div>
+        )}
+
         {/* Hiển thị thông tin vé sau khi quét */}
-        {scannedTicket && (
+        {scannedTicket && !loadingTicket && (
           <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-800">
