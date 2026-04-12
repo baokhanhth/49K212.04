@@ -1,0 +1,16 @@
+Website: https://49-k212-04.vercel.app/
+Admin: 
+Đăng nhập: admin
+MK: 123456
+2. Nhân viên:
+Đăng nhập: nv1
+MK: 123456
+Đăng nhập: nv2
+MK: 123456
+Đăng nhập: nv3
+MK: 123456
+3. Sinh viên:
+Đăng nhập: 231121522345	
+MK: 123456
+Đăng nhập: 231121522346
+MK: 123456
