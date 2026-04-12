@@ -29,29 +29,29 @@ describe('SanBaiService', () => {
     lichSanList: [],
   };
 
-  const mockSanBaiRepo = {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    createQueryBuilder: jest.fn(),
-    save: jest.fn(),
-    remove: jest.fn(),
-    manager: {
-      createQueryBuilder: jest.fn(),
-      find: jest.fn(),
-    },
-  };
-
-  const mockLoaiSanRepo = {
-    find: jest.fn(),
-    findOne: jest.fn(),
-  };
-
   beforeEach(async () => {
+    sanBaiRepo = {
+      find: jest.fn(),
+      findOne: jest.fn(),
+      createQueryBuilder: jest.fn(),
+      save: jest.fn(),
+      remove: jest.fn(),
+      manager: {
+        createQueryBuilder: jest.fn(),
+        find: jest.fn(),
+      },
+    } as any;
+
+    loaiSanRepo = {
+      find: jest.fn(),
+      findOne: jest.fn(),
+    } as any;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SanBaiService,
-        { provide: getRepositoryToken(SanBai), useValue: mockSanBaiRepo },
-        { provide: getRepositoryToken(LoaiSan), useValue: mockLoaiSanRepo },
+        { provide: getRepositoryToken(SanBai), useValue: sanBaiRepo },
+        { provide: getRepositoryToken(LoaiSan), useValue: loaiSanRepo },
       ],
     }).compile();
 
@@ -62,11 +62,9 @@ describe('SanBaiService', () => {
     expect(service).toBeDefined();
   });
 
-  // ───────────── Tests for findOne (Xem chi tiết sân bãi) ─────────────
-
   describe('findOne', () => {
     it('should return a SanBai with loaiSan relation when found', async () => {
-      mockSanBaiRepo.findOne.mockResolvedValue(mockSanBai);
+      sanBaiRepo.findOne.mockResolvedValue(mockSanBai);
 
       const result = await service.findOne(1);
 
@@ -82,7 +80,7 @@ describe('SanBaiService', () => {
     });
 
     it('should throw NotFoundException when SanBai is not found', async () => {
-      mockSanBaiRepo.findOne.mockResolvedValue(null);
+      sanBaiRepo.findOne.mockResolvedValue(null);
 
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
       await expect(service.findOne(999)).rejects.toThrow(
@@ -99,7 +97,7 @@ describe('SanBaiService', () => {
         trangThai: 'Hoạt động',
       };
 
-      mockSanBaiRepo.findOne.mockResolvedValue(fullSanBai);
+      sanBaiRepo.findOne.mockResolvedValue(fullSanBai);
 
       const result = await service.findOne(1);
 
@@ -112,11 +110,11 @@ describe('SanBaiService', () => {
     it('should return SanBai with null hinhAnh and viTri when not set', async () => {
       const sanBaiWithoutOptional: SanBai = {
         ...mockSanBai,
-        hinhAnh: null,
-        viTri: null,
+        hinhAnh: null as any,
+        viTri: null as any,
       };
 
-      mockSanBaiRepo.findOne.mockResolvedValue(sanBaiWithoutOptional);
+      sanBaiRepo.findOne.mockResolvedValue(sanBaiWithoutOptional);
 
       const result = await service.findOne(1);
 
@@ -133,7 +131,7 @@ describe('SanBaiService', () => {
           trangThai,
         };
 
-        mockSanBaiRepo.findOne.mockResolvedValue(sanBaiWithStatus);
+        sanBaiRepo.findOne.mockResolvedValue(sanBaiWithStatus);
 
         const result = await service.findOne(1);
 
@@ -142,7 +140,7 @@ describe('SanBaiService', () => {
     });
 
     it('should handle numeric id parameter correctly', async () => {
-      mockSanBaiRepo.findOne.mockResolvedValue(mockSanBai);
+      sanBaiRepo.findOne.mockResolvedValue(mockSanBai);
 
       await service.findOne(123);
 
@@ -153,11 +151,11 @@ describe('SanBaiService', () => {
     });
 
     it('should include loaiSan relation in the query', async () => {
-      mockSanBaiRepo.findOne.mockResolvedValue(mockSanBai);
+      sanBaiRepo.findOne.mockResolvedValue(mockSanBai);
 
       await service.findOne(1);
 
-      const findOneCall = mockSanBaiRepo.findOne.mock.calls[0][0];
+      const findOneCall = sanBaiRepo.findOne.mock.calls[0][0];
       expect(findOneCall.relations).toContain('loaiSan');
     });
   });
